@@ -6,7 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
@@ -69,65 +71,63 @@ func (c *Client) CreateAttachment(ctx context.Context, input AttachmentCreate) (
 	return attachment, nil
 }
 
-func (c *Client) GetAttachment(ctx context.Context, id string, kind string, sourceID string, targetID string) (*Attachment, error) {
-	if _, err := parseUUID(id); err != nil {
+func (c *Client) GetAttachment(ctx context.Context, id string) (*Attachment, error) {
+	uuidValue, err := parseUUID(id)
+	if err != nil {
 		return nil, err
 	}
-	srcUUID, err := parseUUID(sourceID)
+
+	baseClient, ok := c.raw.ClientInterface.(*teamclient.Client)
+	if !ok {
+		return nil, fmt.Errorf("unsupported client type %T", c.raw.ClientInterface)
+	}
+
+	serverURL, err := url.Parse(baseClient.Server)
 	if err != nil {
-		return nil, fmt.Errorf("invalid source_id: %w", err)
+		return nil, fmt.Errorf("parse server url: %w", err)
 	}
-	tgtUUID, err := parseUUID(targetID)
+
+	operationPath := fmt.Sprintf("/attachments/%s", uuidToString(uuidValue))
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	requestURL, err := serverURL.Parse(operationPath)
 	if err != nil {
-		return nil, fmt.Errorf("invalid target_id: %w", err)
+		return nil, fmt.Errorf("build attachment url: %w", err)
 	}
 
-	kindValue := teamclient.GetAttachmentsParamsKind(kind)
-	page := 1
-	perPage := 100
-	params := &teamclient.GetAttachmentsParams{
-		Kind:     &kindValue,
-		SourceId: &srcUUID,
-		TargetId: &tgtUUID,
-		Page:     &page,
-		PerPage:  &perPage,
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("create attachment request: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := baseClient.Client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("get attachment request: %w", err)
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read attachment response: %w", err)
 	}
 
-	for {
-		resp, err := c.raw.GetAttachmentsWithResponse(ctx, params)
-		if err != nil {
-			return nil, fmt.Errorf("list attachments request: %w", err)
+	switch resp.StatusCode {
+	case http.StatusOK:
+		var attachment Attachment
+		if err := json.Unmarshal(body, &attachment); err != nil {
+			return nil, fmt.Errorf("decode attachment response: %w", err)
 		}
-
-		if resp.JSON200 == nil {
-			return nil, errorFromResponse("list attachments", responseStatus(resp), resp.Body)
-		}
-
-		list, err := mapAttachmentList(resp.JSON200)
-		if err != nil {
-			return nil, fmt.Errorf("decode attachments response: %w", err)
-		}
-
-		for _, item := range list.Items {
-			if item.ID == id {
-				return &item, nil
-			}
-		}
-
-		if list.NextPage == nil {
-			break
-		}
-		if params.Page == nil {
-			break
-		}
-		if *params.Page >= list.TotalPages {
-			break
-		}
-		next := *params.Page + 1
-		params.Page = &next
+		return &attachment, nil
+	case http.StatusNotFound:
+		return nil, ErrAttachmentNotFound
+	default:
+		return nil, errorFromResponse("get attachment", resp.StatusCode, body)
 	}
-
-	return nil, ErrAttachmentNotFound
 }
 
 func (c *Client) DeleteAttachment(ctx context.Context, id string) error {
@@ -147,23 +147,8 @@ func (c *Client) DeleteAttachment(ctx context.Context, id string) error {
 	return nil
 }
 
-type attachmentListPayload struct {
-	Items      []Attachment `json:"items"`
-	Page       int          `json:"page"`
-	TotalPages int          `json:"totalPages"`
-	NextPage   *int         `json:"nextPage,omitempty"`
-}
-
 func mapAttachment(source any) (*Attachment, error) {
 	var payload Attachment
-	if err := decodePayload(source, &payload); err != nil {
-		return nil, err
-	}
-	return &payload, nil
-}
-
-func mapAttachmentList(source any) (*attachmentListPayload, error) {
-	var payload attachmentListPayload
 	if err := decodePayload(source, &payload); err != nil {
 		return nil, err
 	}

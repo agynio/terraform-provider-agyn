@@ -118,7 +118,10 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	plan.ID = types.StringValue(attachment.ID)
+	plan.Kind = types.StringValue(attachment.Kind)
+	plan.SourceID = types.StringValue(attachment.SourceID)
 	plan.SourceType = types.StringValue(attachment.SourceType)
+	plan.TargetID = types.StringValue(attachment.TargetID)
 	plan.TargetType = types.StringValue(attachment.TargetType)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -136,7 +139,12 @@ func (r *attachmentResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString(), state.Kind.ValueString(), state.SourceID.ValueString(), state.TargetID.ValueString())
+	if state.ID.IsNull() || state.ID.IsUnknown() || state.ID.ValueString() == "" {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString())
 	if err != nil {
 		if errors.Is(err, teamapi.ErrAttachmentNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -173,7 +181,7 @@ func (r *attachmentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString(), state.Kind.ValueString(), state.SourceID.ValueString(), state.TargetID.ValueString())
+	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString())
 	if err != nil {
 		if errors.Is(err, teamapi.ErrAttachmentNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -188,7 +196,10 @@ func (r *attachmentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	state.Kind = types.StringValue(attachment.Kind)
+	state.SourceID = types.StringValue(attachment.SourceID)
 	state.SourceType = types.StringValue(attachment.SourceType)
+	state.TargetID = types.StringValue(attachment.TargetID)
 	state.TargetType = types.StringValue(attachment.TargetType)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
