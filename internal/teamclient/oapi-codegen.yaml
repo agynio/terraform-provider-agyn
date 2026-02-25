@@ -1,0 +1,5 @@
+package: teamclient
+generate:
+  models: true
+  client: true
+output: internal/teamclient/client.gen.go

@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -9,6 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/agynio/terraform-provider-agyn/internal/resources"
+	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
 )
 
 type agynProvider struct {
@@ -38,11 +43,6 @@ func (p *agynProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp 
 	}
 }
 
-type providerData struct {
-	cfg Config
-	client interface{}
-}
-
 func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var data struct {
 		APIURL types.String `tfsdk:"api_url"`
@@ -51,23 +51,35 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
 	if data.APIURL.IsNull() || data.APIURL.IsUnknown() || data.APIURL.ValueString() == "" {
 		resp.Diagnostics.AddAttributeError(path.Root("api_url"), "Missing API URL", "The provider requires api_url to be set to the Gateway base URL.")
 		return
 	}
-	pd := providerData{cfg: Config{APIURL: data.APIURL.ValueString()}, client: nil}
-	resp.DataSourceData = &pd
-	resp.ResourceData = &pd
+
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+
+	client, err := teamapi.NewClient(teamapi.Config{
+		BaseURL:    data.APIURL.ValueString(),
+		HTTPClient: httpClient,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to configure client", err.Error())
+		return
+	}
+
+	resp.DataSourceData = client
+	resp.ResourceData = client
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		NewAgentResource,
-		NewToolResource,
-		NewMCPServerResource,
-		NewWorkspaceConfigurationResource,
-		NewMemoryBucketResource,
-		NewAttachmentResource,
+		resources.NewAgentResource,
+		resources.NewToolResource,
+		resources.NewMCPServerResource,
+		resources.NewWorkspaceConfigurationResource,
+		resources.NewMemoryBucketResource,
+		resources.NewAttachmentResource,
 	}
 }
 
