@@ -1,0 +1,43 @@
+project_name: agyn
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - env:
+      - CGO_ENABLED=0
+    mod_timestamp: '{{ .CommitTimestamp }}'
+    flags:
+      - -trimpath
+    ldflags:
+      - '-s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }}'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    binary: 'terraform-provider-{{ .ProjectName }}_{{ .Version }}'
+archives:
+  - format: zip
+    name_template: 'terraform-provider-{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+checksum:
+  name_template: 'terraform-provider-{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+snapshot:
+  name_template: '0.1.0-{{ .ShortCommit }}'
+signs:
+  - id: checksum
+    artifacts: checksum
+    signature: '${artifact}.sig'
+    cmd: gpg
+    args:
+      - --batch
+      - --pinentry-mode
+      - loopback
+      - --detach-sign
+      - --output
+      - '${signature}'
+      - '${artifact}'
+release:
+  draft: false
