@@ -15,9 +15,6 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("AGYN_BASE_URL") == "" {
 		t.Fatal("AGYN_BASE_URL must be set for acceptance tests")
 	}
-	if os.Getenv("AGYN_API_TOKEN") == "" {
-		t.Fatal("AGYN_API_TOKEN must be set for acceptance tests")
-	}
 }
 
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
