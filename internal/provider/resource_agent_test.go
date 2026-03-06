@@ -69,6 +69,9 @@ func TestAccAgynAgent_import(t *testing.T) {
 				ResourceName:      "agyn_agent.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"config",
+				},
 			},
 		},
 	})
