@@ -99,7 +99,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
-	plan.Config = types.StringValue(string(agent.Config))
+	plan.Config = types.StringValue(configValue)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -130,7 +130,11 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.ID = types.StringValue(agent.ID)
 	state.Title = optionalString(agent.Title)
 	state.Description = optionalString(agent.Description)
-	state.Config = types.StringValue(string(agent.Config))
+	configValue := state.Config
+	if configValue.IsNull() || configValue.IsUnknown() || configValue.ValueString() == "" {
+		configValue = types.StringValue(string(agent.Config))
+	}
+	state.Config = configValue
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -174,7 +178,11 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
-	plan.Config = types.StringValue(string(agent.Config))
+	configValue := plan.Config
+	if configValue.IsNull() || configValue.IsUnknown() || configValue.ValueString() == "" {
+		configValue = state.Config
+	}
+	plan.Config = configValue
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

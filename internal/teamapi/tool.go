@@ -58,20 +58,37 @@ func (c *Client) CreateTool(ctx context.Context, input ToolCreate) (*Tool, error
 		return nil, fmt.Errorf("marshal tool payload: %w", err)
 	}
 
-	resp, err := c.raw.PostToolsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("create tool request: %w", err)
+	var lastErr error
+	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
+		if err := waitForConflictRetry(ctx, attempt); err != nil {
+			return nil, err
+		}
+
+		resp, err := c.raw.PostToolsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create tool request: %w", err)
+		}
+
+		if resp.JSON201 == nil {
+			err := errorFromResponse("create tool", responseStatus(resp), resp.Body)
+			if isVersionConflict(err) {
+				lastErr = err
+				continue
+			}
+			return nil, err
+		}
+
+		tool, err := mapTool(resp.JSON201)
+		if err != nil {
+			return nil, fmt.Errorf("decode tool response: %w", err)
+		}
+		return tool, nil
 	}
 
-	if resp.JSON201 == nil {
-		return nil, errorFromResponse("create tool", responseStatus(resp), resp.Body)
+	if lastErr != nil {
+		return nil, lastErr
 	}
-
-	tool, err := mapTool(resp.JSON201)
-	if err != nil {
-		return nil, fmt.Errorf("decode tool response: %w", err)
-	}
-	return tool, nil
+	return nil, fmt.Errorf("create tool failed after %d attempts", graphConflictRetryCount)
 }
 
 func (c *Client) GetTool(ctx context.Context, id string) (*Tool, error) {
@@ -147,15 +164,33 @@ func (c *Client) DeleteTool(ctx context.Context, id string) error {
 		return err
 	}
 
-	resp, err := c.raw.DeleteToolsIdWithResponse(ctx, uuidValue)
-	if err != nil {
-		return fmt.Errorf("delete tool request: %w", err)
+	var lastErr error
+	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
+		if err := waitForConflictRetry(ctx, attempt); err != nil {
+			return err
+		}
+
+		resp, err := c.raw.DeleteToolsIdWithResponse(ctx, uuidValue)
+		if err != nil {
+			return fmt.Errorf("delete tool request: %w", err)
+		}
+
+		if resp.StatusCode() == http.StatusNoContent {
+			return nil
+		}
+
+		err = errorFromResponse("delete tool", responseStatus(resp), resp.Body)
+		if isVersionConflict(err) {
+			lastErr = err
+			continue
+		}
+		return err
 	}
 
-	if resp.StatusCode() != http.StatusNoContent {
-		return errorFromResponse("delete tool", responseStatus(resp), resp.Body)
+	if lastErr != nil {
+		return lastErr
 	}
-	return nil
+	return fmt.Errorf("delete tool failed after %d attempts", graphConflictRetryCount)
 }
 
 type toolPayload struct {
