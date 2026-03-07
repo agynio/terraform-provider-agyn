@@ -254,9 +254,6 @@ func (r *attachmentResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	if isGraphAttachmentKind(state.Kind.ValueString()) {
-		if state.ID.IsNull() || state.ID.IsUnknown() || state.ID.ValueString() == "" {
-			return
-		}
 		if err := r.client.DeleteGraphEdge(ctx, state.ID.ValueString()); err != nil {
 			resp.Diagnostics.AddError("Delete Attachment Failed", err.Error())
 		}
@@ -278,35 +275,27 @@ func (r *attachmentResource) ImportState(ctx context.Context, req resource.Impor
 
 func (r *attachmentResource) createGraphAttachment(ctx context.Context, kind, sourceID, targetID string) (*teamapi.Attachment, error) {
 	apiSourceID, apiTargetID := attachmentRequestIDs(kind, sourceID, targetID)
-	sourceHandle, targetHandle, ok := graphAttachmentHandles(kind)
-	if !ok {
-		return nil, fmt.Errorf("unsupported graph attachment kind %q", kind)
-	}
+	mapping := graphAttachmentMappingForKind(kind)
 
-	edgeID := graphEdgeID(apiSourceID, sourceHandle, apiTargetID, targetHandle)
+	edgeID := graphEdgeID(apiSourceID, mapping.SourceHandle, apiTargetID, mapping.TargetHandle)
 	edge := teamapi.GraphEdge{
 		ID:           edgeID,
 		Source:       apiSourceID,
-		SourceHandle: sourceHandle,
+		SourceHandle: mapping.SourceHandle,
 		Target:       apiTargetID,
-		TargetHandle: targetHandle,
+		TargetHandle: mapping.TargetHandle,
 	}
 	if err := r.client.UpsertGraphEdge(ctx, edge); err != nil {
 		return nil, err
-	}
-
-	sourceType, targetType, ok := graphAttachmentTypes(kind)
-	if !ok {
-		return nil, fmt.Errorf("unsupported graph attachment kind %q", kind)
 	}
 
 	return &teamapi.Attachment{
 		ID:         edgeID,
 		Kind:       kind,
 		SourceID:   apiSourceID,
-		SourceType: sourceType,
+		SourceType: mapping.SourceType,
 		TargetID:   apiTargetID,
-		TargetType: targetType,
+		TargetType: mapping.TargetType,
 	}, nil
 }
 
@@ -316,45 +305,24 @@ func (r *attachmentResource) readGraphAttachment(ctx context.Context, kind, edge
 		return nil, err
 	}
 
-	sourceHandle, targetHandle, ok := graphAttachmentHandles(kind)
-	if !ok {
-		return nil, fmt.Errorf("unsupported graph attachment kind %q", kind)
-	}
-	if edge.SourceHandle != sourceHandle || edge.TargetHandle != targetHandle {
+	mapping := graphAttachmentMappingForKind(kind)
+	if edge.SourceHandle != mapping.SourceHandle || edge.TargetHandle != mapping.TargetHandle {
 		return nil, teamapi.ErrGraphEdgeNotFound
-	}
-
-	sourceType, targetType, ok := graphAttachmentTypes(kind)
-	if !ok {
-		return nil, fmt.Errorf("unsupported graph attachment kind %q", kind)
 	}
 
 	return &teamapi.Attachment{
 		ID:         edge.ID,
 		Kind:       kind,
 		SourceID:   edge.Source,
-		SourceType: sourceType,
+		SourceType: mapping.SourceType,
 		TargetID:   edge.Target,
-		TargetType: targetType,
+		TargetType: mapping.TargetType,
 	}, nil
 }
 
 func isGraphAttachmentKind(kind string) bool {
-	return kind == mcpServerWorkspaceAttachmentKind
-}
-
-func graphAttachmentHandles(kind string) (string, string, bool) {
-	if kind == mcpServerWorkspaceAttachmentKind {
-		return graphWorkspaceSourceHandle, graphMcpServerTargetHandle, true
-	}
-	return "", "", false
-}
-
-func graphAttachmentTypes(kind string) (string, string, bool) {
-	if kind == mcpServerWorkspaceAttachmentKind {
-		return graphWorkspaceSourceType, graphMcpServerTargetType, true
-	}
-	return "", "", false
+	_, ok := graphAttachmentMappings[kind]
+	return ok
 }
 
 func graphEdgeID(sourceID, sourceHandle, targetID, targetHandle string) string {
@@ -369,8 +337,36 @@ const (
 	graphMcpServerTargetType         = "mcpServer"
 )
 
+type graphAttachmentMapping struct {
+	SourceHandle     string
+	TargetHandle     string
+	SourceType       string
+	TargetType       string
+	SwapSourceTarget bool
+}
+
+var graphAttachmentMappings = map[string]graphAttachmentMapping{
+	mcpServerWorkspaceAttachmentKind: {
+		SourceHandle: graphWorkspaceSourceHandle,
+		TargetHandle: graphMcpServerTargetHandle,
+		SourceType:   graphWorkspaceSourceType,
+		TargetType:   graphMcpServerTargetType,
+		// Graph edges store workspace -> MCP server, which is inverted from
+		// the Terraform attachment's MCP server -> workspace configuration.
+		SwapSourceTarget: true,
+	},
+}
+
+func graphAttachmentMappingForKind(kind string) graphAttachmentMapping {
+	mapping, ok := graphAttachmentMappings[kind]
+	if !ok {
+		panic(fmt.Sprintf("missing graph attachment mapping for %q", kind))
+	}
+	return mapping
+}
+
 func attachmentRequestIDs(kind, sourceID, targetID string) (string, string) {
-	if kind == mcpServerWorkspaceAttachmentKind {
+	if mapping, ok := graphAttachmentMappings[kind]; ok && mapping.SwapSourceTarget {
 		return targetID, sourceID
 	}
 	return sourceID, targetID
@@ -384,7 +380,7 @@ func setAttachmentState(state *attachmentModel, attachment *teamapi.Attachment) 
 	targetID := attachment.TargetID
 	sourceType := attachment.SourceType
 	targetType := attachment.TargetType
-	if attachment.Kind == mcpServerWorkspaceAttachmentKind {
+	if mapping, ok := graphAttachmentMappings[attachment.Kind]; ok && mapping.SwapSourceTarget {
 		sourceID, targetID = targetID, sourceID
 		sourceType, targetType = targetType, sourceType
 	}

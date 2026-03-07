@@ -53,24 +53,14 @@ func (c *Client) CreateWorkspaceConfiguration(ctx context.Context, input Workspa
 		return nil, fmt.Errorf("marshal workspace configuration payload: %w", err)
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return nil, err
-		}
-
+	return withConflictRetry(ctx, "create workspace configuration", func() (*WorkspaceConfiguration, error) {
 		resp, err := c.raw.PostWorkspaceConfigurationsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
 		if err != nil {
 			return nil, fmt.Errorf("create workspace configuration request: %w", err)
 		}
 
 		if resp.JSON201 == nil {
-			err := errorFromResponse("create workspace configuration", responseStatus(resp), resp.Body)
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return nil, err
+			return nil, errorFromResponse("create workspace configuration", responseStatus(resp), resp.Body)
 		}
 
 		cfg, err := mapWorkspaceConfiguration(resp.JSON201)
@@ -78,12 +68,7 @@ func (c *Client) CreateWorkspaceConfiguration(ctx context.Context, input Workspa
 			return nil, fmt.Errorf("decode workspace configuration response: %w", err)
 		}
 		return cfg, nil
-	}
-
-	if lastErr != nil {
-		return nil, lastErr
-	}
-	return nil, fmt.Errorf("create workspace configuration failed after %d attempts", graphConflictRetryCount)
+	})
 }
 
 func (c *Client) GetWorkspaceConfiguration(ctx context.Context, id string) (*WorkspaceConfiguration, error) {
@@ -162,12 +147,7 @@ func (c *Client) DeleteWorkspaceConfiguration(ctx context.Context, id string) er
 		return err
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "delete workspace configuration", func() error {
 		resp, err := c.raw.DeleteWorkspaceConfigurationsIdWithResponse(ctx, uuidValue)
 		if err != nil {
 			return fmt.Errorf("delete workspace configuration request: %w", err)
@@ -177,18 +157,8 @@ func (c *Client) DeleteWorkspaceConfiguration(ctx context.Context, id string) er
 			return nil
 		}
 
-		err = errorFromResponse("delete workspace configuration", responseStatus(resp), resp.Body)
-		if isVersionConflict(err) {
-			lastErr = err
-			continue
-		}
-		return err
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("delete workspace configuration failed after %d attempts", graphConflictRetryCount)
+		return errorFromResponse("delete workspace configuration", responseStatus(resp), resp.Body)
+	})
 }
 
 type workspaceConfigurationPayload struct {

@@ -169,12 +169,7 @@ func (c *Client) UpsertGraphEdge(ctx context.Context, edge GraphEdge) error {
 		return fmt.Errorf("graph edge id is required")
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "upsert graph edge", func() error {
 		graph, err := c.GetGraph(ctx)
 		if err != nil {
 			return err
@@ -192,20 +187,9 @@ func (c *Client) UpsertGraphEdge(ctx context.Context, edge GraphEdge) error {
 		}
 
 		graph.Edges = append(graph.Edges, edge)
-		if _, err := c.UpsertGraph(ctx, graphUpsertRequest(graph)); err != nil {
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return err
-		}
-		return nil
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("upsert graph edge failed after %d attempts", graphConflictRetryCount)
+		_, err = c.UpsertGraph(ctx, graphUpsertRequest(graph))
+		return err
+	})
 }
 
 func (c *Client) DeleteGraphEdge(ctx context.Context, edgeID string) error {
@@ -213,12 +197,7 @@ func (c *Client) DeleteGraphEdge(ctx context.Context, edgeID string) error {
 		return fmt.Errorf("graph edge id is required")
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "delete graph edge", func() error {
 		graph, err := c.GetGraph(ctx)
 		if err != nil {
 			return err
@@ -229,20 +208,9 @@ func (c *Client) DeleteGraphEdge(ctx context.Context, edgeID string) error {
 			return nil
 		}
 		graph.Edges = append(graph.Edges[:idx], graph.Edges[idx+1:]...)
-		if _, err := c.UpsertGraph(ctx, graphUpsertRequest(graph)); err != nil {
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return err
-		}
-		return nil
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("delete graph edge failed after %d attempts", graphConflictRetryCount)
+		_, err = c.UpsertGraph(ctx, graphUpsertRequest(graph))
+		return err
+	})
 }
 
 func graphRequestURL(baseClient *teamclient.Client, path string) (*url.URL, error) {
@@ -250,10 +218,18 @@ func graphRequestURL(baseClient *teamclient.Client, path string) (*url.URL, erro
 	if err != nil {
 		return nil, fmt.Errorf("parse server url: %w", err)
 	}
-	serverURL.Path = path
-	serverURL.RawQuery = ""
-	serverURL.Fragment = ""
-	return serverURL, nil
+
+	if len(path) > 0 && path[0] == '/' {
+		path = "." + path
+	}
+
+	requestURL, err := serverURL.Parse(path)
+	if err != nil {
+		return nil, fmt.Errorf("build graph url: %w", err)
+	}
+	requestURL.RawQuery = ""
+	requestURL.Fragment = ""
+	return requestURL, nil
 }
 
 func graphUpsertRequest(graph *Graph) GraphUpsertRequest {

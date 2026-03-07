@@ -3,14 +3,15 @@ package teamapi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
 )
 
 const (
-	graphConflictRetryCount = 4
-	graphConflictBaseDelay  = 200 * time.Millisecond
+	conflictRetryCount = 4
+	conflictBaseDelay  = 200 * time.Millisecond
 )
 
 func isVersionConflict(err error) bool {
@@ -29,7 +30,7 @@ func waitForConflictRetry(ctx context.Context, attempt int) error {
 		return nil
 	}
 
-	delay := graphConflictBaseDelay * time.Duration(attempt)
+	delay := conflictBaseDelay * time.Duration(attempt)
 	timer := time.NewTimer(delay)
 	defer timer.Stop()
 
@@ -39,4 +40,36 @@ func waitForConflictRetry(ctx context.Context, attempt int) error {
 	case <-timer.C:
 		return nil
 	}
+}
+
+func withConflictRetry[T any](ctx context.Context, op string, fn func() (T, error)) (T, error) {
+	var zero T
+	var lastErr error
+	for attempt := 0; attempt < conflictRetryCount; attempt++ {
+		if err := waitForConflictRetry(ctx, attempt); err != nil {
+			return zero, err
+		}
+
+		result, err := fn()
+		if err != nil {
+			if isVersionConflict(err) {
+				lastErr = err
+				continue
+			}
+			return zero, err
+		}
+		return result, nil
+	}
+
+	if lastErr != nil {
+		return zero, lastErr
+	}
+	return zero, fmt.Errorf("%s failed after %d attempts", op, conflictRetryCount)
+}
+
+func withConflictRetryNoResult(ctx context.Context, op string, fn func() error) error {
+	_, err := withConflictRetry(ctx, op, func() (struct{}, error) {
+		return struct{}{}, fn()
+	})
+	return err
 }

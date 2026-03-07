@@ -53,24 +53,14 @@ func (c *Client) CreateMCPServer(ctx context.Context, input MCPServerCreate) (*M
 		return nil, fmt.Errorf("marshal MCP server payload: %w", err)
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return nil, err
-		}
-
+	return withConflictRetry(ctx, "create MCP server", func() (*MCPServer, error) {
 		resp, err := c.raw.PostMcpServersWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
 		if err != nil {
 			return nil, fmt.Errorf("create MCP server request: %w", err)
 		}
 
 		if resp.JSON201 == nil {
-			err := errorFromResponse("create MCP server", responseStatus(resp), resp.Body)
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return nil, err
+			return nil, errorFromResponse("create MCP server", responseStatus(resp), resp.Body)
 		}
 
 		server, err := mapMCPServer(resp.JSON201)
@@ -78,12 +68,7 @@ func (c *Client) CreateMCPServer(ctx context.Context, input MCPServerCreate) (*M
 			return nil, fmt.Errorf("decode MCP server response: %w", err)
 		}
 		return server, nil
-	}
-
-	if lastErr != nil {
-		return nil, lastErr
-	}
-	return nil, fmt.Errorf("create MCP server failed after %d attempts", graphConflictRetryCount)
+	})
 }
 
 func (c *Client) GetMCPServer(ctx context.Context, id string) (*MCPServer, error) {
@@ -162,12 +147,7 @@ func (c *Client) DeleteMCPServer(ctx context.Context, id string) error {
 		return err
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "delete MCP server", func() error {
 		resp, err := c.raw.DeleteMcpServersIdWithResponse(ctx, uuidValue)
 		if err != nil {
 			return fmt.Errorf("delete MCP server request: %w", err)
@@ -177,18 +157,8 @@ func (c *Client) DeleteMCPServer(ctx context.Context, id string) error {
 			return nil
 		}
 
-		err = errorFromResponse("delete MCP server", responseStatus(resp), resp.Body)
-		if isVersionConflict(err) {
-			lastErr = err
-			continue
-		}
-		return err
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("delete MCP server failed after %d attempts", graphConflictRetryCount)
+		return errorFromResponse("delete MCP server", responseStatus(resp), resp.Body)
+	})
 }
 
 type mcpServerPayload struct {

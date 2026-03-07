@@ -53,24 +53,14 @@ func (c *Client) CreateMemoryBucket(ctx context.Context, input MemoryBucketCreat
 		return nil, fmt.Errorf("marshal memory bucket payload: %w", err)
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return nil, err
-		}
-
+	return withConflictRetry(ctx, "create memory bucket", func() (*MemoryBucket, error) {
 		resp, err := c.raw.PostMemoryBucketsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
 		if err != nil {
 			return nil, fmt.Errorf("create memory bucket request: %w", err)
 		}
 
 		if resp.JSON201 == nil {
-			err := errorFromResponse("create memory bucket", responseStatus(resp), resp.Body)
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return nil, err
+			return nil, errorFromResponse("create memory bucket", responseStatus(resp), resp.Body)
 		}
 
 		bucket, err := mapMemoryBucket(resp.JSON201)
@@ -78,12 +68,7 @@ func (c *Client) CreateMemoryBucket(ctx context.Context, input MemoryBucketCreat
 			return nil, fmt.Errorf("decode memory bucket response: %w", err)
 		}
 		return bucket, nil
-	}
-
-	if lastErr != nil {
-		return nil, lastErr
-	}
-	return nil, fmt.Errorf("create memory bucket failed after %d attempts", graphConflictRetryCount)
+	})
 }
 
 func (c *Client) GetMemoryBucket(ctx context.Context, id string) (*MemoryBucket, error) {
@@ -162,12 +147,7 @@ func (c *Client) DeleteMemoryBucket(ctx context.Context, id string) error {
 		return err
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "delete memory bucket", func() error {
 		resp, err := c.raw.DeleteMemoryBucketsIdWithResponse(ctx, uuidValue)
 		if err != nil {
 			return fmt.Errorf("delete memory bucket request: %w", err)
@@ -177,18 +157,8 @@ func (c *Client) DeleteMemoryBucket(ctx context.Context, id string) error {
 			return nil
 		}
 
-		err = errorFromResponse("delete memory bucket", responseStatus(resp), resp.Body)
-		if isVersionConflict(err) {
-			lastErr = err
-			continue
-		}
-		return err
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("delete memory bucket failed after %d attempts", graphConflictRetryCount)
+		return errorFromResponse("delete memory bucket", responseStatus(resp), resp.Body)
+	})
 }
 
 type memoryBucketPayload struct {
