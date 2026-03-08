@@ -53,20 +53,22 @@ func (c *Client) CreateWorkspaceConfiguration(ctx context.Context, input Workspa
 		return nil, fmt.Errorf("marshal workspace configuration payload: %w", err)
 	}
 
-	resp, err := c.raw.PostWorkspaceConfigurationsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("create workspace configuration request: %w", err)
-	}
+	return withConflictRetry(ctx, "create workspace configuration", func() (*WorkspaceConfiguration, error) {
+		resp, err := c.raw.PostWorkspaceConfigurationsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create workspace configuration request: %w", err)
+		}
 
-	if resp.JSON201 == nil {
-		return nil, errorFromResponse("create workspace configuration", responseStatus(resp), resp.Body)
-	}
+		if resp.JSON201 == nil {
+			return nil, errorFromResponse("create workspace configuration", responseStatus(resp), resp.Body)
+		}
 
-	cfg, err := mapWorkspaceConfiguration(resp.JSON201)
-	if err != nil {
-		return nil, fmt.Errorf("decode workspace configuration response: %w", err)
-	}
-	return cfg, nil
+		cfg, err := mapWorkspaceConfiguration(resp.JSON201)
+		if err != nil {
+			return nil, fmt.Errorf("decode workspace configuration response: %w", err)
+		}
+		return cfg, nil
+	})
 }
 
 func (c *Client) GetWorkspaceConfiguration(ctx context.Context, id string) (*WorkspaceConfiguration, error) {
@@ -145,15 +147,18 @@ func (c *Client) DeleteWorkspaceConfiguration(ctx context.Context, id string) er
 		return err
 	}
 
-	resp, err := c.raw.DeleteWorkspaceConfigurationsIdWithResponse(ctx, uuidValue)
-	if err != nil {
-		return fmt.Errorf("delete workspace configuration request: %w", err)
-	}
+	return withConflictRetryNoResult(ctx, "delete workspace configuration", func() error {
+		resp, err := c.raw.DeleteWorkspaceConfigurationsIdWithResponse(ctx, uuidValue)
+		if err != nil {
+			return fmt.Errorf("delete workspace configuration request: %w", err)
+		}
 
-	if resp.StatusCode() != http.StatusNoContent {
+		if resp.StatusCode() == http.StatusNoContent {
+			return nil
+		}
+
 		return errorFromResponse("delete workspace configuration", responseStatus(resp), resp.Body)
-	}
-	return nil
+	})
 }
 
 type workspaceConfigurationPayload struct {

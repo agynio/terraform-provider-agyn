@@ -13,7 +13,7 @@ func testAccPreCheck(t *testing.T) {
 		t.Skip("acceptance tests skipped unless TF_ACC=1")
 	}
 	if os.Getenv("AGYN_BASE_URL") == "" {
-		t.Fatal("AGYN_BASE_URL must be set for acceptance tests")
+		t.Skip("AGYN_BASE_URL must be set for acceptance tests")
 	}
 }
 

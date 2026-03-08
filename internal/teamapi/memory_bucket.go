@@ -53,20 +53,22 @@ func (c *Client) CreateMemoryBucket(ctx context.Context, input MemoryBucketCreat
 		return nil, fmt.Errorf("marshal memory bucket payload: %w", err)
 	}
 
-	resp, err := c.raw.PostMemoryBucketsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("create memory bucket request: %w", err)
-	}
+	return withConflictRetry(ctx, "create memory bucket", func() (*MemoryBucket, error) {
+		resp, err := c.raw.PostMemoryBucketsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create memory bucket request: %w", err)
+		}
 
-	if resp.JSON201 == nil {
-		return nil, errorFromResponse("create memory bucket", responseStatus(resp), resp.Body)
-	}
+		if resp.JSON201 == nil {
+			return nil, errorFromResponse("create memory bucket", responseStatus(resp), resp.Body)
+		}
 
-	bucket, err := mapMemoryBucket(resp.JSON201)
-	if err != nil {
-		return nil, fmt.Errorf("decode memory bucket response: %w", err)
-	}
-	return bucket, nil
+		bucket, err := mapMemoryBucket(resp.JSON201)
+		if err != nil {
+			return nil, fmt.Errorf("decode memory bucket response: %w", err)
+		}
+		return bucket, nil
+	})
 }
 
 func (c *Client) GetMemoryBucket(ctx context.Context, id string) (*MemoryBucket, error) {
@@ -145,15 +147,18 @@ func (c *Client) DeleteMemoryBucket(ctx context.Context, id string) error {
 		return err
 	}
 
-	resp, err := c.raw.DeleteMemoryBucketsIdWithResponse(ctx, uuidValue)
-	if err != nil {
-		return fmt.Errorf("delete memory bucket request: %w", err)
-	}
+	return withConflictRetryNoResult(ctx, "delete memory bucket", func() error {
+		resp, err := c.raw.DeleteMemoryBucketsIdWithResponse(ctx, uuidValue)
+		if err != nil {
+			return fmt.Errorf("delete memory bucket request: %w", err)
+		}
 
-	if resp.StatusCode() != http.StatusNoContent {
+		if resp.StatusCode() == http.StatusNoContent {
+			return nil
+		}
+
 		return errorFromResponse("delete memory bucket", responseStatus(resp), resp.Body)
-	}
-	return nil
+	})
 }
 
 type memoryBucketPayload struct {

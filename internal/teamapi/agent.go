@@ -53,24 +53,14 @@ func (c *Client) CreateAgent(ctx context.Context, input AgentCreate) (*Agent, er
 		return nil, fmt.Errorf("marshal agent payload: %w", err)
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return nil, err
-		}
-
+	return withConflictRetry(ctx, "create agent", func() (*Agent, error) {
 		resp, err := c.raw.PostAgentsWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
 		if err != nil {
 			return nil, fmt.Errorf("create agent request: %w", err)
 		}
 
 		if resp.JSON201 == nil {
-			err := errorFromResponse("create agent", responseStatus(resp), resp.Body)
-			if isVersionConflict(err) {
-				lastErr = err
-				continue
-			}
-			return nil, err
+			return nil, errorFromResponse("create agent", responseStatus(resp), resp.Body)
 		}
 
 		agent, err := mapAgent(resp.JSON201)
@@ -78,12 +68,7 @@ func (c *Client) CreateAgent(ctx context.Context, input AgentCreate) (*Agent, er
 			return nil, fmt.Errorf("decode agent response: %w", err)
 		}
 		return agent, nil
-	}
-
-	if lastErr != nil {
-		return nil, lastErr
-	}
-	return nil, fmt.Errorf("create agent failed after %d attempts", graphConflictRetryCount)
+	})
 }
 
 func (c *Client) GetAgent(ctx context.Context, id string) (*Agent, error) {
@@ -162,12 +147,7 @@ func (c *Client) DeleteAgent(ctx context.Context, id string) error {
 		return err
 	}
 
-	var lastErr error
-	for attempt := 0; attempt < graphConflictRetryCount; attempt++ {
-		if err := waitForConflictRetry(ctx, attempt); err != nil {
-			return err
-		}
-
+	return withConflictRetryNoResult(ctx, "delete agent", func() error {
 		resp, err := c.raw.DeleteAgentsIdWithResponse(ctx, uuidValue)
 		if err != nil {
 			return fmt.Errorf("delete agent request: %w", err)
@@ -177,18 +157,8 @@ func (c *Client) DeleteAgent(ctx context.Context, id string) error {
 			return nil
 		}
 
-		err = errorFromResponse("delete agent", responseStatus(resp), resp.Body)
-		if isVersionConflict(err) {
-			lastErr = err
-			continue
-		}
-		return err
-	}
-
-	if lastErr != nil {
-		return lastErr
-	}
-	return fmt.Errorf("delete agent failed after %d attempts", graphConflictRetryCount)
+		return errorFromResponse("delete agent", responseStatus(resp), resp.Body)
+	})
 }
 
 type agentPayload struct {

@@ -53,20 +53,22 @@ func (c *Client) CreateMCPServer(ctx context.Context, input MCPServerCreate) (*M
 		return nil, fmt.Errorf("marshal MCP server payload: %w", err)
 	}
 
-	resp, err := c.raw.PostMcpServersWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
-	if err != nil {
-		return nil, fmt.Errorf("create MCP server request: %w", err)
-	}
+	return withConflictRetry(ctx, "create MCP server", func() (*MCPServer, error) {
+		resp, err := c.raw.PostMcpServersWithBodyWithResponse(ctx, "application/json", bytes.NewReader(bodyBytes))
+		if err != nil {
+			return nil, fmt.Errorf("create MCP server request: %w", err)
+		}
 
-	if resp.JSON201 == nil {
-		return nil, errorFromResponse("create MCP server", responseStatus(resp), resp.Body)
-	}
+		if resp.JSON201 == nil {
+			return nil, errorFromResponse("create MCP server", responseStatus(resp), resp.Body)
+		}
 
-	server, err := mapMCPServer(resp.JSON201)
-	if err != nil {
-		return nil, fmt.Errorf("decode MCP server response: %w", err)
-	}
-	return server, nil
+		server, err := mapMCPServer(resp.JSON201)
+		if err != nil {
+			return nil, fmt.Errorf("decode MCP server response: %w", err)
+		}
+		return server, nil
+	})
 }
 
 func (c *Client) GetMCPServer(ctx context.Context, id string) (*MCPServer, error) {
@@ -145,15 +147,18 @@ func (c *Client) DeleteMCPServer(ctx context.Context, id string) error {
 		return err
 	}
 
-	resp, err := c.raw.DeleteMcpServersIdWithResponse(ctx, uuidValue)
-	if err != nil {
-		return fmt.Errorf("delete MCP server request: %w", err)
-	}
+	return withConflictRetryNoResult(ctx, "delete MCP server", func() error {
+		resp, err := c.raw.DeleteMcpServersIdWithResponse(ctx, uuidValue)
+		if err != nil {
+			return fmt.Errorf("delete MCP server request: %w", err)
+		}
 
-	if resp.StatusCode() != http.StatusNoContent {
+		if resp.StatusCode() == http.StatusNoContent {
+			return nil
+		}
+
 		return errorFromResponse("delete MCP server", responseStatus(resp), resp.Body)
-	}
-	return nil
+	})
 }
 
 type mcpServerPayload struct {
