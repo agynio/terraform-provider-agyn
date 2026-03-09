@@ -34,16 +34,24 @@ func (r *memoryBucketResource) Metadata(_ context.Context, req resource.Metadata
 
 func (r *memoryBucketResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages an Agyn memory bucket.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:            true,
+				MarkdownDescription: "UUID identifier of the memory bucket.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"title":       schema.StringAttribute{Optional: true},
-			"description": schema.StringAttribute{Optional: true},
+			"title": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable title of the memory bucket.",
+			},
+			"description": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable description of the memory bucket.",
+			},
 			"config": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "JSON-encoded memory bucket configuration.",
+				MarkdownDescription: "JSON-encoded memory bucket configuration. Use `jsonencode()` to construct the value.",
 			},
 		},
 	}

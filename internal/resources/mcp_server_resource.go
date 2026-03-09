@@ -34,16 +34,24 @@ func (r *mcpServerResource) Metadata(_ context.Context, req resource.MetadataReq
 
 func (r *mcpServerResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages an Agyn MCP server.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:            true,
+				MarkdownDescription: "UUID identifier of the MCP server.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"title":       schema.StringAttribute{Optional: true},
-			"description": schema.StringAttribute{Optional: true},
+			"title": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable title of the MCP server.",
+			},
+			"description": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable description of the MCP server.",
+			},
 			"config": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "JSON-encoded MCP server configuration.",
+				MarkdownDescription: "JSON-encoded MCP server configuration. Use `jsonencode()` to construct the value.",
 			},
 		},
 	}

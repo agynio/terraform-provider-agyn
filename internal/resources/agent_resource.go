@@ -34,16 +34,24 @@ func (r *agentResource) Metadata(_ context.Context, req resource.MetadataRequest
 
 func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages an Agyn agent.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:            true,
+				MarkdownDescription: "UUID identifier of the agent.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"title":       schema.StringAttribute{Optional: true},
-			"description": schema.StringAttribute{Optional: true},
+			"title": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable title of the agent.",
+			},
+			"description": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable description of the agent.",
+			},
 			"config": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "JSON-encoded agent configuration.",
+				MarkdownDescription: "JSON-encoded agent configuration. Use `jsonencode()` to construct the value.",
 			},
 		},
 	}
