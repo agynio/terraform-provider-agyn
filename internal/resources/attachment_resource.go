@@ -374,10 +374,11 @@ var graphAttachmentMappings = map[string]graphAttachmentMapping{
 		TargetType:   graphMcpServerTargetType,
 	},
 	mcpServerWorkspaceAttachmentKind: {
-		SourceHandle: graphWorkspaceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphMcpServerSourceType,
-		TargetType:   graphWorkspaceSourceType,
+		SourceHandle:     graphSelfHandle,
+		TargetHandle:     graphWorkspaceHandle,
+		SourceType:       graphWorkspaceSourceType,
+		TargetType:       graphMcpServerTargetType,
+		SwapSourceTarget: true,
 	},
 	workspaceToolAttachmentKind: {
 		SourceHandle: graphSelfHandle,
