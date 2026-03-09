@@ -35,20 +35,28 @@ func (r *toolResource) Metadata(_ context.Context, req resource.MetadataRequest,
 
 func (r *toolResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages an Agyn tool.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:            true,
+				MarkdownDescription: "UUID identifier of the tool.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"name":        schema.StringAttribute{Optional: true},
-			"description": schema.StringAttribute{Optional: true},
+			"name": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable name of the tool.",
+			},
+			"description": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable description of the tool.",
+			},
 			"type": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Tool type identifier.",
 			},
 			"config": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Optional JSON-encoded tool configuration.",
+				MarkdownDescription: "Optional JSON-encoded tool configuration. Use `jsonencode()` to construct the value.",
 			},
 		},
 	}

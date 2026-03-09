@@ -34,16 +34,24 @@ func (r *workspaceConfigurationResource) Metadata(_ context.Context, req resourc
 
 func (r *workspaceConfigurationResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: "Manages an Agyn workspace configuration.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed:      true,
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				Computed:            true,
+				MarkdownDescription: "UUID identifier of the workspace configuration.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"title":       schema.StringAttribute{Optional: true},
-			"description": schema.StringAttribute{Optional: true},
+			"title": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable title of the workspace configuration.",
+			},
+			"description": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Human-readable description of the workspace configuration.",
+			},
 			"config": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "JSON-encoded workspace configuration.",
+				MarkdownDescription: "JSON-encoded workspace configuration. Use `jsonencode()` to construct the value.",
 			},
 		},
 	}
