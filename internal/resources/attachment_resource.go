@@ -332,9 +332,16 @@ func graphEdgeID(sourceID, sourceHandle, targetID, targetHandle string) string {
 }
 
 const (
+	agentToolAttachmentKind          = "agent_tool"
+	agentMcpServerAttachmentKind     = "agent_mcpServer"
 	mcpServerWorkspaceAttachmentKind = "mcpServer_workspaceConfiguration"
-	graphWorkspaceSourceHandle       = "$self"
+	graphSelfHandle                  = "$self"
+	graphAgentToolsSourceHandle      = "tools"
+	graphAgentMcpSourceHandle        = "mcp"
+	graphWorkspaceSourceHandle       = graphSelfHandle
 	graphMcpServerTargetHandle       = "workspace"
+	graphAgentSourceType             = "agent"
+	graphToolTargetType              = "tool"
 	graphWorkspaceSourceType         = "workspaceConfiguration"
 	graphMcpServerTargetType         = "mcpServer"
 )
@@ -348,6 +355,18 @@ type graphAttachmentMapping struct {
 }
 
 var graphAttachmentMappings = map[string]graphAttachmentMapping{
+	agentToolAttachmentKind: {
+		SourceHandle: graphAgentToolsSourceHandle,
+		TargetHandle: graphSelfHandle,
+		SourceType:   graphAgentSourceType,
+		TargetType:   graphToolTargetType,
+	},
+	agentMcpServerAttachmentKind: {
+		SourceHandle: graphAgentMcpSourceHandle,
+		TargetHandle: graphSelfHandle,
+		SourceType:   graphAgentSourceType,
+		TargetType:   graphMcpServerTargetType,
+	},
 	mcpServerWorkspaceAttachmentKind: {
 		SourceHandle: graphWorkspaceSourceHandle,
 		TargetHandle: graphMcpServerTargetHandle,

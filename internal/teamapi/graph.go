@@ -218,14 +218,17 @@ func graphRequestURL(baseClient *teamclient.Client, path string) (*url.URL, erro
 	if err != nil {
 		return nil, fmt.Errorf("parse server url: %w", err)
 	}
-
-	if len(path) > 0 && path[0] == '/' {
-		path = "." + path
+	if path == "" {
+		path = "/"
+	} else if path[0] != '/' {
+		path = "/" + path
 	}
 
-	requestURL, err := serverURL.Parse(path)
-	if err != nil {
-		return nil, fmt.Errorf("build graph url: %w", err)
+	requestURL := &url.URL{
+		Scheme: serverURL.Scheme,
+		Host:   serverURL.Host,
+		User:   serverURL.User,
+		Path:   path,
 	}
 	requestURL.RawQuery = ""
 	requestURL.Fragment = ""

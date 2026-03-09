@@ -23,8 +23,8 @@ func TestGraphRequestURLResolvesRelativePath(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if requestURL.Path != "/team/v1/api/graph" {
-		t.Fatalf("expected path /team/v1/api/graph, got %s", requestURL.Path)
+	if requestURL.Path != "/api/graph" {
+		t.Fatalf("expected path /api/graph, got %s", requestURL.Path)
 	}
 	if requestURL.RawQuery != "" {
 		t.Fatalf("expected empty query string, got %q", requestURL.RawQuery)
