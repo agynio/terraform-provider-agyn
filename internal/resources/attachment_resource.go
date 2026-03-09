@@ -335,15 +335,21 @@ const (
 	agentToolAttachmentKind          = "agent_tool"
 	agentMcpServerAttachmentKind     = "agent_mcpServer"
 	mcpServerWorkspaceAttachmentKind = "mcpServer_workspaceConfiguration"
+	workspaceToolAttachmentKind      = "workspaceConfiguration_tool"
+	memoryBucketToolAttachmentKind   = "memoryBucket_tool"
+	toolAgentAttachmentKind          = "tool_agent"
 	graphSelfHandle                  = "$self"
+	graphMemoryHandle                = "$memory"
 	graphAgentToolsSourceHandle      = "tools"
 	graphAgentMcpSourceHandle        = "mcp"
-	graphWorkspaceSourceHandle       = graphSelfHandle
-	graphMcpServerTargetHandle       = "workspace"
+	graphToolAgentSourceHandle       = "agent"
+	graphWorkspaceHandle             = "workspace"
 	graphAgentSourceType             = "agent"
 	graphToolTargetType              = "tool"
 	graphWorkspaceSourceType         = "workspaceConfiguration"
 	graphMcpServerTargetType         = "mcpServer"
+	graphMemoryBucketSourceType      = "memoryBucket"
+	graphMcpServerSourceType         = "mcpServer"
 )
 
 type graphAttachmentMapping struct {
@@ -368,13 +374,28 @@ var graphAttachmentMappings = map[string]graphAttachmentMapping{
 		TargetType:   graphMcpServerTargetType,
 	},
 	mcpServerWorkspaceAttachmentKind: {
-		SourceHandle: graphWorkspaceSourceHandle,
-		TargetHandle: graphMcpServerTargetHandle,
+		SourceHandle: graphWorkspaceHandle,
+		TargetHandle: graphSelfHandle,
+		SourceType:   graphMcpServerSourceType,
+		TargetType:   graphWorkspaceSourceType,
+	},
+	workspaceToolAttachmentKind: {
+		SourceHandle: graphSelfHandle,
+		TargetHandle: graphWorkspaceHandle,
 		SourceType:   graphWorkspaceSourceType,
-		TargetType:   graphMcpServerTargetType,
-		// Graph edges store workspace -> MCP server, which is inverted from
-		// the Terraform attachment's MCP server -> workspace configuration.
-		SwapSourceTarget: true,
+		TargetType:   graphToolTargetType,
+	},
+	memoryBucketToolAttachmentKind: {
+		SourceHandle: graphSelfHandle,
+		TargetHandle: graphMemoryHandle,
+		SourceType:   graphMemoryBucketSourceType,
+		TargetType:   graphToolTargetType,
+	},
+	toolAgentAttachmentKind: {
+		SourceHandle: graphToolAgentSourceHandle,
+		TargetHandle: graphSelfHandle,
+		SourceType:   graphToolTargetType,
+		TargetType:   graphAgentSourceType,
 	},
 }
 
