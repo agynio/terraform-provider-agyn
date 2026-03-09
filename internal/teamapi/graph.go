@@ -230,8 +230,6 @@ func graphRequestURL(baseClient *teamclient.Client, path string) (*url.URL, erro
 		User:   serverURL.User,
 		Path:   path,
 	}
-	requestURL.RawQuery = ""
-	requestURL.Fragment = ""
 	return requestURL, nil
 }
 

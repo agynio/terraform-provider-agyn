@@ -12,7 +12,7 @@ import (
 	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
 )
 
-func TestGraphRequestURLResolvesRelativePath(t *testing.T) {
+func TestGraphRequestURLStripsBasePath(t *testing.T) {
 	baseClient, err := teamclient.NewClient("https://example.com/team/v1", teamclient.WithHTTPClient(http.DefaultClient))
 	if err != nil {
 		t.Fatalf("failed to build base client: %v", err)
