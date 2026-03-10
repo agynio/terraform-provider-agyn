@@ -569,7 +569,24 @@ func rawMessageFromString(value types.String, label string) (*json.RawMessage, d
 	if value.IsNull() || value.IsUnknown() {
 		return nil, diags
 	}
-	raw, err := json.Marshal(value.ValueString())
+	input := value.ValueString()
+	var parsed any
+	if err := json.Unmarshal([]byte(input), &parsed); err == nil {
+		switch parsed.(type) {
+		case string, float64:
+			normalized, err := json.Marshal(parsed)
+			if err != nil {
+				diags.AddError("Invalid "+label, err.Error())
+				return nil, diags
+			}
+			msg := json.RawMessage(normalized)
+			return &msg, diags
+		default:
+			diags.AddError("Invalid "+label, "Expected string or number.")
+			return nil, diags
+		}
+	}
+	raw, err := json.Marshal(input)
 	if err != nil {
 		diags.AddError("Invalid "+label, err.Error())
 		return nil, diags
