@@ -27,9 +27,9 @@ resource "agyn_memory_bucket" "example" {
 ### Optional
 
 - `collection_prefix` (String) Collection prefix for memory entries.
-- `config` (String, Deprecated) Deprecated JSON-encoded memory bucket configuration. Use structured attributes instead.
+- `config` (String, Deprecated) Deprecated JSON-encoded memory bucket configuration. Use structured attributes instead. Cannot be used together with the structured configuration attributes. Use one approach or the other.
 - `description` (String) Human-readable description of the memory bucket.
-- `scope` (String) Scope for the memory bucket (global or perThread).
+- `scope` (String) Scope for the memory bucket. Must be one of `global` or `perThread`.
 - `title` (String) Human-readable title of the memory bucket.
 
 ### Read-Only

@@ -29,7 +29,7 @@ resource "agyn_agent" "example" {
 
 ### Optional
 
-- `config` (String, Deprecated) Deprecated JSON-encoded agent configuration. Use structured attributes instead.
+- `config` (String, Deprecated) Deprecated JSON-encoded agent configuration. Use structured attributes instead. Cannot be used together with the structured configuration attributes. Use one approach or the other.
 - `debounce_ms` (Number) Debounce duration in milliseconds.
 - `description` (String) Human-readable description of the agent.
 - `model` (String) Model identifier override for the agent.

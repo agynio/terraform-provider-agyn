@@ -8,6 +8,8 @@ description: |-
 
 # agyn_tool (Resource)
 
+~> **Deprecated:** The `agyn_tool` resource is deprecated and will be removed in a future release.
+
 Manages an Agyn tool.
 
 ## Example Usage
