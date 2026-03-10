@@ -13,7 +13,7 @@ type MemoryBucket struct {
 	ID          string
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      MemoryBucketConfig
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 }
@@ -21,25 +21,18 @@ type MemoryBucket struct {
 type MemoryBucketCreate struct {
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      MemoryBucketConfig
 }
 
 type MemoryBucketUpdate struct {
 	Title       *string
 	Description *string
-	Config      *json.RawMessage
+	Config      *MemoryBucketConfig
 }
 
 func (c *Client) CreateMemoryBucket(ctx context.Context, input MemoryBucketCreate) (*MemoryBucket, error) {
-	if len(input.Config) == 0 {
-		return nil, fmt.Errorf("config is required")
-	}
-	if !json.Valid(input.Config) {
-		return nil, fmt.Errorf("config must be valid JSON")
-	}
-
 	payload := map[string]any{
-		"config": json.RawMessage(input.Config),
+		"config": input.Config,
 	}
 	if input.Title != nil {
 		payload["title"] = *input.Title
@@ -63,7 +56,7 @@ func (c *Client) CreateMemoryBucket(ctx context.Context, input MemoryBucketCreat
 			return nil, errorFromResponse("create memory bucket", responseStatus(resp), resp.Body)
 		}
 
-		bucket, err := mapMemoryBucket(resp.JSON201)
+		bucket, err := mapMemoryBucket(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("decode memory bucket response: %w", err)
 		}
@@ -86,7 +79,7 @@ func (c *Client) GetMemoryBucket(ctx context.Context, id string) (*MemoryBucket,
 		return nil, errorFromResponse("get memory bucket", responseStatus(resp), resp.Body)
 	}
 
-	bucket, err := mapMemoryBucket(resp.JSON200)
+	bucket, err := mapMemoryBucket(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode memory bucket response: %w", err)
 	}
@@ -107,13 +100,7 @@ func (c *Client) UpdateMemoryBucket(ctx context.Context, id string, input Memory
 		payload["description"] = *input.Description
 	}
 	if input.Config != nil {
-		if len(*input.Config) == 0 {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		if !json.Valid(*input.Config) {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		payload["config"] = json.RawMessage(*input.Config)
+		payload["config"] = *input.Config
 	}
 
 	if len(payload) == 0 {
@@ -134,7 +121,7 @@ func (c *Client) UpdateMemoryBucket(ctx context.Context, id string, input Memory
 		return nil, errorFromResponse("update memory bucket", responseStatus(resp), resp.Body)
 	}
 
-	bucket, err := mapMemoryBucket(resp.JSON200)
+	bucket, err := mapMemoryBucket(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode memory bucket response: %w", err)
 	}
@@ -165,7 +152,7 @@ type memoryBucketPayload struct {
 	ID          string          `json:"id"`
 	Title       *string         `json:"title,omitempty"`
 	Description *string         `json:"description,omitempty"`
-	Config      json.RawMessage `json:"config"`
+	Config      MemoryBucketConfig `json:"config"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   *time.Time      `json:"updatedAt,omitempty"`
 }

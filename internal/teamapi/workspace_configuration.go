@@ -13,7 +13,7 @@ type WorkspaceConfiguration struct {
 	ID          string
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      WorkspaceConfigurationConfig
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 }
@@ -21,25 +21,18 @@ type WorkspaceConfiguration struct {
 type WorkspaceConfigurationCreate struct {
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      WorkspaceConfigurationConfig
 }
 
 type WorkspaceConfigurationUpdate struct {
 	Title       *string
 	Description *string
-	Config      *json.RawMessage
+	Config      *WorkspaceConfigurationConfig
 }
 
 func (c *Client) CreateWorkspaceConfiguration(ctx context.Context, input WorkspaceConfigurationCreate) (*WorkspaceConfiguration, error) {
-	if len(input.Config) == 0 {
-		return nil, fmt.Errorf("config is required")
-	}
-	if !json.Valid(input.Config) {
-		return nil, fmt.Errorf("config must be valid JSON")
-	}
-
 	payload := map[string]any{
-		"config": json.RawMessage(input.Config),
+		"config": input.Config,
 	}
 	if input.Title != nil {
 		payload["title"] = *input.Title
@@ -63,7 +56,7 @@ func (c *Client) CreateWorkspaceConfiguration(ctx context.Context, input Workspa
 			return nil, errorFromResponse("create workspace configuration", responseStatus(resp), resp.Body)
 		}
 
-		cfg, err := mapWorkspaceConfiguration(resp.JSON201)
+		cfg, err := mapWorkspaceConfiguration(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("decode workspace configuration response: %w", err)
 		}
@@ -86,7 +79,7 @@ func (c *Client) GetWorkspaceConfiguration(ctx context.Context, id string) (*Wor
 		return nil, errorFromResponse("get workspace configuration", responseStatus(resp), resp.Body)
 	}
 
-	cfg, err := mapWorkspaceConfiguration(resp.JSON200)
+	cfg, err := mapWorkspaceConfiguration(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode workspace configuration response: %w", err)
 	}
@@ -107,13 +100,7 @@ func (c *Client) UpdateWorkspaceConfiguration(ctx context.Context, id string, in
 		payload["description"] = *input.Description
 	}
 	if input.Config != nil {
-		if len(*input.Config) == 0 {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		if !json.Valid(*input.Config) {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		payload["config"] = json.RawMessage(*input.Config)
+		payload["config"] = *input.Config
 	}
 
 	if len(payload) == 0 {
@@ -134,7 +121,7 @@ func (c *Client) UpdateWorkspaceConfiguration(ctx context.Context, id string, in
 		return nil, errorFromResponse("update workspace configuration", responseStatus(resp), resp.Body)
 	}
 
-	cfg, err := mapWorkspaceConfiguration(resp.JSON200)
+	cfg, err := mapWorkspaceConfiguration(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode workspace configuration response: %w", err)
 	}
@@ -165,7 +152,7 @@ type workspaceConfigurationPayload struct {
 	ID          string          `json:"id"`
 	Title       *string         `json:"title,omitempty"`
 	Description *string         `json:"description,omitempty"`
-	Config      json.RawMessage `json:"config"`
+	Config      WorkspaceConfigurationConfig `json:"config"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   *time.Time      `json:"updatedAt,omitempty"`
 }

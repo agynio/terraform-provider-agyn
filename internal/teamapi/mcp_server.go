@@ -13,7 +13,7 @@ type MCPServer struct {
 	ID          string
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      MCPServerConfig
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 }
@@ -21,25 +21,18 @@ type MCPServer struct {
 type MCPServerCreate struct {
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      MCPServerConfig
 }
 
 type MCPServerUpdate struct {
 	Title       *string
 	Description *string
-	Config      *json.RawMessage
+	Config      *MCPServerConfig
 }
 
 func (c *Client) CreateMCPServer(ctx context.Context, input MCPServerCreate) (*MCPServer, error) {
-	if len(input.Config) == 0 {
-		return nil, fmt.Errorf("config is required")
-	}
-	if !json.Valid(input.Config) {
-		return nil, fmt.Errorf("config must be valid JSON")
-	}
-
 	payload := map[string]any{
-		"config": json.RawMessage(input.Config),
+		"config": input.Config,
 	}
 	if input.Title != nil {
 		payload["title"] = *input.Title
@@ -63,7 +56,7 @@ func (c *Client) CreateMCPServer(ctx context.Context, input MCPServerCreate) (*M
 			return nil, errorFromResponse("create MCP server", responseStatus(resp), resp.Body)
 		}
 
-		server, err := mapMCPServer(resp.JSON201)
+		server, err := mapMCPServer(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("decode MCP server response: %w", err)
 		}
@@ -86,7 +79,7 @@ func (c *Client) GetMCPServer(ctx context.Context, id string) (*MCPServer, error
 		return nil, errorFromResponse("get MCP server", responseStatus(resp), resp.Body)
 	}
 
-	server, err := mapMCPServer(resp.JSON200)
+	server, err := mapMCPServer(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode MCP server response: %w", err)
 	}
@@ -107,13 +100,7 @@ func (c *Client) UpdateMCPServer(ctx context.Context, id string, input MCPServer
 		payload["description"] = *input.Description
 	}
 	if input.Config != nil {
-		if len(*input.Config) == 0 {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		if !json.Valid(*input.Config) {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		payload["config"] = json.RawMessage(*input.Config)
+		payload["config"] = *input.Config
 	}
 
 	if len(payload) == 0 {
@@ -134,7 +121,7 @@ func (c *Client) UpdateMCPServer(ctx context.Context, id string, input MCPServer
 		return nil, errorFromResponse("update MCP server", responseStatus(resp), resp.Body)
 	}
 
-	server, err := mapMCPServer(resp.JSON200)
+	server, err := mapMCPServer(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode MCP server response: %w", err)
 	}
@@ -165,7 +152,7 @@ type mcpServerPayload struct {
 	ID          string          `json:"id"`
 	Title       *string         `json:"title,omitempty"`
 	Description *string         `json:"description,omitempty"`
-	Config      json.RawMessage `json:"config"`
+	Config      MCPServerConfig `json:"config"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   *time.Time      `json:"updatedAt,omitempty"`
 }

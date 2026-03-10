@@ -21,9 +21,16 @@ func uuidToString(id openapi_types.UUID) string {
 }
 
 func decodePayload(source any, target any) error {
-	raw, err := json.Marshal(source)
-	if err != nil {
-		return err
+	switch value := source.(type) {
+	case []byte:
+		return json.Unmarshal(value, target)
+	case json.RawMessage:
+		return json.Unmarshal(value, target)
+	default:
+		raw, err := json.Marshal(source)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(raw, target)
 	}
-	return json.Unmarshal(raw, target)
 }
