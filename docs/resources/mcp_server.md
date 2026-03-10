@@ -38,7 +38,7 @@ resource "agyn_mcp_server" "example" {
 ### Optional
 
 - `command` (String) Command to run for the MCP server.
-- `config` (String, Deprecated) Deprecated JSON-encoded MCP server configuration. Use structured attributes instead.
+- `config` (String, Deprecated) Deprecated JSON-encoded MCP server configuration. Use structured attributes instead. Cannot be used together with the structured configuration attributes. Use one approach or the other.
 - `description` (String) Human-readable description of the MCP server.
 - `env` (Attributes List) Environment variables for the MCP server process. (see [below for nested schema](#nestedatt--env))
 - `heartbeat_interval_ms` (Number) Heartbeat interval in milliseconds.
@@ -56,6 +56,8 @@ resource "agyn_mcp_server" "example" {
 
 <a id="nestedatt--env"></a>
 ### Nested Schema for `env`
+
+Exactly one of `value` or `value_ref` must be specified.
 
 Required:
 

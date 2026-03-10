@@ -45,7 +45,7 @@ resource "agyn_workspace_configuration" "example" {
 
 ### Optional
 
-- `config` (String, Deprecated) Deprecated JSON-encoded workspace configuration. Use structured attributes instead.
+- `config` (String, Deprecated) Deprecated JSON-encoded workspace configuration. Use structured attributes instead. Cannot be used together with the structured configuration attributes. Use one approach or the other.
 - `cpu_limit` (String) CPU limit for the workspace (string or number as a string).
 - `description` (String) Human-readable description of the workspace configuration.
 - `enable_dind` (Boolean) Whether to enable Docker-in-Docker.
@@ -54,7 +54,7 @@ resource "agyn_workspace_configuration" "example" {
 - `initial_script` (String) Initial script to run in the workspace.
 - `memory_limit` (String) Memory limit for the workspace (string or number as a string).
 - `nix` (String) Nix configuration as JSON.
-- `platform` (String) Platform selection (auto, linux/amd64, linux/arm64).
+- `platform` (String) Platform selection. Must be one of `auto`, `linux/amd64`, or `linux/arm64`.
 - `title` (String) Human-readable title of the workspace configuration.
 - `ttl_seconds` (Number) Time-to-live in seconds for the workspace.
 - `volumes` (Attributes) Workspace volume configuration. (see [below for nested schema](#nestedatt--volumes))
@@ -65,6 +65,8 @@ resource "agyn_workspace_configuration" "example" {
 
 <a id="nestedatt--env"></a>
 ### Nested Schema for `env`
+
+Exactly one of `value` or `value_ref` must be specified.
 
 Required:
 
