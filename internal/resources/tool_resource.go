@@ -36,6 +36,7 @@ func (r *toolResource) Metadata(_ context.Context, req resource.MetadataRequest,
 func (r *toolResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an Agyn tool.",
+		DeprecationMessage:  "The agyn_tool resource is deprecated and will be removed in a future release.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,

@@ -19,8 +19,9 @@ func TestAccAgynMCPServer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_mcp_server.test", "title", resourceName),
 					resource.TestCheckResourceAttr("agyn_mcp_server.test", "description", "Terraform acceptance MCP server"),
+					resource.TestCheckResourceAttr("agyn_mcp_server.test", "namespace", resourceName),
+					resource.TestCheckResourceAttr("agyn_mcp_server.test", "command", "mcp start --stdio"),
 					resource.TestCheckResourceAttrSet("agyn_mcp_server.test", "id"),
-					resource.TestCheckResourceAttrSet("agyn_mcp_server.test", "config"),
 				),
 			},
 		},
@@ -34,10 +35,8 @@ func testAccAgynMCPServerConfig(title, description string) string {
 resource "agyn_mcp_server" "test" {
   title       = %q
   description = %q
-  config = jsonencode({
-    namespace = %q
-    command   = "mcp start --stdio"
-  })
+  namespace = %q
+  command   = "mcp start --stdio"
 }
 `, testAccProviderConfig(), title, description, title)
 }

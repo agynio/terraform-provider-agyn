@@ -13,7 +13,7 @@ type Agent struct {
 	ID          string
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      AgentConfig
 	CreatedAt   time.Time
 	UpdatedAt   *time.Time
 }
@@ -21,25 +21,18 @@ type Agent struct {
 type AgentCreate struct {
 	Title       *string
 	Description *string
-	Config      json.RawMessage
+	Config      AgentConfig
 }
 
 type AgentUpdate struct {
 	Title       *string
 	Description *string
-	Config      *json.RawMessage
+	Config      *AgentConfig
 }
 
 func (c *Client) CreateAgent(ctx context.Context, input AgentCreate) (*Agent, error) {
-	if len(input.Config) == 0 {
-		return nil, fmt.Errorf("config is required")
-	}
-	if !json.Valid(input.Config) {
-		return nil, fmt.Errorf("config must be valid JSON")
-	}
-
 	payload := map[string]any{
-		"config": json.RawMessage(input.Config),
+		"config": input.Config,
 	}
 	if input.Title != nil {
 		payload["title"] = *input.Title
@@ -63,7 +56,7 @@ func (c *Client) CreateAgent(ctx context.Context, input AgentCreate) (*Agent, er
 			return nil, errorFromResponse("create agent", responseStatus(resp), resp.Body)
 		}
 
-		agent, err := mapAgent(resp.JSON201)
+		agent, err := mapAgent(resp.Body)
 		if err != nil {
 			return nil, fmt.Errorf("decode agent response: %w", err)
 		}
@@ -86,7 +79,7 @@ func (c *Client) GetAgent(ctx context.Context, id string) (*Agent, error) {
 		return nil, errorFromResponse("get agent", responseStatus(resp), resp.Body)
 	}
 
-	agent, err := mapAgent(resp.JSON200)
+	agent, err := mapAgent(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode agent response: %w", err)
 	}
@@ -107,13 +100,7 @@ func (c *Client) UpdateAgent(ctx context.Context, id string, input AgentUpdate) 
 		payload["description"] = *input.Description
 	}
 	if input.Config != nil {
-		if len(*input.Config) == 0 {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		if !json.Valid(*input.Config) {
-			return nil, fmt.Errorf("config must be valid JSON")
-		}
-		payload["config"] = json.RawMessage(*input.Config)
+		payload["config"] = *input.Config
 	}
 
 	if len(payload) == 0 {
@@ -134,7 +121,7 @@ func (c *Client) UpdateAgent(ctx context.Context, id string, input AgentUpdate) 
 		return nil, errorFromResponse("update agent", responseStatus(resp), resp.Body)
 	}
 
-	agent, err := mapAgent(resp.JSON200)
+	agent, err := mapAgent(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("decode agent response: %w", err)
 	}
@@ -165,7 +152,7 @@ type agentPayload struct {
 	ID          string          `json:"id"`
 	Title       *string         `json:"title,omitempty"`
 	Description *string         `json:"description,omitempty"`
-	Config      json.RawMessage `json:"config"`
+	Config      AgentConfig     `json:"config"`
 	CreatedAt   time.Time       `json:"createdAt"`
 	UpdatedAt   *time.Time      `json:"updatedAt,omitempty"`
 }

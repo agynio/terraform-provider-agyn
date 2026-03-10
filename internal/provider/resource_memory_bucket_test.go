@@ -19,8 +19,9 @@ func TestAccAgynMemoryBucket_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_memory_bucket.test", "title", resourceName),
 					resource.TestCheckResourceAttr("agyn_memory_bucket.test", "description", "Terraform acceptance memory bucket"),
+					resource.TestCheckResourceAttr("agyn_memory_bucket.test", "scope", "global"),
+					resource.TestCheckResourceAttr("agyn_memory_bucket.test", "collection_prefix", resourceName),
 					resource.TestCheckResourceAttrSet("agyn_memory_bucket.test", "id"),
-					resource.TestCheckResourceAttrSet("agyn_memory_bucket.test", "config"),
 				),
 			},
 		},
@@ -34,10 +35,8 @@ func testAccAgynMemoryBucketConfig(title, description string) string {
 resource "agyn_memory_bucket" "test" {
   title       = %q
   description = %q
-  config = jsonencode({
-    scope            = "global"
-    collectionPrefix = %q
-  })
+  scope             = "global"
+  collection_prefix = %q
 }
 `, testAccProviderConfig(), title, description, title)
 }
