@@ -22,6 +22,8 @@ type agynProvider struct {
 	commit  string
 }
 
+const teamAPIPath = "/team/v1"
+
 func New(version, commit string) func() provider.Provider {
 	return func() provider.Provider { return &agynProvider{version: version, commit: commit} }
 }
@@ -59,12 +61,7 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	}
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
-
-	baseURL := strings.TrimSuffix(data.APIURL.ValueString(), "/")
-	apiURL := baseURL
-	if !strings.HasSuffix(baseURL, "/team/v1") {
-		apiURL = baseURL + "/team/v1"
-	}
+	apiURL := buildTeamAPIURL(data.APIURL.ValueString())
 
 	client, err := teamapi.NewClient(teamapi.Config{
 		BaseURL:    apiURL,
@@ -77,6 +74,10 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
+}
+
+func buildTeamAPIURL(baseURL string) string {
+	return strings.TrimSuffix(baseURL, "/") + teamAPIPath
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
