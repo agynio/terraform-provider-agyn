@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -59,8 +60,14 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 
+	baseURL := strings.TrimSuffix(data.APIURL.ValueString(), "/")
+	apiURL := baseURL
+	if !strings.HasSuffix(baseURL, "/team/v1") {
+		apiURL = baseURL + "/team/v1"
+	}
+
 	client, err := teamapi.NewClient(teamapi.Config{
-		BaseURL:    data.APIURL.ValueString(),
+		BaseURL:    apiURL,
 		HTTPClient: httpClient,
 	})
 	if err != nil {
