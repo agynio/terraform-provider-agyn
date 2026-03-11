@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -20,6 +21,8 @@ type agynProvider struct {
 	version string
 	commit  string
 }
+
+const teamAPIPath = "/team/v1"
 
 func New(version, commit string) func() provider.Provider {
 	return func() provider.Provider { return &agynProvider{version: version, commit: commit} }
@@ -58,9 +61,10 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	}
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
+	apiURL := buildTeamAPIURL(data.APIURL.ValueString())
 
 	client, err := teamapi.NewClient(teamapi.Config{
-		BaseURL:    data.APIURL.ValueString(),
+		BaseURL:    apiURL,
 		HTTPClient: httpClient,
 	})
 	if err != nil {
@@ -70,6 +74,10 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
+}
+
+func buildTeamAPIURL(baseURL string) string {
+	return strings.TrimSuffix(baseURL, "/") + teamAPIPath
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
