@@ -35,11 +35,6 @@ type GraphNodePosition struct {
 	Y float64 `json:"y"`
 }
 
-type GraphNodeHint struct {
-	ID       string
-	Template string
-}
-
 type GraphEdge struct {
 	ID           string `json:"id,omitempty"`
 	Source       string `json:"source"`
@@ -167,40 +162,6 @@ func (c *Client) FindGraphEdge(ctx context.Context, edgeID string) (*GraphEdge, 
 		}
 	}
 	return nil, ErrGraphEdgeNotFound
-}
-
-func (c *Client) UpsertGraphEdgeWithNodes(ctx context.Context, edge GraphEdge, sourceHint, targetHint GraphNodeHint) error {
-	if edge.ID == "" {
-		return fmt.Errorf("graph edge id is required")
-	}
-
-	return withConflictRetryNoResult(ctx, "upsert graph edge", func() error {
-		graph, err := c.GetGraph(ctx)
-		if err != nil {
-			return err
-		}
-
-		updated := false
-		if !graphHasNode(graph.Nodes, edge.Source) {
-			graph.Nodes = append(graph.Nodes, GraphNode{ID: sourceHint.ID, Template: sourceHint.Template})
-			updated = true
-		}
-		if !graphHasNode(graph.Nodes, edge.Target) {
-			graph.Nodes = append(graph.Nodes, GraphNode{ID: targetHint.ID, Template: targetHint.Template})
-			updated = true
-		}
-		if graphEdgeIndex(graph.Edges, edge.ID) == -1 {
-			graph.Edges = append(graph.Edges, edge)
-			updated = true
-		}
-
-		if !updated {
-			return nil
-		}
-
-		_, err = c.UpsertGraph(ctx, graphUpsertRequest(graph))
-		return err
-	})
 }
 
 func (c *Client) UpsertGraphEdge(ctx context.Context, edge GraphEdge) error {
