@@ -76,7 +76,7 @@ func (c *Client) FindAttachmentByID(ctx context.Context, id, kind, sourceID, tar
 
 	attachmentID, err := parseUUID(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid attachment id: %w", err)
 	}
 	sourceUUID, err := parseUUID(sourceID)
 	if err != nil {
@@ -94,29 +94,42 @@ func (c *Client) FindAttachmentByID(ctx context.Context, id, kind, sourceID, tar
 		TargetId: &targetUUID,
 	}
 
-	resp, err := c.raw.GetAttachmentsWithResponse(ctx, &params)
-	if err != nil {
-		return nil, fmt.Errorf("get attachments request: %w", err)
-	}
-	if resp.JSON200 == nil {
-		return nil, errorFromResponse("get attachments", responseStatus(resp), resp.Body)
-	}
-
-	for _, item := range resp.JSON200.Items {
-		if item.Id != attachmentID {
-			continue
+	page := 1
+	for {
+		p := page
+		params.Page = &p
+		resp, err := c.raw.GetAttachmentsWithResponse(ctx, &params)
+		if err != nil {
+			return nil, fmt.Errorf("get attachments request: %w", err)
+		}
+		if resp.JSON200 == nil {
+			return nil, errorFromResponse("get attachments", responseStatus(resp), resp.Body)
+		}
+		if resp.JSON200.PerPage <= 0 {
+			return nil, fmt.Errorf("get attachments response perPage is invalid")
 		}
 
-		return &Attachment{
-			ID:         uuidToString(item.Id),
-			Kind:       string(item.Kind),
-			SourceID:   uuidToString(item.SourceId),
-			SourceType: string(item.SourceType),
-			TargetID:   uuidToString(item.TargetId),
-			TargetType: string(item.TargetType),
-			CreatedAt:  item.CreatedAt,
-			UpdatedAt:  item.UpdatedAt,
-		}, nil
+		for _, item := range resp.JSON200.Items {
+			if item.Id != attachmentID {
+				continue
+			}
+
+			return &Attachment{
+				ID:         uuidToString(item.Id),
+				Kind:       string(item.Kind),
+				SourceID:   uuidToString(item.SourceId),
+				SourceType: string(item.SourceType),
+				TargetID:   uuidToString(item.TargetId),
+				TargetType: string(item.TargetType),
+				CreatedAt:  item.CreatedAt,
+				UpdatedAt:  item.UpdatedAt,
+			}, nil
+		}
+
+		if page*resp.JSON200.PerPage >= resp.JSON200.Total {
+			break
+		}
+		page++
 	}
 
 	return nil, ErrAttachmentNotFound

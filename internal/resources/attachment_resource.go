@@ -3,6 +3,8 @@ package resources
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -230,7 +232,33 @@ func (r *attachmentResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *attachmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	parts := strings.Split(req.ID, ":")
+	if len(parts) != 4 {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Expected import identifier with format kind:source_id:target_id:id.",
+		)
+		return
+	}
+	for idx, value := range parts {
+		if strings.TrimSpace(value) == "" {
+			resp.Diagnostics.AddError(
+				"Invalid Import ID",
+				fmt.Sprintf("Import identifier segment %d is empty.", idx+1),
+			)
+			return
+		}
+	}
+
+	state := attachmentModel{
+		Kind:       types.StringValue(parts[0]),
+		SourceID:   types.StringValue(parts[1]),
+		TargetID:   types.StringValue(parts[2]),
+		ID:         types.StringValue(parts[3]),
+		SourceType: types.StringNull(),
+		TargetType: types.StringNull(),
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func setAttachmentState(state *attachmentModel, attachment *teamapi.Attachment) {
