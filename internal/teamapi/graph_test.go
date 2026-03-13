@@ -169,6 +169,252 @@ func TestUpsertGraphEdgeRetriesOnConflict(t *testing.T) {
 	}
 }
 
+func TestUpsertGraphEdgeWithNodesCreatesNodes(t *testing.T) {
+	edge := GraphEdge{
+		ID:           "edge-1",
+		Source:       "source-1",
+		SourceHandle: "source-handle",
+		Target:       "target-1",
+		TargetHandle: "target-handle",
+	}
+	sourceHint := GraphNodeHint{ID: edge.Source, Template: "agent"}
+	targetHint := GraphNodeHint{ID: edge.Target, Template: "tool"}
+	graph := Graph{
+		Name:    "main",
+		Version: 1,
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graph); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		case http.MethodPost:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			var payload GraphUpsertRequest
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatalf("failed to decode graph request: %v", err)
+			}
+			if len(payload.Nodes) != 2 {
+				t.Fatalf("expected 2 nodes, got %d", len(payload.Nodes))
+			}
+			sourceNode, ok := findGraphNode(payload.Nodes, sourceHint.ID)
+			if !ok {
+				t.Fatalf("expected source node %s to be included", sourceHint.ID)
+			}
+			if sourceNode.Template != sourceHint.Template {
+				t.Fatalf("expected source node template %s, got %s", sourceHint.Template, sourceNode.Template)
+			}
+			targetNode, ok := findGraphNode(payload.Nodes, targetHint.ID)
+			if !ok {
+				t.Fatalf("expected target node %s to be included", targetHint.ID)
+			}
+			if targetNode.Template != targetHint.Template {
+				t.Fatalf("expected target node template %s, got %s", targetHint.Template, targetNode.Template)
+			}
+			if len(payload.Edges) != 1 {
+				t.Fatalf("expected 1 edge, got %d", len(payload.Edges))
+			}
+			if payload.Edges[0] != edge {
+				t.Fatalf("unexpected edge payload: %+v", payload.Edges[0])
+			}
+
+			graphResponse := graph
+			graphResponse.Nodes = payload.Nodes
+			graphResponse.Edges = payload.Edges
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graphResponse); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, HTTPClient: server.Client()})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	if err := client.UpsertGraphEdgeWithNodes(context.Background(), edge, sourceHint, targetHint); err != nil {
+		t.Fatalf("UpsertGraphEdgeWithNodes returned error: %v", err)
+	}
+}
+
+func TestUpsertGraphEdgeWithNodesSkipsExistingNodes(t *testing.T) {
+	edge := GraphEdge{
+		ID:           "edge-1",
+		Source:       "source-1",
+		SourceHandle: "source-handle",
+		Target:       "target-1",
+		TargetHandle: "target-handle",
+	}
+	sourceHint := GraphNodeHint{ID: edge.Source, Template: "agent"}
+	targetHint := GraphNodeHint{ID: edge.Target, Template: "tool"}
+	graph := Graph{
+		Name:    "main",
+		Version: 1,
+		Nodes: []GraphNode{
+			{ID: edge.Source, Template: "existing-source"},
+			{ID: edge.Target, Template: "existing-target"},
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graph); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		case http.MethodPost:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			var payload GraphUpsertRequest
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatalf("failed to decode graph request: %v", err)
+			}
+			if len(payload.Nodes) != 2 {
+				t.Fatalf("expected 2 nodes, got %d", len(payload.Nodes))
+			}
+			sourceNode, ok := findGraphNode(payload.Nodes, edge.Source)
+			if !ok {
+				t.Fatalf("expected source node %s to be included", edge.Source)
+			}
+			if sourceNode.Template != "existing-source" {
+				t.Fatalf("expected existing source node template, got %s", sourceNode.Template)
+			}
+			targetNode, ok := findGraphNode(payload.Nodes, edge.Target)
+			if !ok {
+				t.Fatalf("expected target node %s to be included", edge.Target)
+			}
+			if targetNode.Template != "existing-target" {
+				t.Fatalf("expected existing target node template, got %s", targetNode.Template)
+			}
+			if len(payload.Edges) != 1 {
+				t.Fatalf("expected 1 edge, got %d", len(payload.Edges))
+			}
+			if payload.Edges[0] != edge {
+				t.Fatalf("unexpected edge payload: %+v", payload.Edges[0])
+			}
+
+			graphResponse := graph
+			graphResponse.Edges = payload.Edges
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graphResponse); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, HTTPClient: server.Client()})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	if err := client.UpsertGraphEdgeWithNodes(context.Background(), edge, sourceHint, targetHint); err != nil {
+		t.Fatalf("UpsertGraphEdgeWithNodes returned error: %v", err)
+	}
+}
+
+func TestUpsertGraphEdgeWithNodesPartialNodeCreation(t *testing.T) {
+	edge := GraphEdge{
+		ID:           "edge-1",
+		Source:       "source-1",
+		SourceHandle: "source-handle",
+		Target:       "target-1",
+		TargetHandle: "target-handle",
+	}
+	sourceHint := GraphNodeHint{ID: edge.Source, Template: "agent"}
+	targetHint := GraphNodeHint{ID: edge.Target, Template: "tool"}
+	graph := Graph{
+		Name:    "main",
+		Version: 1,
+		Nodes: []GraphNode{
+			{ID: edge.Source, Template: "existing-source"},
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graph); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		case http.MethodPost:
+			if r.URL.Path != "/api/graph" {
+				t.Fatalf("expected path /api/graph, got %s", r.URL.Path)
+			}
+			var payload GraphUpsertRequest
+			if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+				t.Fatalf("failed to decode graph request: %v", err)
+			}
+			if len(payload.Nodes) != 2 {
+				t.Fatalf("expected 2 nodes, got %d", len(payload.Nodes))
+			}
+			sourceNode, ok := findGraphNode(payload.Nodes, edge.Source)
+			if !ok {
+				t.Fatalf("expected source node %s to be included", edge.Source)
+			}
+			if sourceNode.Template != "existing-source" {
+				t.Fatalf("expected existing source node template, got %s", sourceNode.Template)
+			}
+			targetNode, ok := findGraphNode(payload.Nodes, edge.Target)
+			if !ok {
+				t.Fatalf("expected target node %s to be included", edge.Target)
+			}
+			if targetNode.Template != targetHint.Template {
+				t.Fatalf("expected target node template %s, got %s", targetHint.Template, targetNode.Template)
+			}
+			if len(payload.Edges) != 1 {
+				t.Fatalf("expected 1 edge, got %d", len(payload.Edges))
+			}
+			if payload.Edges[0] != edge {
+				t.Fatalf("unexpected edge payload: %+v", payload.Edges[0])
+			}
+
+			graphResponse := graph
+			graphResponse.Nodes = payload.Nodes
+			graphResponse.Edges = payload.Edges
+			w.Header().Set("Content-Type", "application/json")
+			if err := json.NewEncoder(w).Encode(graphResponse); err != nil {
+				t.Fatalf("failed to encode graph response: %v", err)
+			}
+		default:
+			t.Fatalf("unexpected method %s", r.Method)
+		}
+	}))
+	defer server.Close()
+
+	client, err := NewClient(Config{BaseURL: server.URL, HTTPClient: server.Client()})
+	if err != nil {
+		t.Fatalf("failed to create client: %v", err)
+	}
+
+	if err := client.UpsertGraphEdgeWithNodes(context.Background(), edge, sourceHint, targetHint); err != nil {
+		t.Fatalf("UpsertGraphEdgeWithNodes returned error: %v", err)
+	}
+}
+
 func TestDeleteGraphEdgeRetriesOnConflict(t *testing.T) {
 	edge := GraphEdge{
 		ID:           "edge-1",
@@ -244,4 +490,13 @@ func TestDeleteGraphEdgeRetriesOnConflict(t *testing.T) {
 	if getCount != conflictRetryCount {
 		t.Fatalf("expected %d GET attempts, got %d", conflictRetryCount, getCount)
 	}
+}
+
+func findGraphNode(nodes []GraphNode, id string) (GraphNode, bool) {
+	for _, node := range nodes {
+		if node.ID == id {
+			return node, true
+		}
+	}
+	return GraphNode{}, false
 }
