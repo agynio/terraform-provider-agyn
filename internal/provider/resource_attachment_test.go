@@ -85,18 +85,9 @@ func testAccCheckAgynAttachmentDestroy(ctx context.Context) func(*terraform.Stat
 			}
 
 			kind := rs.Primary.Attributes["kind"]
-			if kind == "mcpServer_workspaceConfiguration" {
-				_, err := client.FindGraphEdge(ctx, rs.Primary.ID)
-				if err == nil {
-					return fmt.Errorf("graph attachment %s still exists", rs.Primary.ID)
-				}
-				if errors.Is(err, teamapi.ErrGraphEdgeNotFound) {
-					continue
-				}
-				return err
-			}
-
-			_, err := client.GetAttachment(ctx, rs.Primary.ID)
+			sourceID := rs.Primary.Attributes["source_id"]
+			targetID := rs.Primary.Attributes["target_id"]
+			_, err := client.FindAttachmentByID(ctx, rs.Primary.ID, kind, sourceID, targetID)
 			if err == nil {
 				return fmt.Errorf("attachment %s still exists", rs.Primary.ID)
 			}

@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
@@ -71,63 +69,70 @@ func (c *Client) CreateAttachment(ctx context.Context, input AttachmentCreate) (
 	return attachment, nil
 }
 
-func (c *Client) GetAttachment(ctx context.Context, id string) (*Attachment, error) {
-	uuidValue, err := parseUUID(id)
+func (c *Client) FindAttachmentByID(ctx context.Context, id, kind, sourceID, targetID string) (*Attachment, error) {
+	if kind == "" {
+		return nil, fmt.Errorf("kind is required")
+	}
+
+	attachmentID, err := parseUUID(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid attachment id: %w", err)
 	}
-
-	baseClient, ok := c.raw.ClientInterface.(*teamclient.Client)
-	if !ok {
-		return nil, fmt.Errorf("unsupported client type %T", c.raw.ClientInterface)
-	}
-
-	serverURL, err := url.Parse(baseClient.Server)
+	sourceUUID, err := parseUUID(sourceID)
 	if err != nil {
-		return nil, fmt.Errorf("parse server url: %w", err)
+		return nil, fmt.Errorf("invalid source_id: %w", err)
 	}
-
-	operationPath := fmt.Sprintf("/attachments/%s", uuidToString(uuidValue))
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	requestURL, err := serverURL.Parse(operationPath)
+	targetUUID, err := parseUUID(targetID)
 	if err != nil {
-		return nil, fmt.Errorf("build attachment url: %w", err)
+		return nil, fmt.Errorf("invalid target_id: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, requestURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("create attachment request: %w", err)
-	}
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := baseClient.Client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("get attachment request: %w", err)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read attachment response: %w", err)
+	paramsKind := teamclient.GetAttachmentsParamsKind(kind)
+	params := teamclient.GetAttachmentsParams{
+		Kind:     &paramsKind,
+		SourceId: &sourceUUID,
+		TargetId: &targetUUID,
 	}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-		var attachment Attachment
-		if err := json.Unmarshal(body, &attachment); err != nil {
-			return nil, fmt.Errorf("decode attachment response: %w", err)
+	page := 1
+	for {
+		p := page
+		params.Page = &p
+		resp, err := c.raw.GetAttachmentsWithResponse(ctx, &params)
+		if err != nil {
+			return nil, fmt.Errorf("get attachments request: %w", err)
 		}
-		return &attachment, nil
-	case http.StatusNotFound:
-		return nil, ErrAttachmentNotFound
-	default:
-		return nil, errorFromResponse("get attachment", resp.StatusCode, body)
+		if resp.JSON200 == nil {
+			return nil, errorFromResponse("get attachments", responseStatus(resp), resp.Body)
+		}
+		if resp.JSON200.PerPage <= 0 {
+			return nil, fmt.Errorf("get attachments response perPage is invalid")
+		}
+
+		for _, item := range resp.JSON200.Items {
+			if item.Id != attachmentID {
+				continue
+			}
+
+			return &Attachment{
+				ID:         uuidToString(item.Id),
+				Kind:       string(item.Kind),
+				SourceID:   uuidToString(item.SourceId),
+				SourceType: string(item.SourceType),
+				TargetID:   uuidToString(item.TargetId),
+				TargetType: string(item.TargetType),
+				CreatedAt:  item.CreatedAt,
+				UpdatedAt:  item.UpdatedAt,
+			}, nil
+		}
+
+		if page*resp.JSON200.PerPage >= resp.JSON200.Total {
+			break
+		}
+		page++
 	}
+
+	return nil, ErrAttachmentNotFound
 }
 
 func (c *Client) DeleteAttachment(ctx context.Context, id string) error {

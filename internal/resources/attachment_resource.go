@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -111,24 +112,10 @@ func (r *attachmentResource) Create(ctx context.Context, req resource.CreateRequ
 	kind := plan.Kind.ValueString()
 	sourceID := plan.SourceID.ValueString()
 	targetID := plan.TargetID.ValueString()
-
-	if isGraphAttachmentKind(kind) {
-		attachment, err := r.createGraphAttachment(ctx, kind, sourceID, targetID)
-		if err != nil {
-			resp.Diagnostics.AddError("Create Attachment Failed", err.Error())
-			return
-		}
-
-		setAttachmentState(&plan, attachment)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-		return
-	}
-
-	apiSourceID, apiTargetID := attachmentRequestIDs(kind, sourceID, targetID)
 	create := teamapi.AttachmentCreate{
 		Kind:     kind,
-		SourceID: apiSourceID,
-		TargetID: apiTargetID,
+		SourceID: sourceID,
+		TargetID: targetID,
 	}
 
 	attachment, err := r.client.CreateAttachment(ctx, create)
@@ -159,23 +146,13 @@ func (r *attachmentResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	if isGraphAttachmentKind(state.Kind.ValueString()) {
-		attachment, err := r.readGraphAttachment(ctx, state.Kind.ValueString(), state.ID.ValueString())
-		if err != nil {
-			if errors.Is(err, teamapi.ErrGraphEdgeNotFound) {
-				resp.State.RemoveResource(ctx)
-				return
-			}
-			resp.Diagnostics.AddError("Read Attachment Failed", err.Error())
-			return
-		}
-
-		setAttachmentState(&state, attachment)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		return
-	}
-
-	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString())
+	attachment, err := r.client.FindAttachmentByID(
+		ctx,
+		state.ID.ValueString(),
+		state.Kind.ValueString(),
+		state.SourceID.ValueString(),
+		state.TargetID.ValueString(),
+	)
 	if err != nil {
 		if errors.Is(err, teamapi.ErrAttachmentNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -207,23 +184,13 @@ func (r *attachmentResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	if isGraphAttachmentKind(state.Kind.ValueString()) {
-		attachment, err := r.readGraphAttachment(ctx, state.Kind.ValueString(), state.ID.ValueString())
-		if err != nil {
-			if errors.Is(err, teamapi.ErrGraphEdgeNotFound) {
-				resp.State.RemoveResource(ctx)
-				return
-			}
-			resp.Diagnostics.AddError("Refresh Attachment Failed", err.Error())
-			return
-		}
-
-		setAttachmentState(&state, attachment)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-		return
-	}
-
-	attachment, err := r.client.GetAttachment(ctx, state.ID.ValueString())
+	attachment, err := r.client.FindAttachmentByID(
+		ctx,
+		state.ID.ValueString(),
+		state.Kind.ValueString(),
+		state.SourceID.ValueString(),
+		state.TargetID.ValueString(),
+	)
 	if err != nil {
 		if errors.Is(err, teamapi.ErrAttachmentNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -255,13 +222,6 @@ func (r *attachmentResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	if isGraphAttachmentKind(state.Kind.ValueString()) {
-		if err := r.client.DeleteGraphEdge(ctx, state.ID.ValueString()); err != nil {
-			resp.Diagnostics.AddError("Delete Attachment Failed", err.Error())
-		}
-		return
-	}
-
 	if err := r.client.DeleteAttachment(ctx, state.ID.ValueString()); err != nil {
 		var apiErr *teamapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
@@ -272,163 +232,40 @@ func (r *attachmentResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *attachmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *attachmentResource) createGraphAttachment(ctx context.Context, kind, sourceID, targetID string) (*teamapi.Attachment, error) {
-	apiSourceID, apiTargetID := attachmentRequestIDs(kind, sourceID, targetID)
-	mapping := graphAttachmentMappingForKind(kind)
-
-	edgeID := graphEdgeID(apiSourceID, mapping.SourceHandle, apiTargetID, mapping.TargetHandle)
-	edge := teamapi.GraphEdge{
-		ID:           edgeID,
-		Source:       apiSourceID,
-		SourceHandle: mapping.SourceHandle,
-		Target:       apiTargetID,
-		TargetHandle: mapping.TargetHandle,
+	parts := strings.Split(req.ID, ":")
+	if len(parts) != 4 {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			"Expected import identifier with format kind:source_id:target_id:id.",
+		)
+		return
 	}
-	if err := r.client.UpsertGraphEdge(ctx, edge); err != nil {
-		return nil, err
-	}
-
-	return &teamapi.Attachment{
-		ID:         edgeID,
-		Kind:       kind,
-		SourceID:   apiSourceID,
-		SourceType: mapping.SourceType,
-		TargetID:   apiTargetID,
-		TargetType: mapping.TargetType,
-	}, nil
-}
-
-func (r *attachmentResource) readGraphAttachment(ctx context.Context, kind, edgeID string) (*teamapi.Attachment, error) {
-	edge, err := r.client.FindGraphEdge(ctx, edgeID)
-	if err != nil {
-		return nil, err
+	for idx, value := range parts {
+		if strings.TrimSpace(value) == "" {
+			resp.Diagnostics.AddError(
+				"Invalid Import ID",
+				fmt.Sprintf("Import identifier segment %d is empty.", idx+1),
+			)
+			return
+		}
 	}
 
-	mapping := graphAttachmentMappingForKind(kind)
-	if edge.SourceHandle != mapping.SourceHandle || edge.TargetHandle != mapping.TargetHandle {
-		return nil, teamapi.ErrGraphEdgeNotFound
+	state := attachmentModel{
+		Kind:       types.StringValue(parts[0]),
+		SourceID:   types.StringValue(parts[1]),
+		TargetID:   types.StringValue(parts[2]),
+		ID:         types.StringValue(parts[3]),
+		SourceType: types.StringNull(),
+		TargetType: types.StringNull(),
 	}
-
-	return &teamapi.Attachment{
-		ID:         edge.ID,
-		Kind:       kind,
-		SourceID:   edge.Source,
-		SourceType: mapping.SourceType,
-		TargetID:   edge.Target,
-		TargetType: mapping.TargetType,
-	}, nil
-}
-
-func isGraphAttachmentKind(kind string) bool {
-	_, ok := graphAttachmentMappings[kind]
-	return ok
-}
-
-func graphEdgeID(sourceID, sourceHandle, targetID, targetHandle string) string {
-	return fmt.Sprintf("%s-%s__%s-%s", sourceID, sourceHandle, targetID, targetHandle)
-}
-
-const (
-	agentToolAttachmentKind          = "agent_tool"
-	agentMcpServerAttachmentKind     = "agent_mcpServer"
-	mcpServerWorkspaceAttachmentKind = "mcpServer_workspaceConfiguration"
-	workspaceToolAttachmentKind      = "workspaceConfiguration_tool"
-	memoryBucketToolAttachmentKind   = "memoryBucket_tool"
-	toolAgentAttachmentKind          = "tool_agent"
-	graphSelfHandle                  = "$self"
-	graphMemoryHandle                = "$memory"
-	graphAgentToolsSourceHandle      = "tools"
-	graphAgentMcpSourceHandle        = "mcp"
-	graphToolAgentSourceHandle       = "agent"
-	graphWorkspaceHandle             = "workspace"
-	graphAgentSourceType             = "agent"
-	graphToolTargetType              = "tool"
-	graphWorkspaceSourceType         = "workspaceConfiguration"
-	graphMcpServerTargetType         = "mcpServer"
-	graphMemoryBucketSourceType      = "memoryBucket"
-	graphMcpServerSourceType         = "mcpServer"
-)
-
-type graphAttachmentMapping struct {
-	SourceHandle     string
-	TargetHandle     string
-	SourceType       string
-	TargetType       string
-	SwapSourceTarget bool
-}
-
-var graphAttachmentMappings = map[string]graphAttachmentMapping{
-	agentToolAttachmentKind: {
-		SourceHandle: graphAgentToolsSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphAgentSourceType,
-		TargetType:   graphToolTargetType,
-	},
-	agentMcpServerAttachmentKind: {
-		SourceHandle: graphAgentMcpSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphAgentSourceType,
-		TargetType:   graphMcpServerTargetType,
-	},
-	mcpServerWorkspaceAttachmentKind: {
-		SourceHandle: graphWorkspaceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphMcpServerSourceType,
-		TargetType:   graphWorkspaceSourceType,
-	},
-	workspaceToolAttachmentKind: {
-		SourceHandle: graphSelfHandle,
-		TargetHandle: graphWorkspaceHandle,
-		SourceType:   graphWorkspaceSourceType,
-		TargetType:   graphToolTargetType,
-	},
-	memoryBucketToolAttachmentKind: {
-		SourceHandle: graphSelfHandle,
-		TargetHandle: graphMemoryHandle,
-		SourceType:   graphMemoryBucketSourceType,
-		TargetType:   graphToolTargetType,
-	},
-	toolAgentAttachmentKind: {
-		SourceHandle: graphToolAgentSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphToolTargetType,
-		TargetType:   graphAgentSourceType,
-	},
-}
-
-func graphAttachmentMappingForKind(kind string) graphAttachmentMapping {
-	mapping, ok := graphAttachmentMappings[kind]
-	if !ok {
-		panic(fmt.Sprintf("missing graph attachment mapping for %q", kind))
-	}
-	return mapping
-}
-
-func attachmentRequestIDs(kind, sourceID, targetID string) (string, string) {
-	if mapping, ok := graphAttachmentMappings[kind]; ok && mapping.SwapSourceTarget {
-		return targetID, sourceID
-	}
-	return sourceID, targetID
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func setAttachmentState(state *attachmentModel, attachment *teamapi.Attachment) {
 	state.ID = types.StringValue(attachment.ID)
 	state.Kind = types.StringValue(attachment.Kind)
-
-	sourceID := attachment.SourceID
-	targetID := attachment.TargetID
-	sourceType := attachment.SourceType
-	targetType := attachment.TargetType
-	if mapping, ok := graphAttachmentMappings[attachment.Kind]; ok && mapping.SwapSourceTarget {
-		sourceID, targetID = targetID, sourceID
-		sourceType, targetType = targetType, sourceType
-	}
-
-	state.SourceID = types.StringValue(sourceID)
-	state.SourceType = types.StringValue(sourceType)
-	state.TargetID = types.StringValue(targetID)
-	state.TargetType = types.StringValue(targetType)
+	state.SourceID = types.StringValue(attachment.SourceID)
+	state.SourceType = types.StringValue(attachment.SourceType)
+	state.TargetID = types.StringValue(attachment.TargetID)
+	state.TargetType = types.StringValue(attachment.TargetType)
 }
