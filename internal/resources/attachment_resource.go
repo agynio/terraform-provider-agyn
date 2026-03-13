@@ -287,7 +287,9 @@ func (r *attachmentResource) createGraphAttachment(ctx context.Context, kind, so
 		Target:       apiTargetID,
 		TargetHandle: mapping.TargetHandle,
 	}
-	if err := r.client.UpsertGraphEdge(ctx, edge); err != nil {
+	sourceHint := teamapi.GraphNodeHint{ID: apiSourceID, Template: mapping.SourceTemplate}
+	targetHint := teamapi.GraphNodeHint{ID: apiTargetID, Template: mapping.TargetTemplate}
+	if err := r.client.UpsertGraphEdgeWithNodes(ctx, edge, sourceHint, targetHint); err != nil {
 		return nil, err
 	}
 
@@ -350,6 +352,11 @@ const (
 	graphMcpServerTargetType         = "mcpServer"
 	graphMemoryBucketSourceType      = "memoryBucket"
 	graphMcpServerSourceType         = "mcpServer"
+	graphAgentTemplate               = "agent"
+	graphToolTemplate                = "tool"
+	graphWorkspaceTemplate           = "workspaceConfiguration"
+	graphMcpServerTemplate           = "mcpServer"
+	graphMemoryBucketTemplate        = "memoryBucket"
 )
 
 type graphAttachmentMapping struct {
@@ -357,45 +364,59 @@ type graphAttachmentMapping struct {
 	TargetHandle     string
 	SourceType       string
 	TargetType       string
+	SourceTemplate   string
+	TargetTemplate   string
 	SwapSourceTarget bool
 }
 
 var graphAttachmentMappings = map[string]graphAttachmentMapping{
 	agentToolAttachmentKind: {
-		SourceHandle: graphAgentToolsSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphAgentSourceType,
-		TargetType:   graphToolTargetType,
+		SourceHandle:   graphAgentToolsSourceHandle,
+		TargetHandle:   graphSelfHandle,
+		SourceType:     graphAgentSourceType,
+		TargetType:     graphToolTargetType,
+		SourceTemplate: graphAgentTemplate,
+		TargetTemplate: graphToolTemplate,
 	},
 	agentMcpServerAttachmentKind: {
-		SourceHandle: graphAgentMcpSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphAgentSourceType,
-		TargetType:   graphMcpServerTargetType,
+		SourceHandle:   graphAgentMcpSourceHandle,
+		TargetHandle:   graphSelfHandle,
+		SourceType:     graphAgentSourceType,
+		TargetType:     graphMcpServerTargetType,
+		SourceTemplate: graphAgentTemplate,
+		TargetTemplate: graphMcpServerTemplate,
 	},
 	mcpServerWorkspaceAttachmentKind: {
-		SourceHandle: graphWorkspaceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphMcpServerSourceType,
-		TargetType:   graphWorkspaceSourceType,
+		SourceHandle:   graphWorkspaceHandle,
+		TargetHandle:   graphSelfHandle,
+		SourceType:     graphMcpServerSourceType,
+		TargetType:     graphWorkspaceSourceType,
+		SourceTemplate: graphMcpServerTemplate,
+		TargetTemplate: graphWorkspaceTemplate,
 	},
 	workspaceToolAttachmentKind: {
-		SourceHandle: graphSelfHandle,
-		TargetHandle: graphWorkspaceHandle,
-		SourceType:   graphWorkspaceSourceType,
-		TargetType:   graphToolTargetType,
+		SourceHandle:   graphSelfHandle,
+		TargetHandle:   graphWorkspaceHandle,
+		SourceType:     graphWorkspaceSourceType,
+		TargetType:     graphToolTargetType,
+		SourceTemplate: graphWorkspaceTemplate,
+		TargetTemplate: graphToolTemplate,
 	},
 	memoryBucketToolAttachmentKind: {
-		SourceHandle: graphSelfHandle,
-		TargetHandle: graphMemoryHandle,
-		SourceType:   graphMemoryBucketSourceType,
-		TargetType:   graphToolTargetType,
+		SourceHandle:   graphSelfHandle,
+		TargetHandle:   graphMemoryHandle,
+		SourceType:     graphMemoryBucketSourceType,
+		TargetType:     graphToolTargetType,
+		SourceTemplate: graphMemoryBucketTemplate,
+		TargetTemplate: graphToolTemplate,
 	},
 	toolAgentAttachmentKind: {
-		SourceHandle: graphToolAgentSourceHandle,
-		TargetHandle: graphSelfHandle,
-		SourceType:   graphToolTargetType,
-		TargetType:   graphAgentSourceType,
+		SourceHandle:   graphToolAgentSourceHandle,
+		TargetHandle:   graphSelfHandle,
+		SourceType:     graphToolTargetType,
+		TargetType:     graphAgentSourceType,
+		SourceTemplate: graphToolTemplate,
+		TargetTemplate: graphAgentTemplate,
 	},
 }
 
