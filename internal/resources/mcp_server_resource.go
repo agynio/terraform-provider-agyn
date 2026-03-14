@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -97,43 +99,63 @@ func (r *mcpServerResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"namespace": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Namespace for the MCP server.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"command": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Command to run for the MCP server.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"workdir": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Working directory for the MCP server process.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"request_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Request timeout in milliseconds.",
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"startup_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Startup timeout in milliseconds.",
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"heartbeat_interval_ms": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Heartbeat interval in milliseconds.",
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"stale_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Stale timeout in milliseconds.",
+				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"restart": schema.SingleNestedAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Restart policy configuration.",
+				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 				Attributes: map[string]schema.Attribute{
 					"max_attempts": schema.Int64Attribute{
 						Optional:            true,
+						Computed:            true,
 						MarkdownDescription: "Maximum restart attempts.",
+						PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 					},
 					"backoff_ms": schema.Int64Attribute{
 						Optional:            true,
+						Computed:            true,
 						MarkdownDescription: "Backoff duration in milliseconds between restarts.",
+						PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 					},
 				},
 			},

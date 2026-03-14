@@ -33,6 +33,11 @@ func configStateValue(config types.String, payload any) (types.String, diag.Diag
 		return config, nil
 	}
 
+	projected, err := projectJSONKeys(original, responseJSON)
+	if err == nil && jsonSemanticallyEqual(original, projected) {
+		return config, nil
+	}
+
 	return types.StringValue(responseJSON), diags
 }
 
@@ -46,4 +51,28 @@ func jsonSemanticallyEqual(a, b string) bool {
 		return false
 	}
 	return reflect.DeepEqual(objA, objB)
+}
+
+func projectJSONKeys(reference, source string) (string, error) {
+	var refObj map[string]any
+	var srcObj map[string]any
+	if err := json.Unmarshal([]byte(reference), &refObj); err != nil {
+		return "", err
+	}
+	if err := json.Unmarshal([]byte(source), &srcObj); err != nil {
+		return "", err
+	}
+	projected := make(map[string]any, len(refObj))
+	for key, refValue := range refObj {
+		if value, ok := srcObj[key]; ok {
+			projected[key] = value
+			continue
+		}
+		projected[key] = refValue
+	}
+	raw, err := json.Marshal(projected)
+	if err != nil {
+		return "", err
+	}
+	return string(raw), nil
 }
