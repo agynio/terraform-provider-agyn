@@ -252,7 +252,9 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
-	applyAgentConfigToModel(&plan, agent.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyAgentConfigToModel(&plan, agent.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, agent.Config)
 	resp.Diagnostics.Append(diags...)
 
@@ -286,7 +288,9 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.ID = types.StringValue(agent.ID)
 	state.Title = optionalString(agent.Title)
 	state.Description = optionalString(agent.Description)
-	applyAgentConfigToModel(&state, agent.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyAgentConfigToModel(&state, agent.Config)
+	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, agent.Config)
 	resp.Diagnostics.Append(diags...)
@@ -333,7 +337,9 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
-	applyAgentConfigToModel(&plan, agent.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyAgentConfigToModel(&plan, agent.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, agent.Config)
 	resp.Diagnostics.Append(diags...)
 

@@ -21,9 +21,36 @@ func configStateValue(config types.String, payload any) (types.String, diag.Diag
 	if config.IsNull() || config.IsUnknown() {
 		return config, nil
 	}
-	value, diags := marshalConfig(payload)
+
+	responseJSON, diags := marshalConfig(payload)
 	if diags.HasError() {
 		return config, diags
 	}
-	return types.StringValue(value), diags
+
+	original := config.ValueString()
+	if jsonSemanticallyEqual(original, responseJSON) {
+		return config, nil
+	}
+
+	return types.StringValue(responseJSON), diags
+}
+
+func jsonSemanticallyEqual(a, b string) bool {
+	var objA any
+	var objB any
+	if err := json.Unmarshal([]byte(a), &objA); err != nil {
+		return false
+	}
+	if err := json.Unmarshal([]byte(b), &objB); err != nil {
+		return false
+	}
+	normA, err := json.Marshal(objA)
+	if err != nil {
+		return false
+	}
+	normB, err := json.Marshal(objB)
+	if err != nil {
+		return false
+	}
+	return string(normA) == string(normB)
 }

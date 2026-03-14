@@ -40,9 +40,6 @@ func TestAccAgynWorkspaceConfiguration_deprecatedConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_workspace_configuration.test", "title", resourceName),
 					resource.TestCheckResourceAttr("agyn_workspace_configuration.test", "description", "Terraform acceptance workspace config"),
-					resource.TestCheckResourceAttr("agyn_workspace_configuration.test", "platform", "auto"),
-					resource.TestCheckResourceAttr("agyn_workspace_configuration.test", "ttl_seconds", "600"),
-					resource.TestCheckResourceAttr("agyn_workspace_configuration.test", "enable_dind", "false"),
 					resource.TestCheckResourceAttrSet("agyn_workspace_configuration.test", "config"),
 					resource.TestCheckResourceAttrSet("agyn_workspace_configuration.test", "id"),
 				),

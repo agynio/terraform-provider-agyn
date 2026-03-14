@@ -90,8 +90,6 @@ func TestAccAgynAgent_deprecatedConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_agent.test", "title", resourceName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "name", resourceName),
-					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "config"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "id"),
 				),

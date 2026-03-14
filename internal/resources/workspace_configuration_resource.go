@@ -297,9 +297,11 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, req resourc
 	plan.ID = types.StringValue(cfg.ID)
 	plan.Title = optionalString(cfg.Title)
 	plan.Description = optionalString(cfg.Description)
-	resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if configValue.IsNull() || configValue.IsUnknown() {
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 	plan.Config, diags = configStateValue(configValue, cfg.Config)
 	resp.Diagnostics.Append(diags...)
@@ -337,9 +339,11 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.
 	state.ID = types.StringValue(cfg.ID)
 	state.Title = optionalString(cfg.Title)
 	state.Description = optionalString(cfg.Description)
-	resp.Diagnostics.Append(applyWorkspaceConfigToModel(&state, cfg.Config)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if configValue.IsNull() || configValue.IsUnknown() {
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&state, cfg.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, cfg.Config)
@@ -390,9 +394,11 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 	plan.ID = types.StringValue(cfg.ID)
 	plan.Title = optionalString(cfg.Title)
 	plan.Description = optionalString(cfg.Description)
-	resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
-	if resp.Diagnostics.HasError() {
-		return
+	if configValue.IsNull() || configValue.IsUnknown() {
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 	plan.Config, diags = configStateValue(configValue, cfg.Config)
 	resp.Diagnostics.Append(diags...)
