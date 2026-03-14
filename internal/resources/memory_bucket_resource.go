@@ -183,7 +183,9 @@ func (r *memoryBucketResource) Create(ctx context.Context, req resource.CreateRe
 	plan.ID = types.StringValue(bucket.ID)
 	plan.Title = optionalString(bucket.Title)
 	plan.Description = optionalString(bucket.Description)
-	applyMemoryBucketConfigToModel(&plan, bucket.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMemoryBucketConfigToModel(&plan, bucket.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, bucket.Config)
 	resp.Diagnostics.Append(diags...)
 
@@ -217,7 +219,9 @@ func (r *memoryBucketResource) Read(ctx context.Context, req resource.ReadReques
 	state.ID = types.StringValue(bucket.ID)
 	state.Title = optionalString(bucket.Title)
 	state.Description = optionalString(bucket.Description)
-	applyMemoryBucketConfigToModel(&state, bucket.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMemoryBucketConfigToModel(&state, bucket.Config)
+	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, bucket.Config)
 	resp.Diagnostics.Append(diags...)
@@ -264,7 +268,9 @@ func (r *memoryBucketResource) Update(ctx context.Context, req resource.UpdateRe
 	plan.ID = types.StringValue(bucket.ID)
 	plan.Title = optionalString(bucket.Title)
 	plan.Description = optionalString(bucket.Description)
-	applyMemoryBucketConfigToModel(&plan, bucket.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMemoryBucketConfigToModel(&plan, bucket.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, bucket.Config)
 	resp.Diagnostics.Append(diags...)
 

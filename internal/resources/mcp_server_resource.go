@@ -281,7 +281,9 @@ func (r *mcpServerResource) Create(ctx context.Context, req resource.CreateReque
 	plan.ID = types.StringValue(server.ID)
 	plan.Title = optionalString(server.Title)
 	plan.Description = optionalString(server.Description)
-	applyMCPServerConfigToModel(&plan, server.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMCPServerConfigToModel(&plan, server.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, server.Config)
 	resp.Diagnostics.Append(diags...)
 
@@ -315,7 +317,9 @@ func (r *mcpServerResource) Read(ctx context.Context, req resource.ReadRequest, 
 	state.ID = types.StringValue(server.ID)
 	state.Title = optionalString(server.Title)
 	state.Description = optionalString(server.Description)
-	applyMCPServerConfigToModel(&state, server.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMCPServerConfigToModel(&state, server.Config)
+	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, server.Config)
 	resp.Diagnostics.Append(diags...)
@@ -362,7 +366,9 @@ func (r *mcpServerResource) Update(ctx context.Context, req resource.UpdateReque
 	plan.ID = types.StringValue(server.ID)
 	plan.Title = optionalString(server.Title)
 	plan.Description = optionalString(server.Description)
-	applyMCPServerConfigToModel(&plan, server.Config)
+	if configValue.IsNull() || configValue.IsUnknown() {
+		applyMCPServerConfigToModel(&plan, server.Config)
+	}
 	plan.Config, diags = configStateValue(configValue, server.Config)
 	resp.Diagnostics.Append(diags...)
 

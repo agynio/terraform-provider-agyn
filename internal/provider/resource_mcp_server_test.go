@@ -39,8 +39,6 @@ func TestAccAgynMCPServer_deprecatedConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_mcp_server.test", "title", resourceName),
 					resource.TestCheckResourceAttr("agyn_mcp_server.test", "description", "Terraform acceptance MCP server"),
-					resource.TestCheckResourceAttr("agyn_mcp_server.test", "namespace", resourceName),
-					resource.TestCheckResourceAttr("agyn_mcp_server.test", "command", "mcp start --stdio"),
 					resource.TestCheckResourceAttrSet("agyn_mcp_server.test", "config"),
 					resource.TestCheckResourceAttrSet("agyn_mcp_server.test", "id"),
 				),
