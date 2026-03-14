@@ -77,7 +77,7 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 }
 
 func buildTeamAPIURL(baseURL string) string {
-	return strings.TrimSuffix(baseURL, "/") + teamAPIPath
+	return strings.TrimSuffix(baseURL, "/") + teamAPIPath + "/"
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {

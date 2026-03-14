@@ -32,22 +32,22 @@ func TestBuildTeamAPIURL(t *testing.T) {
 		{
 			name:    "no trailing slash",
 			baseURL: "https://gateway.example.com",
-			want:    "https://gateway.example.com" + teamAPIPath,
+			want:    "https://gateway.example.com" + teamAPIPath + "/",
 		},
 		{
 			name:    "trailing slash",
 			baseURL: "https://gateway.example.com/",
-			want:    "https://gateway.example.com" + teamAPIPath,
+			want:    "https://gateway.example.com" + teamAPIPath + "/",
 		},
 		{
 			name:    "already includes path",
 			baseURL: "https://gateway.example.com" + teamAPIPath,
-			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath,
+			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath + "/",
 		},
 		{
 			name:    "path with trailing slash",
 			baseURL: "https://gateway.example.com" + teamAPIPath + "/",
-			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath,
+			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath + "/",
 		},
 	}
 
