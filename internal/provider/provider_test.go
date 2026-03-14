@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"net/url"
 	"os"
 	"testing"
 
@@ -56,6 +57,58 @@ func TestBuildTeamAPIURL(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			if got := buildTeamAPIURL(test.baseURL); got != test.want {
 				t.Fatalf("buildTeamAPIURL(%q) = %q, want %q", test.baseURL, got, test.want)
+			}
+		})
+	}
+}
+
+func TestBuildTeamAPIURLResolvesOperationPaths(t *testing.T) {
+	t.Parallel()
+
+	baseURL := buildTeamAPIURL("https://gateway.example.com")
+
+	serverURL, err := url.Parse(baseURL)
+	if err != nil {
+		t.Fatalf("parse base URL: %v", err)
+	}
+
+	tests := []struct {
+		name          string
+		operationPath string
+		want          string
+	}{
+		{
+			name:          "agents",
+			operationPath: "/agents",
+			want:          "https://gateway.example.com" + teamAPIPath + "/agents",
+		},
+		{
+			name:          "tools",
+			operationPath: "/tools",
+			want:          "https://gateway.example.com" + teamAPIPath + "/tools",
+		},
+		{
+			name:          "workspace configurations",
+			operationPath: "/workspace-configurations",
+			want:          "https://gateway.example.com" + teamAPIPath + "/workspace-configurations",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			operationPath := test.operationPath
+			if operationPath[0] == '/' {
+				operationPath = "." + operationPath
+			}
+
+			queryURL, err := serverURL.Parse(operationPath)
+			if err != nil {
+				t.Fatalf("parse operation path %q: %v", operationPath, err)
+			}
+
+			if got := queryURL.String(); got != test.want {
+				t.Fatalf("resolved %q = %q, want %q", operationPath, got, test.want)
 			}
 		})
 	}
