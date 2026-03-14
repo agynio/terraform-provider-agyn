@@ -2,6 +2,7 @@ package resources
 
 import (
 	"encoding/json"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,13 +45,5 @@ func jsonSemanticallyEqual(a, b string) bool {
 	if err := json.Unmarshal([]byte(b), &objB); err != nil {
 		return false
 	}
-	normA, err := json.Marshal(objA)
-	if err != nil {
-		return false
-	}
-	normB, err := json.Marshal(objB)
-	if err != nil {
-		return false
-	}
-	return string(normA) == string(normB)
+	return reflect.DeepEqual(objA, objB)
 }
