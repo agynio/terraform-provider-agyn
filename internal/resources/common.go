@@ -48,22 +48,22 @@ func optionalBool(v *bool) types.Bool {
 }
 
 func preserveOrApplyString(prior types.String, apiValue *string) types.String {
-	if prior.IsNull() || prior.IsUnknown() {
-		return types.StringNull()
+	if !prior.IsNull() && !prior.IsUnknown() {
+		return prior
 	}
 	return optionalString(apiValue)
 }
 
 func preserveOrApplyInt64(prior types.Int64, apiValue *int64) types.Int64 {
-	if prior.IsNull() || prior.IsUnknown() {
-		return types.Int64Null()
+	if !prior.IsNull() && !prior.IsUnknown() {
+		return prior
 	}
 	return optionalInt64(apiValue)
 }
 
 func preserveOrApplyBool(prior types.Bool, apiValue *bool) types.Bool {
-	if prior.IsNull() || prior.IsUnknown() {
-		return types.BoolNull()
+	if !prior.IsNull() && !prior.IsUnknown() {
+		return prior
 	}
 	return optionalBool(apiValue)
 }

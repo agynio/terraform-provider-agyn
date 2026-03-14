@@ -550,10 +550,10 @@ func applyWorkspaceConfigToModelFull(model *workspaceConfigurationModel, config 
 
 func preserveOrApplyVolumes(prior *workspaceVolumesModel, apiVolumes *teamapi.WorkspaceVolumes) *workspaceVolumesModel {
 	if prior == nil {
-		return nil
+		return workspaceVolumesModelFromAPI(apiVolumes)
 	}
 	if apiVolumes == nil {
-		return nil
+		return prior
 	}
 	return &workspaceVolumesModel{
 		Enabled:   preserveOrApplyBool(prior.Enabled, apiVolumes.Enabled),
@@ -566,15 +566,15 @@ func applyWorkspaceConfigToModel(model *workspaceConfigurationModel, config team
 	model.Image = preserveOrApplyString(prior.Image, config.Image)
 	model.Env = envVarModelsFromAPI(config.Env)
 	model.InitialScript = preserveOrApplyString(prior.InitialScript, config.InitialScript)
-	if prior.CpuLimit.IsNull() || prior.CpuLimit.IsUnknown() {
-		model.CpuLimit = types.StringNull()
+	if !prior.CpuLimit.IsNull() && !prior.CpuLimit.IsUnknown() {
+		model.CpuLimit = prior.CpuLimit
 	} else {
 		cpuLimit, cpuDiags := stringFromRawMessage(config.CpuLimit, "cpu_limit")
 		diags.Append(cpuDiags...)
 		model.CpuLimit = cpuLimit
 	}
-	if prior.MemoryLimit.IsNull() || prior.MemoryLimit.IsUnknown() {
-		model.MemoryLimit = types.StringNull()
+	if !prior.MemoryLimit.IsNull() && !prior.MemoryLimit.IsUnknown() {
+		model.MemoryLimit = prior.MemoryLimit
 	} else {
 		memoryLimit, memDiags := stringFromRawMessage(config.MemoryLimit, "memory_limit")
 		diags.Append(memDiags...)
@@ -584,8 +584,8 @@ func applyWorkspaceConfigToModel(model *workspaceConfigurationModel, config team
 	model.EnableDinD = preserveOrApplyBool(prior.EnableDinD, config.EnableDinD)
 	model.TtlSeconds = preserveOrApplyInt64(prior.TtlSeconds, config.TtlSeconds)
 	model.Volumes = preserveOrApplyVolumes(prior.Volumes, config.Volumes)
-	if prior.Nix.IsNull() || prior.Nix.IsUnknown() {
-		model.Nix = jsontypes.NewNormalizedNull()
+	if !prior.Nix.IsNull() && !prior.Nix.IsUnknown() {
+		model.Nix = prior.Nix
 	} else {
 		model.Nix = normalizedFromRawMessage(config.Nix)
 	}

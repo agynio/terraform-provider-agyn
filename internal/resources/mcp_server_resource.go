@@ -494,10 +494,10 @@ func applyMCPServerConfigToModelFull(model *mcpServerModel, config teamapi.MCPSe
 
 func preserveOrApplyRestart(prior *mcpServerRestartModel, apiRestart *teamapi.RestartPolicy) *mcpServerRestartModel {
 	if prior == nil {
-		return nil
+		return mcpServerRestartModelFromAPI(apiRestart)
 	}
 	if apiRestart == nil {
-		return nil
+		return prior
 	}
 	return &mcpServerRestartModel{
 		MaxAttempts: preserveOrApplyInt64(prior.MaxAttempts, apiRestart.MaxAttempts),
