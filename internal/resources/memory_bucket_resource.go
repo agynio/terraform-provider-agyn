@@ -77,18 +77,14 @@ func (r *memoryBucketResource) Schema(_ context.Context, _ resource.SchemaReques
 			},
 			"scope": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Scope for the memory bucket (global or perThread).",
 				Validators: []validator.String{
 					stringvalidator.OneOf("global", "perThread"),
 				},
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"collection_prefix": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Collection prefix for memory entries.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -132,7 +128,7 @@ func (r *memoryBucketResource) UpgradeState(ctx context.Context) map[int64]resou
 					Description: prior.Description,
 					Config:      types.StringNull(),
 				}
-				applyMemoryBucketConfigToModel(&upgraded, config)
+				applyMemoryBucketConfigToModelFull(&upgraded, config)
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
 			},
@@ -184,11 +180,12 @@ func (r *memoryBucketResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(bucket.ID)
 	plan.Title = optionalString(bucket.Title)
 	plan.Description = optionalString(bucket.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMemoryBucketConfigToModel(&plan, bucket.Config)
+		applyMemoryBucketConfigToModel(&plan, bucket.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, bucket.Config)
 	resp.Diagnostics.Append(diags...)
@@ -220,11 +217,12 @@ func (r *memoryBucketResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	configValue := state.Config
+	prior := state
 	state.ID = types.StringValue(bucket.ID)
 	state.Title = optionalString(bucket.Title)
 	state.Description = optionalString(bucket.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMemoryBucketConfigToModel(&state, bucket.Config)
+		applyMemoryBucketConfigToModel(&state, bucket.Config, prior)
 	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, bucket.Config)
@@ -269,11 +267,12 @@ func (r *memoryBucketResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(bucket.ID)
 	plan.Title = optionalString(bucket.Title)
 	plan.Description = optionalString(bucket.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMemoryBucketConfigToModel(&plan, bucket.Config)
+		applyMemoryBucketConfigToModel(&plan, bucket.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, bucket.Config)
 	resp.Diagnostics.Append(diags...)
@@ -357,7 +356,12 @@ func memoryBucketConfigFromString(value types.String) (teamapi.MemoryBucketConfi
 	return config, diags
 }
 
-func applyMemoryBucketConfigToModel(model *memoryBucketModel, config teamapi.MemoryBucketConfig) {
+func applyMemoryBucketConfigToModelFull(model *memoryBucketModel, config teamapi.MemoryBucketConfig) {
 	model.Scope = optionalString(config.Scope)
 	model.CollectionPrefix = optionalString(config.CollectionPrefix)
+}
+
+func applyMemoryBucketConfigToModel(model *memoryBucketModel, config teamapi.MemoryBucketConfig, prior memoryBucketModel) {
+	model.Scope = preserveOrApplyString(prior.Scope, config.Scope)
+	model.CollectionPrefix = preserveOrApplyString(prior.CollectionPrefix, config.CollectionPrefix)
 }

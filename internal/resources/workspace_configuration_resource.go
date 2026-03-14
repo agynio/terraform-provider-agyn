@@ -13,9 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -104,9 +101,7 @@ func (r *workspaceConfigurationResource) Schema(_ context.Context, _ resource.Sc
 			},
 			"image": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Container image for the workspace.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"env": schema.ListNestedAttribute{
 				Optional:            true,
@@ -157,69 +152,49 @@ func (r *workspaceConfigurationResource) Schema(_ context.Context, _ resource.Sc
 			},
 			"initial_script": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Initial script to run in the workspace.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"cpu_limit": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "CPU limit for the workspace (string or number as a string).",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"memory_limit": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Memory limit for the workspace (string or number as a string).",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"platform": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Platform selection (auto, linux/amd64, linux/arm64).",
 				Validators: []validator.String{
 					stringvalidator.OneOf("auto", "linux/amd64", "linux/arm64"),
 				},
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"enable_dind": schema.BoolAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Whether to enable Docker-in-Docker.",
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"ttl_seconds": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Time-to-live in seconds for the workspace.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"volumes": schema.SingleNestedAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Workspace volume configuration.",
-				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 				Attributes: map[string]schema.Attribute{
 					"enabled": schema.BoolAttribute{
 						Optional:            true,
-						Computed:            true,
 						MarkdownDescription: "Whether volumes are enabled.",
-						PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 					},
 					"mount_path": schema.StringAttribute{
 						Optional:            true,
-						Computed:            true,
 						MarkdownDescription: "Mount path for the volume.",
-						PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 					},
 				},
 			},
 			"nix": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				CustomType:          jsontypes.NormalizedType{},
 				MarkdownDescription: "Nix configuration as JSON.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -264,7 +239,7 @@ func (r *workspaceConfigurationResource) UpgradeState(ctx context.Context) map[i
 					Config:      types.StringNull(),
 					Nix:         jsontypes.NewNormalizedNull(),
 				}
-				resp.Diagnostics.Append(applyWorkspaceConfigToModel(&upgraded, config)...)
+				resp.Diagnostics.Append(applyWorkspaceConfigToModelFull(&upgraded, config)...)
 				if resp.Diagnostics.HasError() {
 					return
 				}
@@ -319,11 +294,12 @@ func (r *workspaceConfigurationResource) Create(ctx context.Context, req resourc
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(cfg.ID)
 	plan.Title = optionalString(cfg.Title)
 	plan.Description = optionalString(cfg.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config, prior)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -361,11 +337,12 @@ func (r *workspaceConfigurationResource) Read(ctx context.Context, req resource.
 	}
 
 	configValue := state.Config
+	prior := state
 	state.ID = types.StringValue(cfg.ID)
 	state.Title = optionalString(cfg.Title)
 	state.Description = optionalString(cfg.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&state, cfg.Config)...)
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&state, cfg.Config, prior)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -416,11 +393,12 @@ func (r *workspaceConfigurationResource) Update(ctx context.Context, req resourc
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(cfg.ID)
 	plan.Title = optionalString(cfg.Title)
 	plan.Description = optionalString(cfg.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config)...)
+		resp.Diagnostics.Append(applyWorkspaceConfigToModel(&plan, cfg.Config, prior)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -551,7 +529,7 @@ func workspaceConfigFromString(value types.String) (teamapi.WorkspaceConfigurati
 	return config, diags
 }
 
-func applyWorkspaceConfigToModel(model *workspaceConfigurationModel, config teamapi.WorkspaceConfigurationConfig) diag.Diagnostics {
+func applyWorkspaceConfigToModelFull(model *workspaceConfigurationModel, config teamapi.WorkspaceConfigurationConfig) diag.Diagnostics {
 	var diags diag.Diagnostics
 	model.Image = optionalString(config.Image)
 	model.Env = envVarModelsFromAPI(config.Env)
@@ -567,6 +545,50 @@ func applyWorkspaceConfigToModel(model *workspaceConfigurationModel, config team
 	model.TtlSeconds = optionalInt64(config.TtlSeconds)
 	model.Volumes = workspaceVolumesModelFromAPI(config.Volumes)
 	model.Nix = normalizedFromRawMessage(config.Nix)
+	return diags
+}
+
+func preserveOrApplyVolumes(prior *workspaceVolumesModel, apiVolumes *teamapi.WorkspaceVolumes) *workspaceVolumesModel {
+	if prior == nil {
+		return nil
+	}
+	if apiVolumes == nil {
+		return nil
+	}
+	return &workspaceVolumesModel{
+		Enabled:   preserveOrApplyBool(prior.Enabled, apiVolumes.Enabled),
+		MountPath: preserveOrApplyString(prior.MountPath, apiVolumes.MountPath),
+	}
+}
+
+func applyWorkspaceConfigToModel(model *workspaceConfigurationModel, config teamapi.WorkspaceConfigurationConfig, prior workspaceConfigurationModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	model.Image = preserveOrApplyString(prior.Image, config.Image)
+	model.Env = envVarModelsFromAPI(config.Env)
+	model.InitialScript = preserveOrApplyString(prior.InitialScript, config.InitialScript)
+	if prior.CpuLimit.IsNull() || prior.CpuLimit.IsUnknown() {
+		model.CpuLimit = types.StringNull()
+	} else {
+		cpuLimit, cpuDiags := stringFromRawMessage(config.CpuLimit, "cpu_limit")
+		diags.Append(cpuDiags...)
+		model.CpuLimit = cpuLimit
+	}
+	if prior.MemoryLimit.IsNull() || prior.MemoryLimit.IsUnknown() {
+		model.MemoryLimit = types.StringNull()
+	} else {
+		memoryLimit, memDiags := stringFromRawMessage(config.MemoryLimit, "memory_limit")
+		diags.Append(memDiags...)
+		model.MemoryLimit = memoryLimit
+	}
+	model.Platform = preserveOrApplyString(prior.Platform, config.Platform)
+	model.EnableDinD = preserveOrApplyBool(prior.EnableDinD, config.EnableDinD)
+	model.TtlSeconds = preserveOrApplyInt64(prior.TtlSeconds, config.TtlSeconds)
+	model.Volumes = preserveOrApplyVolumes(prior.Volumes, config.Volumes)
+	if prior.Nix.IsNull() || prior.Nix.IsUnknown() {
+		model.Nix = jsontypes.NewNormalizedNull()
+	} else {
+		model.Nix = normalizedFromRawMessage(config.Nix)
+	}
 	return diags
 }
 

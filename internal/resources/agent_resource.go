@@ -10,8 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -101,87 +99,61 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"name": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Agent name for the configuration.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"role": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Role assigned to the agent.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"model": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Model identifier override for the agent.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"system_prompt": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "System prompt override for the agent.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"debounce_ms": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Debounce duration in milliseconds.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"when_busy": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Behavior when the agent is busy (injectAfterTools or wait).",
 				Validators: []validator.String{
 					stringvalidator.OneOf("injectAfterTools", "wait"),
 				},
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"process_buffer": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Processing strategy for buffered content (allTogether or oneByOne).",
 				Validators: []validator.String{
 					stringvalidator.OneOf("allTogether", "oneByOne"),
 				},
-				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"send_final_response_to_thread": schema.BoolAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Whether to send the final response to the thread.",
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"restrict_output": schema.BoolAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Whether to enforce output restrictions.",
-				PlanModifiers:       []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
 			"restriction_message": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Message to inject when output restrictions are applied.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"restriction_max_injections": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Maximum number of restriction message injections.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"summarization_keep_tokens": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Number of tokens to keep during summarization.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"summarization_max_tokens": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Maximum number of tokens for summarization.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 		},
 	}
@@ -225,7 +197,7 @@ func (r *agentResource) UpgradeState(ctx context.Context) map[int64]resource.Sta
 					Description: prior.Description,
 					Config:      types.StringNull(),
 				}
-				applyAgentConfigToModel(&upgraded, config)
+				applyAgentConfigToModelFull(&upgraded, config)
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
 			},
@@ -277,11 +249,12 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyAgentConfigToModel(&plan, agent.Config)
+		applyAgentConfigToModel(&plan, agent.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, agent.Config)
 	resp.Diagnostics.Append(diags...)
@@ -313,11 +286,12 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	configValue := state.Config
+	prior := state
 	state.ID = types.StringValue(agent.ID)
 	state.Title = optionalString(agent.Title)
 	state.Description = optionalString(agent.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyAgentConfigToModel(&state, agent.Config)
+		applyAgentConfigToModel(&state, agent.Config, prior)
 	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, agent.Config)
@@ -362,11 +336,12 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(agent.ID)
 	plan.Title = optionalString(agent.Title)
 	plan.Description = optionalString(agent.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyAgentConfigToModel(&plan, agent.Config)
+		applyAgentConfigToModel(&plan, agent.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, agent.Config)
 	resp.Diagnostics.Append(diags...)
@@ -472,7 +447,7 @@ func agentConfigFromString(value types.String) (teamapi.AgentConfig, diag.Diagno
 	return config, diags
 }
 
-func applyAgentConfigToModel(model *agentModel, config teamapi.AgentConfig) {
+func applyAgentConfigToModelFull(model *agentModel, config teamapi.AgentConfig) {
 	model.Name = optionalString(config.Name)
 	model.Role = optionalString(config.Role)
 	model.Model = optionalString(config.Model)
@@ -486,4 +461,20 @@ func applyAgentConfigToModel(model *agentModel, config teamapi.AgentConfig) {
 	model.RestrictionMaxInjections = optionalInt64(config.RestrictionMaxInjections)
 	model.SummarizationKeepTokens = optionalInt64(config.SummarizationKeepTokens)
 	model.SummarizationMaxTokens = optionalInt64(config.SummarizationMaxTokens)
+}
+
+func applyAgentConfigToModel(model *agentModel, config teamapi.AgentConfig, prior agentModel) {
+	model.Name = preserveOrApplyString(prior.Name, config.Name)
+	model.Role = preserveOrApplyString(prior.Role, config.Role)
+	model.Model = preserveOrApplyString(prior.Model, config.Model)
+	model.SystemPrompt = preserveOrApplyString(prior.SystemPrompt, config.SystemPrompt)
+	model.DebounceMs = preserveOrApplyInt64(prior.DebounceMs, config.DebounceMs)
+	model.WhenBusy = preserveOrApplyString(prior.WhenBusy, config.WhenBusy)
+	model.ProcessBuffer = preserveOrApplyString(prior.ProcessBuffer, config.ProcessBuffer)
+	model.SendFinalResponseToThread = preserveOrApplyBool(prior.SendFinalResponseToThread, config.SendFinalResponseToThread)
+	model.RestrictOutput = preserveOrApplyBool(prior.RestrictOutput, config.RestrictOutput)
+	model.RestrictionMessage = preserveOrApplyString(prior.RestrictionMessage, config.RestrictionMessage)
+	model.RestrictionMaxInjections = preserveOrApplyInt64(prior.RestrictionMaxInjections, config.RestrictionMaxInjections)
+	model.SummarizationKeepTokens = preserveOrApplyInt64(prior.SummarizationKeepTokens, config.SummarizationKeepTokens)
+	model.SummarizationMaxTokens = preserveOrApplyInt64(prior.SummarizationMaxTokens, config.SummarizationMaxTokens)
 }
