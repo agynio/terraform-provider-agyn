@@ -77,14 +77,18 @@ func (r *memoryBucketResource) Schema(_ context.Context, _ resource.SchemaReques
 			},
 			"scope": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Scope for the memory bucket (global or perThread).",
 				Validators: []validator.String{
 					stringvalidator.OneOf("global", "perThread"),
 				},
+				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"collection_prefix": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Collection prefix for memory entries.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 		},
 	}

@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -125,5 +127,83 @@ func TestJSONSemanticallyEqual(t *testing.T) {
 		if jsonSemanticallyEqual(test.left, test.right) != test.expected {
 			t.Fatalf("%s: expected %v", test.name, test.expected)
 		}
+	}
+}
+
+func TestProjectJSONKeys(t *testing.T) {
+	tests := []struct {
+		name      string
+		reference string
+		source    string
+		expected  map[string]any
+		wantErr   bool
+	}{
+		{
+			name:      "subset keys",
+			reference: `{"a":1}`,
+			source:    `{"a":2,"b":3}`,
+			expected:  map[string]any{"a": float64(2)},
+		},
+		{
+			name:      "missing source key",
+			reference: `{"a":1,"b":2}`,
+			source:    `{"a":3}`,
+			expected:  map[string]any{"a": float64(3), "b": float64(2)},
+		},
+		{
+			name:      "empty objects",
+			reference: `{}`,
+			source:    `{}`,
+			expected:  map[string]any{},
+		},
+		{
+			name:      "invalid reference",
+			reference: "{invalid",
+			source:    `{"a":1}`,
+			wantErr:   true,
+		},
+		{
+			name:      "invalid source",
+			reference: `{"a":1}`,
+			source:    "{invalid",
+			wantErr:   true,
+		},
+	}
+
+	for _, test := range tests {
+		result, err := projectJSONKeys(test.reference, test.source)
+		if test.wantErr {
+			if err == nil {
+				t.Fatalf("%s: expected error", test.name)
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatalf("%s: unexpected error: %v", test.name, err)
+		}
+		var got map[string]any
+		if err := json.Unmarshal([]byte(result), &got); err != nil {
+			t.Fatalf("%s: invalid json result: %v", test.name, err)
+		}
+		if !reflect.DeepEqual(got, test.expected) {
+			t.Fatalf("%s: expected %v, got %v", test.name, test.expected, got)
+		}
+	}
+}
+
+func TestConfigStateValueProjection(t *testing.T) {
+	type payload struct {
+		Name       string `json:"name"`
+		Role       string `json:"role"`
+		DebounceMs int64  `json:"debounceMs"`
+	}
+
+	original := types.StringValue(`{"name":"foo","role":"bar"}`)
+	value, diags := configStateValue(original, payload{Name: "foo", Role: "bar"})
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	if value.ValueString() != original.ValueString() {
+		t.Fatalf("expected original JSON, got: %s", value.ValueString())
 	}
 }
