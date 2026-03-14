@@ -11,8 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -99,63 +97,43 @@ func (r *mcpServerResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"namespace": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Namespace for the MCP server.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"command": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Command to run for the MCP server.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"workdir": schema.StringAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Working directory for the MCP server process.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"request_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Request timeout in milliseconds.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"startup_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Startup timeout in milliseconds.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"heartbeat_interval_ms": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Heartbeat interval in milliseconds.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"stale_timeout_ms": schema.Int64Attribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Stale timeout in milliseconds.",
-				PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"restart": schema.SingleNestedAttribute{
 				Optional:            true,
-				Computed:            true,
 				MarkdownDescription: "Restart policy configuration.",
-				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
 				Attributes: map[string]schema.Attribute{
 					"max_attempts": schema.Int64Attribute{
 						Optional:            true,
-						Computed:            true,
 						MarkdownDescription: "Maximum restart attempts.",
-						PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 					},
 					"backoff_ms": schema.Int64Attribute{
 						Optional:            true,
-						Computed:            true,
 						MarkdownDescription: "Backoff duration in milliseconds between restarts.",
-						PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 					},
 				},
 			},
@@ -248,7 +226,7 @@ func (r *mcpServerResource) UpgradeState(ctx context.Context) map[int64]resource
 					Description: prior.Description,
 					Config:      types.StringNull(),
 				}
-				applyMCPServerConfigToModel(&upgraded, config)
+				applyMCPServerConfigToModelFull(&upgraded, config)
 
 				resp.Diagnostics.Append(resp.State.Set(ctx, &upgraded)...)
 			},
@@ -300,11 +278,12 @@ func (r *mcpServerResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(server.ID)
 	plan.Title = optionalString(server.Title)
 	plan.Description = optionalString(server.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMCPServerConfigToModel(&plan, server.Config)
+		applyMCPServerConfigToModel(&plan, server.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, server.Config)
 	resp.Diagnostics.Append(diags...)
@@ -336,11 +315,12 @@ func (r *mcpServerResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	configValue := state.Config
+	prior := state
 	state.ID = types.StringValue(server.ID)
 	state.Title = optionalString(server.Title)
 	state.Description = optionalString(server.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMCPServerConfigToModel(&state, server.Config)
+		applyMCPServerConfigToModel(&state, server.Config, prior)
 	}
 	var diags diag.Diagnostics
 	state.Config, diags = configStateValue(configValue, server.Config)
@@ -385,11 +365,12 @@ func (r *mcpServerResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	configValue := plan.Config
+	prior := plan
 	plan.ID = types.StringValue(server.ID)
 	plan.Title = optionalString(server.Title)
 	plan.Description = optionalString(server.Description)
 	if configValue.IsNull() || configValue.IsUnknown() {
-		applyMCPServerConfigToModel(&plan, server.Config)
+		applyMCPServerConfigToModel(&plan, server.Config, prior)
 	}
 	plan.Config, diags = configStateValue(configValue, server.Config)
 	resp.Diagnostics.Append(diags...)
@@ -499,7 +480,7 @@ func mcpServerConfigFromString(value types.String) (teamapi.MCPServerConfig, dia
 	return config, diags
 }
 
-func applyMCPServerConfigToModel(model *mcpServerModel, config teamapi.MCPServerConfig) {
+func applyMCPServerConfigToModelFull(model *mcpServerModel, config teamapi.MCPServerConfig) {
 	model.Namespace = optionalString(config.Namespace)
 	model.Command = optionalString(config.Command)
 	model.Workdir = optionalString(config.Workdir)
@@ -508,6 +489,31 @@ func applyMCPServerConfigToModel(model *mcpServerModel, config teamapi.MCPServer
 	model.HeartbeatIntervalMs = optionalInt64(config.HeartbeatIntervalMs)
 	model.StaleTimeoutMs = optionalInt64(config.StaleTimeoutMs)
 	model.Restart = mcpServerRestartModelFromAPI(config.Restart)
+	model.Env = envVarModelsFromAPI(config.Env)
+}
+
+func preserveOrApplyRestart(prior *mcpServerRestartModel, apiRestart *teamapi.RestartPolicy) *mcpServerRestartModel {
+	if prior == nil {
+		return mcpServerRestartModelFromAPI(apiRestart)
+	}
+	if apiRestart == nil {
+		return prior
+	}
+	return &mcpServerRestartModel{
+		MaxAttempts: preserveOrApplyInt64(prior.MaxAttempts, apiRestart.MaxAttempts),
+		BackoffMs:   preserveOrApplyInt64(prior.BackoffMs, apiRestart.BackoffMs),
+	}
+}
+
+func applyMCPServerConfigToModel(model *mcpServerModel, config teamapi.MCPServerConfig, prior mcpServerModel) {
+	model.Namespace = preserveOrApplyString(prior.Namespace, config.Namespace)
+	model.Command = preserveOrApplyString(prior.Command, config.Command)
+	model.Workdir = preserveOrApplyString(prior.Workdir, config.Workdir)
+	model.RequestTimeoutMs = preserveOrApplyInt64(prior.RequestTimeoutMs, config.RequestTimeoutMs)
+	model.StartupTimeoutMs = preserveOrApplyInt64(prior.StartupTimeoutMs, config.StartupTimeoutMs)
+	model.HeartbeatIntervalMs = preserveOrApplyInt64(prior.HeartbeatIntervalMs, config.HeartbeatIntervalMs)
+	model.StaleTimeoutMs = preserveOrApplyInt64(prior.StaleTimeoutMs, config.StaleTimeoutMs)
+	model.Restart = preserveOrApplyRestart(prior.Restart, config.Restart)
 	model.Env = envVarModelsFromAPI(config.Env)
 }
 
