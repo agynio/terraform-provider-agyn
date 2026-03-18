@@ -50,6 +50,39 @@ func computeResourcesFromModel(model *computeResourcesModel) *teamapi.ComputeRes
 	return &resources
 }
 
+func updateComputeResources(plan *computeResourcesModel, prior *computeResourcesModel) *teamapi.ComputeResources {
+	if plan == nil {
+		if prior == nil {
+			return nil
+		}
+		return &teamapi.ComputeResources{}
+	}
+
+	priorModel := computeResourcesModel{
+		RequestsCPU:    types.StringNull(),
+		RequestsMemory: types.StringNull(),
+		LimitsCPU:      types.StringNull(),
+		LimitsMemory:   types.StringNull(),
+	}
+	if prior != nil {
+		priorModel = *prior
+	}
+
+	resources := teamapi.ComputeResources{
+		RequestsCPU:    updateStringPointer(plan.RequestsCPU, priorModel.RequestsCPU),
+		RequestsMemory: updateStringPointer(plan.RequestsMemory, priorModel.RequestsMemory),
+		LimitsCPU:      updateStringPointer(plan.LimitsCPU, priorModel.LimitsCPU),
+		LimitsMemory:   updateStringPointer(plan.LimitsMemory, priorModel.LimitsMemory),
+	}
+	if resources.RequestsCPU == nil && resources.RequestsMemory == nil && resources.LimitsCPU == nil && resources.LimitsMemory == nil {
+		if prior != nil {
+			return &teamapi.ComputeResources{}
+		}
+		return nil
+	}
+	return &resources
+}
+
 func computeResourcesToModel(resources *teamapi.ComputeResources) *computeResourcesModel {
 	if resources == nil {
 		return nil

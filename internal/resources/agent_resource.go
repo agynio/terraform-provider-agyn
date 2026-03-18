@@ -135,7 +135,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	state := agentModel{
+	updatedState := agentModel{
 		ID:            types.StringValue(agent.ID),
 		Name:          types.StringValue(agent.Name),
 		Role:          types.StringValue(agent.Role),
@@ -146,7 +146,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Resources:     computeResourcesToModel(agent.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -197,6 +197,8 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	var plan agentModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state agentModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -213,9 +215,9 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Role:          stringPointer(plan.Role),
 		Model:         stringPointer(plan.Model),
 		Image:         stringPointer(plan.Image),
-		Description:   stringPointer(plan.Description),
-		Configuration: stringPointer(plan.Configuration),
-		Resources:     computeResourcesFromModel(plan.Resources),
+		Description:   updateStringPointer(plan.Description, state.Description),
+		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
+		Resources:     updateComputeResources(plan.Resources, state.Resources),
 	}
 
 	agent, err := r.client.UpdateAgent(ctx, plan.ID.ValueString(), input)
@@ -230,7 +232,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	state := agentModel{
+	updatedState := agentModel{
 		ID:            types.StringValue(agent.ID),
 		Name:          types.StringValue(agent.Name),
 		Role:          types.StringValue(agent.Role),
@@ -241,7 +243,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Resources:     computeResourcesToModel(agent.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *agentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

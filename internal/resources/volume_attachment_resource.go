@@ -166,24 +166,10 @@ func (r *volumeAttachmentResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	var state volumeAttachmentModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	attachment, err := r.client.GetVolumeAttachment(ctx, state.ID.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to read volume attachment", err.Error())
-		return
-	}
-
-	state.VolumeID = types.StringValue(attachment.VolumeID)
-	state.AgentID = optionalString(attachment.AgentID)
-	state.McpID = optionalString(attachment.McpID)
-	state.HookID = optionalString(attachment.HookID)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.AddError(
+		"Update not supported",
+		"Volume attachments are immutable. This is an internal error.",
+	)
 }
 
 func (r *volumeAttachmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

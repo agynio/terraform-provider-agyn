@@ -102,7 +102,7 @@ func (r *skillResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	state := skillModel{
+	updatedState := skillModel{
 		ID:          types.StringValue(skill.ID),
 		AgentID:     types.StringValue(skill.AgentID),
 		Name:        types.StringValue(skill.Name),
@@ -110,7 +110,7 @@ func (r *skillResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Description: optionalString(skill.Description),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *skillResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -152,6 +152,8 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	var plan skillModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state skillModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -159,7 +161,7 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	input := teamapi.SkillUpdate{
 		Name:        stringPointer(plan.Name),
 		Body:        stringPointer(plan.Body),
-		Description: stringPointer(plan.Description),
+		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
 	skill, err := r.client.UpdateSkill(ctx, plan.ID.ValueString(), input)
@@ -168,7 +170,7 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	state := skillModel{
+	updatedState := skillModel{
 		ID:          types.StringValue(skill.ID),
 		AgentID:     types.StringValue(skill.AgentID),
 		Name:        types.StringValue(skill.Name),
@@ -176,7 +178,7 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Description: optionalString(skill.Description),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *skillResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

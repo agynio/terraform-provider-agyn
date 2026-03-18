@@ -115,7 +115,7 @@ func (r *hookResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	state := hookModel{
+	updatedState := hookModel{
 		ID:          types.StringValue(hook.ID),
 		AgentID:     types.StringValue(hook.AgentID),
 		Event:       types.StringValue(hook.Event),
@@ -125,7 +125,7 @@ func (r *hookResource) Create(ctx context.Context, req resource.CreateRequest, r
 		Resources:   computeResourcesToModel(hook.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *hookResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -169,6 +169,8 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	var plan hookModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state hookModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -177,8 +179,8 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Event:       stringPointer(plan.Event),
 		Function:    stringPointer(plan.Function),
 		Image:       stringPointer(plan.Image),
-		Description: stringPointer(plan.Description),
-		Resources:   computeResourcesFromModel(plan.Resources),
+		Description: updateStringPointer(plan.Description, state.Description),
+		Resources:   updateComputeResources(plan.Resources, state.Resources),
 	}
 
 	hook, err := r.client.UpdateHook(ctx, plan.ID.ValueString(), input)
@@ -187,7 +189,7 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	state := hookModel{
+	updatedState := hookModel{
 		ID:          types.StringValue(hook.ID),
 		AgentID:     types.StringValue(hook.AgentID),
 		Event:       types.StringValue(hook.Event),
@@ -197,7 +199,7 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		Resources:   computeResourcesToModel(hook.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *hookResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

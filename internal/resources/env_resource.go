@@ -144,18 +144,18 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	state := envModel{
+	updatedState := envModel{
 		ID:          types.StringValue(env.ID),
 		Name:        types.StringValue(env.Name),
 		Description: optionalString(env.Description),
 		AgentID:     optionalString(env.AgentID),
 		McpID:       optionalString(env.McpID),
 		HookID:      optionalString(env.HookID),
-		Value:       optionalString(env.Value),
+		Value:       preserveSensitiveString(plan.Value, env.Value),
 		SecretID:    optionalString(env.SecretID),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -186,7 +186,7 @@ func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	state.AgentID = optionalString(env.AgentID)
 	state.McpID = optionalString(env.McpID)
 	state.HookID = optionalString(env.HookID)
-	state.Value = optionalString(env.Value)
+	state.Value = preserveSensitiveString(state.Value, env.Value)
 	state.SecretID = optionalString(env.SecretID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -200,15 +200,17 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	var plan envModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state envModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := teamapi.EnvUpdate{
 		Name:        stringPointer(plan.Name),
-		Description: stringPointer(plan.Description),
-		Value:       stringPointer(plan.Value),
-		SecretID:    stringPointer(plan.SecretID),
+		Description: updateStringPointer(plan.Description, state.Description),
+		Value:       updateStringPointer(plan.Value, state.Value),
+		SecretID:    updateStringPointer(plan.SecretID, state.SecretID),
 	}
 
 	env, err := r.client.UpdateEnv(ctx, plan.ID.ValueString(), input)
@@ -217,18 +219,18 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	state := envModel{
+	updatedState := envModel{
 		ID:          types.StringValue(env.ID),
 		Name:        types.StringValue(env.Name),
 		Description: optionalString(env.Description),
 		AgentID:     optionalString(env.AgentID),
 		McpID:       optionalString(env.McpID),
 		HookID:      optionalString(env.HookID),
-		Value:       optionalString(env.Value),
+		Value:       preserveSensitiveString(plan.Value, env.Value),
 		SecretID:    optionalString(env.SecretID),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *envResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

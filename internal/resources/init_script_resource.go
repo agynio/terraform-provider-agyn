@@ -123,7 +123,7 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	state := initScriptModel{
+	updatedState := initScriptModel{
 		ID:          types.StringValue(script.ID),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
@@ -132,7 +132,7 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		HookID:      optionalString(script.HookID),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *initScriptResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -175,13 +175,15 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	var plan initScriptModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state initScriptModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	input := teamapi.InitScriptUpdate{
 		Script:      stringPointer(plan.Script),
-		Description: stringPointer(plan.Description),
+		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
 	script, err := r.client.UpdateInitScript(ctx, plan.ID.ValueString(), input)
@@ -190,7 +192,7 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	state := initScriptModel{
+	updatedState := initScriptModel{
 		ID:          types.StringValue(script.ID),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
@@ -199,7 +201,7 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 		HookID:      optionalString(script.HookID),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *initScriptResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

@@ -1,0 +1,86 @@
+package provider
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+)
+
+func TestAccAgynVolume_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgynVolumeConfig("Terraform acceptance volume", "/data", "1Gi"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("agyn_volume.test", "persistent", "true"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "mount_path", "/data"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "size", "1Gi"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "description", "Terraform acceptance volume"),
+					resource.TestCheckResourceAttrSet("agyn_volume.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAgynVolume_update(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgynVolumeConfig("Terraform acceptance volume", "/data", "1Gi"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("agyn_volume.test", "persistent", "true"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "mount_path", "/data"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "size", "1Gi"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "description", "Terraform acceptance volume"),
+					resource.TestCheckResourceAttrSet("agyn_volume.test", "id"),
+				),
+			},
+			{
+				Config: testAccAgynVolumeConfig("Terraform acceptance volume updated", "/data-updated", "2Gi"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("agyn_volume.test", "persistent", "true"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "mount_path", "/data-updated"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "size", "2Gi"),
+					resource.TestCheckResourceAttr("agyn_volume.test", "description", "Terraform acceptance volume updated"),
+					resource.TestCheckResourceAttrSet("agyn_volume.test", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAgynVolume_import(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgynVolumeConfig("Terraform acceptance volume", "/data", "1Gi"),
+			},
+			{
+				ResourceName:      "agyn_volume.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAgynVolumeConfig(description, mountPath, size string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "agyn_volume" "test" {
+	  persistent  = true
+	  mount_path  = %q
+	  size        = %q
+	  description = %q
+}
+`, testAccProviderConfig(), mountPath, size, description)
+}

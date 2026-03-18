@@ -109,7 +109,7 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	state := mcpModel{
+	updatedState := mcpModel{
 		ID:          types.StringValue(mcp.ID),
 		AgentID:     types.StringValue(mcp.AgentID),
 		Image:       types.StringValue(mcp.Image),
@@ -118,7 +118,7 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 		Resources:   computeResourcesToModel(mcp.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *mcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -161,6 +161,8 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	var plan mcpModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state mcpModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -168,8 +170,8 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	input := teamapi.McpUpdate{
 		Image:       stringPointer(plan.Image),
 		Command:     stringPointer(plan.Command),
-		Description: stringPointer(plan.Description),
-		Resources:   computeResourcesFromModel(plan.Resources),
+		Description: updateStringPointer(plan.Description, state.Description),
+		Resources:   updateComputeResources(plan.Resources, state.Resources),
 	}
 
 	mcp, err := r.client.UpdateMcp(ctx, plan.ID.ValueString(), input)
@@ -178,7 +180,7 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	state := mcpModel{
+	updatedState := mcpModel{
 		ID:          types.StringValue(mcp.ID),
 		AgentID:     types.StringValue(mcp.AgentID),
 		Image:       types.StringValue(mcp.Image),
@@ -187,7 +189,7 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		Resources:   computeResourcesToModel(mcp.Resources),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *mcpResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

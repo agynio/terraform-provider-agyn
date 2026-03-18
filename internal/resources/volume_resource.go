@@ -101,7 +101,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	state := volumeModel{
+	updatedState := volumeModel{
 		ID:          types.StringValue(volume.ID),
 		Persistent:  types.BoolValue(volume.Persistent),
 		MountPath:   types.StringValue(volume.MountPath),
@@ -109,7 +109,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		Description: optionalString(volume.Description),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -151,6 +151,8 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 
 	var plan volumeModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	var state volumeModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -158,8 +160,8 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	input := teamapi.VolumeUpdate{
 		Persistent:  boolPointer(plan.Persistent),
 		MountPath:   stringPointer(plan.MountPath),
-		Size:        stringPointer(plan.Size),
-		Description: stringPointer(plan.Description),
+		Size:        updateStringPointer(plan.Size, state.Size),
+		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
 	volume, err := r.client.UpdateVolume(ctx, plan.ID.ValueString(), input)
@@ -168,7 +170,7 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	state := volumeModel{
+	updatedState := volumeModel{
 		ID:          types.StringValue(volume.ID),
 		Persistent:  types.BoolValue(volume.Persistent),
 		MountPath:   types.StringValue(volume.MountPath),
@@ -176,7 +178,7 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		Description: optionalString(volume.Description),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
 }
 
 func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
