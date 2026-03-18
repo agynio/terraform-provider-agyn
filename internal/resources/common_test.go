@@ -59,3 +59,33 @@ func TestOptionalBool(t *testing.T) {
 		t.Fatalf("unexpected optional bool value: %v", v)
 	}
 }
+
+func TestUpdateStringPointer(t *testing.T) {
+	if ptr := updateStringPointer(types.StringUnknown(), types.StringValue("prior")); ptr != nil {
+		t.Fatalf("expected nil pointer for unknown plan")
+	}
+
+	if ptr := updateStringPointer(types.StringNull(), types.StringNull()); ptr != nil {
+		t.Fatalf("expected nil pointer for null plan with null prior")
+	}
+
+	if ptr := updateStringPointer(types.StringNull(), types.StringValue("prior")); ptr == nil || *ptr != "" {
+		t.Fatalf("expected empty string pointer for cleared value, got %v", ptr)
+	}
+
+	if ptr := updateStringPointer(types.StringValue("value"), types.StringValue("prior")); ptr == nil || *ptr != "value" {
+		t.Fatalf("expected pointer with value, got %v", ptr)
+	}
+}
+
+func TestPreserveSensitiveString(t *testing.T) {
+	fallback := types.StringValue("fallback")
+	if got := preserveSensitiveString(fallback, nil); got.ValueString() != "fallback" {
+		t.Fatalf("expected fallback value, got %v", got)
+	}
+
+	apiValue := "secret"
+	if got := preserveSensitiveString(fallback, &apiValue); got.ValueString() != "secret" {
+		t.Fatalf("expected api value, got %v", got)
+	}
+}
