@@ -10,14 +10,6 @@ func stringPointer(v types.String) *string {
 	return &value
 }
 
-func int64Pointer(v types.Int64) *int64 {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-	value := v.ValueInt64()
-	return &value
-}
-
 func boolPointer(v types.Bool) *bool {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
@@ -33,39 +25,11 @@ func optionalString(v *string) types.String {
 	return types.StringValue(*v)
 }
 
-func optionalInt64(v *int64) types.Int64 {
-	if v == nil {
-		return types.Int64Null()
-	}
-	return types.Int64Value(*v)
-}
-
 func optionalBool(v *bool) types.Bool {
 	if v == nil {
 		return types.BoolNull()
 	}
 	return types.BoolValue(*v)
-}
-
-func preserveOrApplyString(prior types.String, apiValue *string) types.String {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalString(apiValue)
-}
-
-func preserveOrApplyInt64(prior types.Int64, apiValue *int64) types.Int64 {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalInt64(apiValue)
-}
-
-func preserveOrApplyBool(prior types.Bool, apiValue *bool) types.Bool {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalBool(apiValue)
 }
 
 const httpStatusNotFound = 404

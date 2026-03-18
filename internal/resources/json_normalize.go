@@ -8,37 +8,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func marshalConfig(config any) (string, diag.Diagnostics) {
+func normalizeJSONState(config types.String, apiValue *string) (types.String, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	raw, err := json.Marshal(config)
-	if err != nil {
-		diags.AddError("Failed to Serialize Config", err.Error())
-		return "", diags
-	}
-	return string(raw), diags
-}
-
-func configStateValue(config types.String, payload any) (types.String, diag.Diagnostics) {
-	if config.IsNull() || config.IsUnknown() {
-		return config, nil
-	}
-
-	responseJSON, diags := marshalConfig(payload)
-	if diags.HasError() {
+	if apiValue == nil {
+		if config.IsNull() || config.IsUnknown() {
+			return types.StringNull(), diags
+		}
 		return config, diags
 	}
 
+	if config.IsNull() || config.IsUnknown() {
+		return types.StringValue(*apiValue), diags
+	}
+
 	original := config.ValueString()
-	if jsonSemanticallyEqual(original, responseJSON) {
-		return config, nil
+	if jsonSemanticallyEqual(original, *apiValue) {
+		return config, diags
 	}
 
-	projected, err := projectJSONKeys(original, responseJSON)
+	projected, err := projectJSONKeys(original, *apiValue)
 	if err == nil && jsonSemanticallyEqual(original, projected) {
-		return config, nil
+		return config, diags
 	}
 
-	return types.StringValue(responseJSON), diags
+	return types.StringValue(*apiValue), diags
 }
 
 func jsonSemanticallyEqual(a, b string) bool {

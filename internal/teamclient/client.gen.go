@@ -18,458 +18,465 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for PostAgentsJSONBodyConfigProcessBuffer.
-const (
-	PostAgentsJSONBodyConfigProcessBufferAllTogether PostAgentsJSONBodyConfigProcessBuffer = "allTogether"
-	PostAgentsJSONBodyConfigProcessBufferOneByOne    PostAgentsJSONBodyConfigProcessBuffer = "oneByOne"
-)
+// Agent defines model for Agent.
+type Agent struct {
+	// Configuration JSON-encoded agent configuration payload.
+	Configuration string             `json:"configuration"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	Description   *string            `json:"description,omitempty"`
+	Id            openapi_types.UUID `json:"id"`
+	Image         string             `json:"image"`
+	Model         openapi_types.UUID `json:"model"`
+	Name          string             `json:"name"`
+	Resources     *ComputeResources  `json:"resources,omitempty"`
+	Role          string             `json:"role"`
+	UpdatedAt     *time.Time         `json:"updatedAt,omitempty"`
+}
 
-// Defines values for PostAgentsJSONBodyConfigWhenBusy.
-const (
-	PostAgentsJSONBodyConfigWhenBusyInjectAfterTools PostAgentsJSONBodyConfigWhenBusy = "injectAfterTools"
-	PostAgentsJSONBodyConfigWhenBusyWait             PostAgentsJSONBodyConfigWhenBusy = "wait"
-)
+// AgentCreateRequest defines model for AgentCreateRequest.
+type AgentCreateRequest struct {
+	// Configuration JSON-encoded agent configuration payload.
+	Configuration *string            `json:"configuration,omitempty"`
+	Description   *string            `json:"description,omitempty"`
+	Image         string             `json:"image"`
+	Model         openapi_types.UUID `json:"model"`
+	Name          string             `json:"name"`
+	Resources     *ComputeResources  `json:"resources,omitempty"`
+	Role          string             `json:"role"`
+}
 
-// Defines values for PatchAgentsIdJSONBodyConfigProcessBuffer.
-const (
-	PatchAgentsIdJSONBodyConfigProcessBufferAllTogether PatchAgentsIdJSONBodyConfigProcessBuffer = "allTogether"
-	PatchAgentsIdJSONBodyConfigProcessBufferOneByOne    PatchAgentsIdJSONBodyConfigProcessBuffer = "oneByOne"
-)
+// AgentUpdateRequest defines model for AgentUpdateRequest.
+type AgentUpdateRequest struct {
+	// Configuration JSON-encoded agent configuration payload.
+	Configuration *string             `json:"configuration,omitempty"`
+	Description   *string             `json:"description,omitempty"`
+	Image         *string             `json:"image,omitempty"`
+	Model         *openapi_types.UUID `json:"model,omitempty"`
+	Name          *string             `json:"name,omitempty"`
+	Resources     *ComputeResources   `json:"resources,omitempty"`
+	Role          *string             `json:"role,omitempty"`
+}
 
-// Defines values for PatchAgentsIdJSONBodyConfigWhenBusy.
-const (
-	PatchAgentsIdJSONBodyConfigWhenBusyInjectAfterTools PatchAgentsIdJSONBodyConfigWhenBusy = "injectAfterTools"
-	PatchAgentsIdJSONBodyConfigWhenBusyWait             PatchAgentsIdJSONBodyConfigWhenBusy = "wait"
-)
+// ComputeResources defines model for ComputeResources.
+type ComputeResources struct {
+	LimitsCpu      *string `json:"limitsCpu,omitempty"`
+	LimitsMemory   *string `json:"limitsMemory,omitempty"`
+	RequestsCpu    *string `json:"requestsCpu,omitempty"`
+	RequestsMemory *string `json:"requestsMemory,omitempty"`
+}
 
-// Defines values for GetAttachmentsParamsSourceType.
-const (
-	GetAttachmentsParamsSourceTypeAgent                  GetAttachmentsParamsSourceType = "agent"
-	GetAttachmentsParamsSourceTypeMcpServer              GetAttachmentsParamsSourceType = "mcpServer"
-	GetAttachmentsParamsSourceTypeMemoryBucket           GetAttachmentsParamsSourceType = "memoryBucket"
-	GetAttachmentsParamsSourceTypeTool                   GetAttachmentsParamsSourceType = "tool"
-	GetAttachmentsParamsSourceTypeWorkspaceConfiguration GetAttachmentsParamsSourceType = "workspaceConfiguration"
-)
+// EntityMeta defines model for EntityMeta.
+type EntityMeta struct {
+	CreatedAt time.Time          `json:"createdAt"`
+	Id        openapi_types.UUID `json:"id"`
+	UpdatedAt *time.Time         `json:"updatedAt,omitempty"`
+}
 
-// Defines values for GetAttachmentsParamsTargetType.
-const (
-	GetAttachmentsParamsTargetTypeAgent                  GetAttachmentsParamsTargetType = "agent"
-	GetAttachmentsParamsTargetTypeMcpServer              GetAttachmentsParamsTargetType = "mcpServer"
-	GetAttachmentsParamsTargetTypeMemoryBucket           GetAttachmentsParamsTargetType = "memoryBucket"
-	GetAttachmentsParamsTargetTypeTool                   GetAttachmentsParamsTargetType = "tool"
-	GetAttachmentsParamsTargetTypeWorkspaceConfiguration GetAttachmentsParamsTargetType = "workspaceConfiguration"
-)
+// Env defines model for Env.
+type Env struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId     *openapi_types.UUID `json:"agentId,omitempty"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	Description *string             `json:"description,omitempty"`
 
-// Defines values for GetAttachmentsParamsKind.
-const (
-	GetAttachmentsParamsKindAgentMcpServer                  GetAttachmentsParamsKind = "agent_mcpServer"
-	GetAttachmentsParamsKindAgentMemoryBucket               GetAttachmentsParamsKind = "agent_memoryBucket"
-	GetAttachmentsParamsKindAgentTool                       GetAttachmentsParamsKind = "agent_tool"
-	GetAttachmentsParamsKindAgentWorkspaceConfiguration     GetAttachmentsParamsKind = "agent_workspaceConfiguration"
-	GetAttachmentsParamsKindMcpServerWorkspaceConfiguration GetAttachmentsParamsKind = "mcpServer_workspaceConfiguration"
-)
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
+	Id     openapi_types.UUID  `json:"id"`
 
-// Defines values for PostAttachmentsJSONBodyKind.
-const (
-	PostAttachmentsJSONBodyKindAgentMcpServer                  PostAttachmentsJSONBodyKind = "agent_mcpServer"
-	PostAttachmentsJSONBodyKindAgentMemoryBucket               PostAttachmentsJSONBodyKind = "agent_memoryBucket"
-	PostAttachmentsJSONBodyKindAgentTool                       PostAttachmentsJSONBodyKind = "agent_tool"
-	PostAttachmentsJSONBodyKindAgentWorkspaceConfiguration     PostAttachmentsJSONBodyKind = "agent_workspaceConfiguration"
-	PostAttachmentsJSONBodyKindMcpServerWorkspaceConfiguration PostAttachmentsJSONBodyKind = "mcpServer_workspaceConfiguration"
-)
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId *openapi_types.UUID `json:"mcpId,omitempty"`
+	Name  string              `json:"name"`
 
-// Defines values for PostMemoryBucketsJSONBodyConfigScope.
-const (
-	PostMemoryBucketsJSONBodyConfigScopeGlobal    PostMemoryBucketsJSONBodyConfigScope = "global"
-	PostMemoryBucketsJSONBodyConfigScopePerThread PostMemoryBucketsJSONBodyConfigScope = "perThread"
-)
+	// SecretId Secret reference. Mutually exclusive with value.
+	SecretId  *openapi_types.UUID `json:"secretId,omitempty"`
+	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
 
-// Defines values for PatchMemoryBucketsIdJSONBodyConfigScope.
-const (
-	PatchMemoryBucketsIdJSONBodyConfigScopeGlobal    PatchMemoryBucketsIdJSONBodyConfigScope = "global"
-	PatchMemoryBucketsIdJSONBodyConfigScopePerThread PatchMemoryBucketsIdJSONBodyConfigScope = "perThread"
-)
+	// Value Plain-text value. Mutually exclusive with secretId.
+	Value *string `json:"value,omitempty"`
+}
 
-// Defines values for GetToolsParamsType.
-const (
-	GetToolsParamsTypeCallAgent        GetToolsParamsType = "call_agent"
-	GetToolsParamsTypeGithubCloneRepo  GetToolsParamsType = "github_clone_repo"
-	GetToolsParamsTypeManage           GetToolsParamsType = "manage"
-	GetToolsParamsTypeMemory           GetToolsParamsType = "memory"
-	GetToolsParamsTypeRemindMe         GetToolsParamsType = "remind_me"
-	GetToolsParamsTypeSendMessage      GetToolsParamsType = "send_message"
-	GetToolsParamsTypeSendSlackMessage GetToolsParamsType = "send_slack_message"
-	GetToolsParamsTypeShellCommand     GetToolsParamsType = "shell_command"
-)
+// EnvCreateRequest defines model for EnvCreateRequest.
+type EnvCreateRequest struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId     *openapi_types.UUID `json:"agentId,omitempty"`
+	Description *string             `json:"description,omitempty"`
 
-// Defines values for PostToolsJSONBodyType.
-const (
-	PostToolsJSONBodyTypeCallAgent        PostToolsJSONBodyType = "call_agent"
-	PostToolsJSONBodyTypeGithubCloneRepo  PostToolsJSONBodyType = "github_clone_repo"
-	PostToolsJSONBodyTypeManage           PostToolsJSONBodyType = "manage"
-	PostToolsJSONBodyTypeMemory           PostToolsJSONBodyType = "memory"
-	PostToolsJSONBodyTypeRemindMe         PostToolsJSONBodyType = "remind_me"
-	PostToolsJSONBodyTypeSendMessage      PostToolsJSONBodyType = "send_message"
-	PostToolsJSONBodyTypeSendSlackMessage PostToolsJSONBodyType = "send_slack_message"
-	PostToolsJSONBodyTypeShellCommand     PostToolsJSONBodyType = "shell_command"
-)
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
 
-// Defines values for PostWorkspaceConfigurationsJSONBodyConfigPlatform.
-const (
-	PostWorkspaceConfigurationsJSONBodyConfigPlatformAuto       PostWorkspaceConfigurationsJSONBodyConfigPlatform = "auto"
-	PostWorkspaceConfigurationsJSONBodyConfigPlatformLinuxamd64 PostWorkspaceConfigurationsJSONBodyConfigPlatform = "linux/amd64"
-	PostWorkspaceConfigurationsJSONBodyConfigPlatformLinuxarm64 PostWorkspaceConfigurationsJSONBodyConfigPlatform = "linux/arm64"
-)
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId *openapi_types.UUID `json:"mcpId,omitempty"`
+	Name  string              `json:"name"`
 
-// Defines values for PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform.
-const (
-	PatchWorkspaceConfigurationsIdJSONBodyConfigPlatformAuto       PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform = "auto"
-	PatchWorkspaceConfigurationsIdJSONBodyConfigPlatformLinuxamd64 PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform = "linux/amd64"
-	PatchWorkspaceConfigurationsIdJSONBodyConfigPlatformLinuxarm64 PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform = "linux/arm64"
-)
+	// SecretId Secret reference. Mutually exclusive with value.
+	SecretId *openapi_types.UUID `json:"secretId,omitempty"`
+
+	// Value Plain-text value. Mutually exclusive with secretId.
+	Value *string `json:"value,omitempty"`
+}
+
+// EnvUpdateRequest defines model for EnvUpdateRequest.
+type EnvUpdateRequest struct {
+	Description *string             `json:"description,omitempty"`
+	Name        *string             `json:"name,omitempty"`
+	SecretId    *openapi_types.UUID `json:"secretId,omitempty"`
+	Value       *string             `json:"value,omitempty"`
+}
+
+// Hook defines model for Hook.
+type Hook struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description *string            `json:"description,omitempty"`
+	Event       string             `json:"event"`
+	Function    string             `json:"function"`
+	Id          openapi_types.UUID `json:"id"`
+	Image       string             `json:"image"`
+	Resources   *ComputeResources  `json:"resources,omitempty"`
+	UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
+}
+
+// HookCreateRequest defines model for HookCreateRequest.
+type HookCreateRequest struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	Description *string            `json:"description,omitempty"`
+	Event       string             `json:"event"`
+	Function    string             `json:"function"`
+	Image       string             `json:"image"`
+	Resources   *ComputeResources  `json:"resources,omitempty"`
+}
+
+// HookUpdateRequest defines model for HookUpdateRequest.
+type HookUpdateRequest struct {
+	Description *string           `json:"description,omitempty"`
+	Event       *string           `json:"event,omitempty"`
+	Function    *string           `json:"function,omitempty"`
+	Image       *string           `json:"image,omitempty"`
+	Resources   *ComputeResources `json:"resources,omitempty"`
+}
+
+// InitScript defines model for InitScript.
+type InitScript struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId     *openapi_types.UUID `json:"agentId,omitempty"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	Description *string             `json:"description,omitempty"`
+
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
+	Id     openapi_types.UUID  `json:"id"`
+
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId     *openapi_types.UUID `json:"mcpId,omitempty"`
+	Script    string              `json:"script"`
+	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
+}
+
+// InitScriptCreateRequest defines model for InitScriptCreateRequest.
+type InitScriptCreateRequest struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId     *openapi_types.UUID `json:"agentId,omitempty"`
+	Description *string             `json:"description,omitempty"`
+
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
+
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId  *openapi_types.UUID `json:"mcpId,omitempty"`
+	Script string              `json:"script"`
+}
+
+// InitScriptUpdateRequest defines model for InitScriptUpdateRequest.
+type InitScriptUpdateRequest struct {
+	Description *string `json:"description,omitempty"`
+	Script      *string `json:"script,omitempty"`
+}
+
+// Mcp defines model for Mcp.
+type Mcp struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	Command     string             `json:"command"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description *string            `json:"description,omitempty"`
+	Id          openapi_types.UUID `json:"id"`
+	Image       string             `json:"image"`
+	Resources   *ComputeResources  `json:"resources,omitempty"`
+	UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
+}
+
+// McpCreateRequest defines model for McpCreateRequest.
+type McpCreateRequest struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	Command     string             `json:"command"`
+	Description *string            `json:"description,omitempty"`
+	Image       string             `json:"image"`
+	Resources   *ComputeResources  `json:"resources,omitempty"`
+}
+
+// McpUpdateRequest defines model for McpUpdateRequest.
+type McpUpdateRequest struct {
+	Command     *string           `json:"command,omitempty"`
+	Description *string           `json:"description,omitempty"`
+	Image       *string           `json:"image,omitempty"`
+	Resources   *ComputeResources `json:"resources,omitempty"`
+}
+
+// PaginatedAgents defines model for PaginatedAgents.
+type PaginatedAgents struct {
+	Items         []Agent `json:"items"`
+	NextPageToken *string `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedEnvs defines model for PaginatedEnvs.
+type PaginatedEnvs struct {
+	Items         []Env   `json:"items"`
+	NextPageToken *string `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedHooks defines model for PaginatedHooks.
+type PaginatedHooks struct {
+	Items         []Hook  `json:"items"`
+	NextPageToken *string `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedInitScripts defines model for PaginatedInitScripts.
+type PaginatedInitScripts struct {
+	Items         []InitScript `json:"items"`
+	NextPageToken *string      `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedMcps defines model for PaginatedMcps.
+type PaginatedMcps struct {
+	Items         []Mcp   `json:"items"`
+	NextPageToken *string `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedSkills defines model for PaginatedSkills.
+type PaginatedSkills struct {
+	Items         []Skill `json:"items"`
+	NextPageToken *string `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedVolumeAttachments defines model for PaginatedVolumeAttachments.
+type PaginatedVolumeAttachments struct {
+	Items         []VolumeAttachment `json:"items"`
+	NextPageToken *string            `json:"nextPageToken,omitempty"`
+}
+
+// PaginatedVolumes defines model for PaginatedVolumes.
+type PaginatedVolumes struct {
+	Items         []Volume `json:"items"`
+	NextPageToken *string  `json:"nextPageToken,omitempty"`
+}
+
+// Problem defines model for Problem.
+type Problem struct {
+	Detail   *string `json:"detail,omitempty"`
+	Instance *string `json:"instance,omitempty"`
+	Status   int     `json:"status"`
+	Title    string  `json:"title"`
+	Type     *string `json:"type,omitempty"`
+}
+
+// Skill defines model for Skill.
+type Skill struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	Body        string             `json:"body"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description *string            `json:"description,omitempty"`
+	Id          openapi_types.UUID `json:"id"`
+	Name        string             `json:"name"`
+	UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
+}
+
+// SkillCreateRequest defines model for SkillCreateRequest.
+type SkillCreateRequest struct {
+	AgentId     openapi_types.UUID `json:"agentId"`
+	Body        string             `json:"body"`
+	Description *string            `json:"description,omitempty"`
+	Name        string             `json:"name"`
+}
+
+// SkillUpdateRequest defines model for SkillUpdateRequest.
+type SkillUpdateRequest struct {
+	Body        *string `json:"body,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty"`
+}
+
+// Volume defines model for Volume.
+type Volume struct {
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description *string            `json:"description,omitempty"`
+	Id          openapi_types.UUID `json:"id"`
+	MountPath   string             `json:"mountPath"`
+	Persistent  bool               `json:"persistent"`
+
+	// Size Required when persistent is true.
+	Size      *string    `json:"size,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
+}
+
+// VolumeAttachment defines model for VolumeAttachment.
+type VolumeAttachment struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId   *openapi_types.UUID `json:"agentId,omitempty"`
+	CreatedAt time.Time           `json:"createdAt"`
+
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
+	Id     openapi_types.UUID  `json:"id"`
+
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId     *openapi_types.UUID `json:"mcpId,omitempty"`
+	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
+	VolumeId  openapi_types.UUID  `json:"volumeId"`
+}
+
+// VolumeAttachmentCreateRequest defines model for VolumeAttachmentCreateRequest.
+type VolumeAttachmentCreateRequest struct {
+	// AgentId Target agent. Mutually exclusive with mcpId and hookId.
+	AgentId *openapi_types.UUID `json:"agentId,omitempty"`
+
+	// HookId Target hook. Mutually exclusive with agentId and mcpId.
+	HookId *openapi_types.UUID `json:"hookId,omitempty"`
+
+	// McpId Target MCP. Mutually exclusive with agentId and hookId.
+	McpId    *openapi_types.UUID `json:"mcpId,omitempty"`
+	VolumeId openapi_types.UUID  `json:"volumeId"`
+}
+
+// VolumeCreateRequest defines model for VolumeCreateRequest.
+type VolumeCreateRequest struct {
+	Description *string `json:"description,omitempty"`
+	MountPath   string  `json:"mountPath"`
+	Persistent  bool    `json:"persistent"`
+
+	// Size Required when persistent is true.
+	Size *string `json:"size,omitempty"`
+}
+
+// VolumeUpdateRequest defines model for VolumeUpdateRequest.
+type VolumeUpdateRequest struct {
+	Description *string `json:"description,omitempty"`
+	MountPath   *string `json:"mountPath,omitempty"`
+	Persistent  *bool   `json:"persistent,omitempty"`
+
+	// Size Required when persistent is true.
+	Size *string `json:"size,omitempty"`
+}
+
+// IdPath defines model for IdPath.
+type IdPath = openapi_types.UUID
+
+// ProblemResponse defines model for ProblemResponse.
+type ProblemResponse = Problem
 
 // GetAgentsParams defines parameters for GetAgents.
 type GetAgentsParams struct {
-	// Q Free-text search (name/role).
-	Q       *string `form:"q,omitempty" json:"q,omitempty"`
-	Page    *int    `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *int    `form:"perPage,omitempty" json:"perPage,omitempty"`
+	PageSize  *int    `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
-// PostAgentsJSONBody defines parameters for PostAgents.
-type PostAgentsJSONBody struct {
-	Config struct {
-		DebounceMs                *int                                   `json:"debounceMs,omitempty"`
-		Model                     *string                                `json:"model,omitempty"`
-		Name                      *string                                `json:"name,omitempty"`
-		ProcessBuffer             *PostAgentsJSONBodyConfigProcessBuffer `json:"processBuffer,omitempty"`
-		RestrictOutput            *bool                                  `json:"restrictOutput,omitempty"`
-		RestrictionMaxInjections  *int                                   `json:"restrictionMaxInjections,omitempty"`
-		RestrictionMessage        *string                                `json:"restrictionMessage,omitempty"`
-		Role                      *string                                `json:"role,omitempty"`
-		SendFinalResponseToThread *bool                                  `json:"sendFinalResponseToThread,omitempty"`
-		SummarizationKeepTokens   *int                                   `json:"summarizationKeepTokens,omitempty"`
-		SummarizationMaxTokens    *int                                   `json:"summarizationMaxTokens,omitempty"`
-		SystemPrompt              *string                                `json:"systemPrompt,omitempty"`
-		WhenBusy                  *PostAgentsJSONBodyConfigWhenBusy      `json:"whenBusy,omitempty"`
-	} `json:"config"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
+// GetEnvsParams defines parameters for GetEnvs.
+type GetEnvsParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
+	McpId     *openapi_types.UUID `form:"mcpId,omitempty" json:"mcpId,omitempty"`
+	HookId    *openapi_types.UUID `form:"hookId,omitempty" json:"hookId,omitempty"`
 }
 
-// PostAgentsJSONBodyConfigProcessBuffer defines parameters for PostAgents.
-type PostAgentsJSONBodyConfigProcessBuffer string
-
-// PostAgentsJSONBodyConfigWhenBusy defines parameters for PostAgents.
-type PostAgentsJSONBodyConfigWhenBusy string
-
-// PatchAgentsIdJSONBody defines parameters for PatchAgentsId.
-type PatchAgentsIdJSONBody struct {
-	Config *struct {
-		DebounceMs                *int                                      `json:"debounceMs,omitempty"`
-		Model                     *string                                   `json:"model,omitempty"`
-		Name                      *string                                   `json:"name,omitempty"`
-		ProcessBuffer             *PatchAgentsIdJSONBodyConfigProcessBuffer `json:"processBuffer,omitempty"`
-		RestrictOutput            *bool                                     `json:"restrictOutput,omitempty"`
-		RestrictionMaxInjections  *int                                      `json:"restrictionMaxInjections,omitempty"`
-		RestrictionMessage        *string                                   `json:"restrictionMessage,omitempty"`
-		Role                      *string                                   `json:"role,omitempty"`
-		SendFinalResponseToThread *bool                                     `json:"sendFinalResponseToThread,omitempty"`
-		SummarizationKeepTokens   *int                                      `json:"summarizationKeepTokens,omitempty"`
-		SummarizationMaxTokens    *int                                      `json:"summarizationMaxTokens,omitempty"`
-		SystemPrompt              *string                                   `json:"systemPrompt,omitempty"`
-		WhenBusy                  *PatchAgentsIdJSONBodyConfigWhenBusy      `json:"whenBusy,omitempty"`
-	} `json:"config,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
+// GetHooksParams defines parameters for GetHooks.
+type GetHooksParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
 }
 
-// PatchAgentsIdJSONBodyConfigProcessBuffer defines parameters for PatchAgentsId.
-type PatchAgentsIdJSONBodyConfigProcessBuffer string
-
-// PatchAgentsIdJSONBodyConfigWhenBusy defines parameters for PatchAgentsId.
-type PatchAgentsIdJSONBodyConfigWhenBusy string
-
-// GetAttachmentsParams defines parameters for GetAttachments.
-type GetAttachmentsParams struct {
-	SourceType *GetAttachmentsParamsSourceType `form:"sourceType,omitempty" json:"sourceType,omitempty"`
-	SourceId   *openapi_types.UUID             `form:"sourceId,omitempty" json:"sourceId,omitempty"`
-	TargetType *GetAttachmentsParamsTargetType `form:"targetType,omitempty" json:"targetType,omitempty"`
-	TargetId   *openapi_types.UUID             `form:"targetId,omitempty" json:"targetId,omitempty"`
-	Kind       *GetAttachmentsParamsKind       `form:"kind,omitempty" json:"kind,omitempty"`
-	Page       *int                            `form:"page,omitempty" json:"page,omitempty"`
-	PerPage    *int                            `form:"perPage,omitempty" json:"perPage,omitempty"`
+// GetInitScriptsParams defines parameters for GetInitScripts.
+type GetInitScriptsParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
+	McpId     *openapi_types.UUID `form:"mcpId,omitempty" json:"mcpId,omitempty"`
+	HookId    *openapi_types.UUID `form:"hookId,omitempty" json:"hookId,omitempty"`
 }
 
-// GetAttachmentsParamsSourceType defines parameters for GetAttachments.
-type GetAttachmentsParamsSourceType string
-
-// GetAttachmentsParamsTargetType defines parameters for GetAttachments.
-type GetAttachmentsParamsTargetType string
-
-// GetAttachmentsParamsKind defines parameters for GetAttachments.
-type GetAttachmentsParamsKind string
-
-// PostAttachmentsJSONBody defines parameters for PostAttachments.
-type PostAttachmentsJSONBody struct {
-	// Kind Relation type between entities
-	Kind     PostAttachmentsJSONBodyKind `json:"kind"`
-	SourceId openapi_types.UUID          `json:"sourceId"`
-	TargetId openapi_types.UUID          `json:"targetId"`
+// GetMcpsParams defines parameters for GetMcps.
+type GetMcpsParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
 }
 
-// PostAttachmentsJSONBodyKind defines parameters for PostAttachments.
-type PostAttachmentsJSONBodyKind string
-
-// GetMcpServersParams defines parameters for GetMcpServers.
-type GetMcpServersParams struct {
-	Page    *int `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *int `form:"perPage,omitempty" json:"perPage,omitempty"`
+// GetSkillsParams defines parameters for GetSkills.
+type GetSkillsParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
 }
 
-// PostMcpServersJSONBody defines parameters for PostMcpServers.
-type PostMcpServersJSONBody struct {
-	Config struct {
-		Command *string `json:"command,omitempty"`
-		Env     *[]struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-		} `json:"env,omitempty"`
-		HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-		Namespace           *string `json:"namespace,omitempty"`
-		RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-		Restart             *struct {
-			BackoffMs   *int `json:"backoffMs,omitempty"`
-			MaxAttempts *int `json:"maxAttempts,omitempty"`
-		} `json:"restart,omitempty"`
-		StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-		StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-		Workdir          *string `json:"workdir,omitempty"`
-	} `json:"config"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
+// GetVolumeAttachmentsParams defines parameters for GetVolumeAttachments.
+type GetVolumeAttachmentsParams struct {
+	PageSize  *int                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	VolumeId  *openapi_types.UUID `form:"volumeId,omitempty" json:"volumeId,omitempty"`
+	AgentId   *openapi_types.UUID `form:"agentId,omitempty" json:"agentId,omitempty"`
+	McpId     *openapi_types.UUID `form:"mcpId,omitempty" json:"mcpId,omitempty"`
+	HookId    *openapi_types.UUID `form:"hookId,omitempty" json:"hookId,omitempty"`
 }
 
-// PatchMcpServersIdJSONBody defines parameters for PatchMcpServersId.
-type PatchMcpServersIdJSONBody struct {
-	Config *struct {
-		Command *string `json:"command,omitempty"`
-		Env     *[]struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-		} `json:"env,omitempty"`
-		HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-		Namespace           *string `json:"namespace,omitempty"`
-		RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-		Restart             *struct {
-			BackoffMs   *int `json:"backoffMs,omitempty"`
-			MaxAttempts *int `json:"maxAttempts,omitempty"`
-		} `json:"restart,omitempty"`
-		StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-		StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-		Workdir          *string `json:"workdir,omitempty"`
-	} `json:"config,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
+// GetVolumesParams defines parameters for GetVolumes.
+type GetVolumesParams struct {
+	PageSize  *int    `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *string `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
-
-// GetMemoryBucketsParams defines parameters for GetMemoryBuckets.
-type GetMemoryBucketsParams struct {
-	Page    *int `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *int `form:"perPage,omitempty" json:"perPage,omitempty"`
-}
-
-// PostMemoryBucketsJSONBody defines parameters for PostMemoryBuckets.
-type PostMemoryBucketsJSONBody struct {
-	Config struct {
-		CollectionPrefix *string                               `json:"collectionPrefix,omitempty"`
-		Scope            *PostMemoryBucketsJSONBodyConfigScope `json:"scope,omitempty"`
-	} `json:"config"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
-}
-
-// PostMemoryBucketsJSONBodyConfigScope defines parameters for PostMemoryBuckets.
-type PostMemoryBucketsJSONBodyConfigScope string
-
-// PatchMemoryBucketsIdJSONBody defines parameters for PatchMemoryBucketsId.
-type PatchMemoryBucketsIdJSONBody struct {
-	Config *struct {
-		CollectionPrefix *string                                  `json:"collectionPrefix,omitempty"`
-		Scope            *PatchMemoryBucketsIdJSONBodyConfigScope `json:"scope,omitempty"`
-	} `json:"config,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
-}
-
-// PatchMemoryBucketsIdJSONBodyConfigScope defines parameters for PatchMemoryBucketsId.
-type PatchMemoryBucketsIdJSONBodyConfigScope string
-
-// GetToolsParams defines parameters for GetTools.
-type GetToolsParams struct {
-	// Type Filter by tool type
-	Type    *GetToolsParamsType `form:"type,omitempty" json:"type,omitempty"`
-	Page    *int                `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *int                `form:"perPage,omitempty" json:"perPage,omitempty"`
-}
-
-// GetToolsParamsType defines parameters for GetTools.
-type GetToolsParamsType string
-
-// PostToolsJSONBody defines parameters for PostTools.
-type PostToolsJSONBody struct {
-	Config      *map[string]interface{} `json:"config,omitempty"`
-	Description *string                 `json:"description,omitempty"`
-	Name        *string                 `json:"name,omitempty"`
-	Type        PostToolsJSONBodyType   `json:"type"`
-}
-
-// PostToolsJSONBodyType defines parameters for PostTools.
-type PostToolsJSONBodyType string
-
-// PatchToolsIdJSONBody defines parameters for PatchToolsId.
-type PatchToolsIdJSONBody struct {
-	Config      *map[string]interface{} `json:"config,omitempty"`
-	Description *string                 `json:"description,omitempty"`
-	Name        *string                 `json:"name,omitempty"`
-}
-
-// GetWorkspaceConfigurationsParams defines parameters for GetWorkspaceConfigurations.
-type GetWorkspaceConfigurationsParams struct {
-	Page    *int `form:"page,omitempty" json:"page,omitempty"`
-	PerPage *int `form:"perPage,omitempty" json:"perPage,omitempty"`
-}
-
-// PostWorkspaceConfigurationsJSONBody defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBody struct {
-	Config struct {
-		CpuLimit   *PostWorkspaceConfigurationsJSONBody_Config_CpuLimit `json:"cpu_limit,omitempty"`
-		EnableDinD *bool                                                `json:"enableDinD,omitempty"`
-		Env        *[]struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-		} `json:"env,omitempty"`
-		Image         *string                                                 `json:"image,omitempty"`
-		InitialScript *string                                                 `json:"initialScript,omitempty"`
-		MemoryLimit   *PostWorkspaceConfigurationsJSONBody_Config_MemoryLimit `json:"memory_limit,omitempty"`
-		Nix           *map[string]interface{}                                 `json:"nix,omitempty"`
-		Platform      *PostWorkspaceConfigurationsJSONBodyConfigPlatform      `json:"platform,omitempty"`
-		TtlSeconds    *int                                                    `json:"ttlSeconds,omitempty"`
-		Volumes       *struct {
-			Enabled   *bool   `json:"enabled,omitempty"`
-			MountPath *string `json:"mountPath,omitempty"`
-		} `json:"volumes,omitempty"`
-	} `json:"config"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
-}
-
-// PostWorkspaceConfigurationsJSONBodyConfigCpuLimit0 defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBodyConfigCpuLimit0 = float32
-
-// PostWorkspaceConfigurationsJSONBodyConfigCpuLimit1 defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBodyConfigCpuLimit1 = string
-
-// PostWorkspaceConfigurationsJSONBody_Config_CpuLimit defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBody_Config_CpuLimit struct {
-	union json.RawMessage
-}
-
-// PostWorkspaceConfigurationsJSONBodyConfigMemoryLimit0 defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBodyConfigMemoryLimit0 = float32
-
-// PostWorkspaceConfigurationsJSONBodyConfigMemoryLimit1 defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBodyConfigMemoryLimit1 = string
-
-// PostWorkspaceConfigurationsJSONBody_Config_MemoryLimit defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBody_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-
-// PostWorkspaceConfigurationsJSONBodyConfigPlatform defines parameters for PostWorkspaceConfigurations.
-type PostWorkspaceConfigurationsJSONBodyConfigPlatform string
-
-// PatchWorkspaceConfigurationsIdJSONBody defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBody struct {
-	Config *struct {
-		CpuLimit   *PatchWorkspaceConfigurationsIdJSONBody_Config_CpuLimit `json:"cpu_limit,omitempty"`
-		EnableDinD *bool                                                   `json:"enableDinD,omitempty"`
-		Env        *[]struct {
-			Name  string `json:"name"`
-			Value string `json:"value"`
-		} `json:"env,omitempty"`
-		Image         *string                                                    `json:"image,omitempty"`
-		InitialScript *string                                                    `json:"initialScript,omitempty"`
-		MemoryLimit   *PatchWorkspaceConfigurationsIdJSONBody_Config_MemoryLimit `json:"memory_limit,omitempty"`
-		Nix           *map[string]interface{}                                    `json:"nix,omitempty"`
-		Platform      *PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform      `json:"platform,omitempty"`
-		TtlSeconds    *int                                                       `json:"ttlSeconds,omitempty"`
-		Volumes       *struct {
-			Enabled   *bool   `json:"enabled,omitempty"`
-			MountPath *string `json:"mountPath,omitempty"`
-		} `json:"volumes,omitempty"`
-	} `json:"config,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Title       *string `json:"title,omitempty"`
-}
-
-// PatchWorkspaceConfigurationsIdJSONBodyConfigCpuLimit0 defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBodyConfigCpuLimit0 = float32
-
-// PatchWorkspaceConfigurationsIdJSONBodyConfigCpuLimit1 defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBodyConfigCpuLimit1 = string
-
-// PatchWorkspaceConfigurationsIdJSONBody_Config_CpuLimit defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBody_Config_CpuLimit struct {
-	union json.RawMessage
-}
-
-// PatchWorkspaceConfigurationsIdJSONBodyConfigMemoryLimit0 defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBodyConfigMemoryLimit0 = float32
-
-// PatchWorkspaceConfigurationsIdJSONBodyConfigMemoryLimit1 defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBodyConfigMemoryLimit1 = string
-
-// PatchWorkspaceConfigurationsIdJSONBody_Config_MemoryLimit defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBody_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-
-// PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform defines parameters for PatchWorkspaceConfigurationsId.
-type PatchWorkspaceConfigurationsIdJSONBodyConfigPlatform string
 
 // PostAgentsJSONRequestBody defines body for PostAgents for application/json ContentType.
-type PostAgentsJSONRequestBody PostAgentsJSONBody
+type PostAgentsJSONRequestBody = AgentCreateRequest
 
 // PatchAgentsIdJSONRequestBody defines body for PatchAgentsId for application/json ContentType.
-type PatchAgentsIdJSONRequestBody PatchAgentsIdJSONBody
+type PatchAgentsIdJSONRequestBody = AgentUpdateRequest
 
-// PostAttachmentsJSONRequestBody defines body for PostAttachments for application/json ContentType.
-type PostAttachmentsJSONRequestBody PostAttachmentsJSONBody
+// PostEnvsJSONRequestBody defines body for PostEnvs for application/json ContentType.
+type PostEnvsJSONRequestBody = EnvCreateRequest
 
-// PostMcpServersJSONRequestBody defines body for PostMcpServers for application/json ContentType.
-type PostMcpServersJSONRequestBody PostMcpServersJSONBody
+// PatchEnvsIdJSONRequestBody defines body for PatchEnvsId for application/json ContentType.
+type PatchEnvsIdJSONRequestBody = EnvUpdateRequest
 
-// PatchMcpServersIdJSONRequestBody defines body for PatchMcpServersId for application/json ContentType.
-type PatchMcpServersIdJSONRequestBody PatchMcpServersIdJSONBody
+// PostHooksJSONRequestBody defines body for PostHooks for application/json ContentType.
+type PostHooksJSONRequestBody = HookCreateRequest
 
-// PostMemoryBucketsJSONRequestBody defines body for PostMemoryBuckets for application/json ContentType.
-type PostMemoryBucketsJSONRequestBody PostMemoryBucketsJSONBody
+// PatchHooksIdJSONRequestBody defines body for PatchHooksId for application/json ContentType.
+type PatchHooksIdJSONRequestBody = HookUpdateRequest
 
-// PatchMemoryBucketsIdJSONRequestBody defines body for PatchMemoryBucketsId for application/json ContentType.
-type PatchMemoryBucketsIdJSONRequestBody PatchMemoryBucketsIdJSONBody
+// PostInitScriptsJSONRequestBody defines body for PostInitScripts for application/json ContentType.
+type PostInitScriptsJSONRequestBody = InitScriptCreateRequest
 
-// PostToolsJSONRequestBody defines body for PostTools for application/json ContentType.
-type PostToolsJSONRequestBody PostToolsJSONBody
+// PatchInitScriptsIdJSONRequestBody defines body for PatchInitScriptsId for application/json ContentType.
+type PatchInitScriptsIdJSONRequestBody = InitScriptUpdateRequest
 
-// PatchToolsIdJSONRequestBody defines body for PatchToolsId for application/json ContentType.
-type PatchToolsIdJSONRequestBody PatchToolsIdJSONBody
+// PostMcpsJSONRequestBody defines body for PostMcps for application/json ContentType.
+type PostMcpsJSONRequestBody = McpCreateRequest
 
-// PostWorkspaceConfigurationsJSONRequestBody defines body for PostWorkspaceConfigurations for application/json ContentType.
-type PostWorkspaceConfigurationsJSONRequestBody PostWorkspaceConfigurationsJSONBody
+// PatchMcpsIdJSONRequestBody defines body for PatchMcpsId for application/json ContentType.
+type PatchMcpsIdJSONRequestBody = McpUpdateRequest
 
-// PatchWorkspaceConfigurationsIdJSONRequestBody defines body for PatchWorkspaceConfigurationsId for application/json ContentType.
-type PatchWorkspaceConfigurationsIdJSONRequestBody PatchWorkspaceConfigurationsIdJSONBody
+// PostSkillsJSONRequestBody defines body for PostSkills for application/json ContentType.
+type PostSkillsJSONRequestBody = SkillCreateRequest
+
+// PatchSkillsIdJSONRequestBody defines body for PatchSkillsId for application/json ContentType.
+type PatchSkillsIdJSONRequestBody = SkillUpdateRequest
+
+// PostVolumeAttachmentsJSONRequestBody defines body for PostVolumeAttachments for application/json ContentType.
+type PostVolumeAttachmentsJSONRequestBody = VolumeAttachmentCreateRequest
+
+// PostVolumesJSONRequestBody defines body for PostVolumes for application/json ContentType.
+type PostVolumesJSONRequestBody = VolumeCreateRequest
+
+// PatchVolumesIdJSONRequestBody defines body for PatchVolumesId for application/json ContentType.
+type PatchVolumesIdJSONRequestBody = VolumeUpdateRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -553,102 +560,143 @@ type ClientInterface interface {
 	PostAgents(ctx context.Context, body PostAgentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteAgentsId request
-	DeleteAgentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DeleteAgentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetAgentsId request
-	GetAgentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	GetAgentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PatchAgentsIdWithBody request with any body
-	PatchAgentsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchAgentsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchAgentsId(ctx context.Context, id openapi_types.UUID, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchAgentsId(ctx context.Context, id IdPath, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetAttachments request
-	GetAttachments(ctx context.Context, params *GetAttachmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetEnvs request
+	GetEnvs(ctx context.Context, params *GetEnvsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostAttachmentsWithBody request with any body
-	PostAttachmentsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostEnvsWithBody request with any body
+	PostEnvsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostAttachments(ctx context.Context, body PostAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostEnvs(ctx context.Context, body PostEnvsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteAttachmentsId request
-	DeleteAttachmentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteEnvsId request
+	DeleteEnvsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetMcpServers request
-	GetMcpServers(ctx context.Context, params *GetMcpServersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetEnvsId request
+	GetEnvsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostMcpServersWithBody request with any body
-	PostMcpServersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchEnvsIdWithBody request with any body
+	PatchEnvsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostMcpServers(ctx context.Context, body PostMcpServersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchEnvsId(ctx context.Context, id IdPath, body PatchEnvsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteMcpServersId request
-	DeleteMcpServersId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetHooks request
+	GetHooks(ctx context.Context, params *GetHooksParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetMcpServersId request
-	GetMcpServersId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostHooksWithBody request with any body
+	PostHooksWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchMcpServersIdWithBody request with any body
-	PatchMcpServersIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostHooks(ctx context.Context, body PostHooksJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchMcpServersId(ctx context.Context, id openapi_types.UUID, body PatchMcpServersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteHooksId request
+	DeleteHooksId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetMemoryBuckets request
-	GetMemoryBuckets(ctx context.Context, params *GetMemoryBucketsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetHooksId request
+	GetHooksId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostMemoryBucketsWithBody request with any body
-	PostMemoryBucketsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchHooksIdWithBody request with any body
+	PatchHooksIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostMemoryBuckets(ctx context.Context, body PostMemoryBucketsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchHooksId(ctx context.Context, id IdPath, body PatchHooksIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteMemoryBucketsId request
-	DeleteMemoryBucketsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetInitScripts request
+	GetInitScripts(ctx context.Context, params *GetInitScriptsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetMemoryBucketsId request
-	GetMemoryBucketsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostInitScriptsWithBody request with any body
+	PostInitScriptsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchMemoryBucketsIdWithBody request with any body
-	PatchMemoryBucketsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostInitScripts(ctx context.Context, body PostInitScriptsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchMemoryBucketsId(ctx context.Context, id openapi_types.UUID, body PatchMemoryBucketsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteInitScriptsId request
+	DeleteInitScriptsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTools request
-	GetTools(ctx context.Context, params *GetToolsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetInitScriptsId request
+	GetInitScriptsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostToolsWithBody request with any body
-	PostToolsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchInitScriptsIdWithBody request with any body
+	PatchInitScriptsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostTools(ctx context.Context, body PostToolsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchInitScriptsId(ctx context.Context, id IdPath, body PatchInitScriptsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteToolsId request
-	DeleteToolsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMcps request
+	GetMcps(ctx context.Context, params *GetMcpsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetToolsId request
-	GetToolsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostMcpsWithBody request with any body
+	PostMcpsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchToolsIdWithBody request with any body
-	PatchToolsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostMcps(ctx context.Context, body PostMcpsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchToolsId(ctx context.Context, id openapi_types.UUID, body PatchToolsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteMcpsId request
+	DeleteMcpsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetWorkspaceConfigurations request
-	GetWorkspaceConfigurations(ctx context.Context, params *GetWorkspaceConfigurationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMcpsId request
+	GetMcpsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostWorkspaceConfigurationsWithBody request with any body
-	PostWorkspaceConfigurationsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchMcpsIdWithBody request with any body
+	PatchMcpsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostWorkspaceConfigurations(ctx context.Context, body PostWorkspaceConfigurationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchMcpsId(ctx context.Context, id IdPath, body PatchMcpsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteWorkspaceConfigurationsId request
-	DeleteWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetSkills request
+	GetSkills(ctx context.Context, params *GetSkillsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetWorkspaceConfigurationsId request
-	GetWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostSkillsWithBody request with any body
+	PostSkillsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchWorkspaceConfigurationsIdWithBody request with any body
-	PatchWorkspaceConfigurationsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostSkills(ctx context.Context, body PostSkillsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, body PatchWorkspaceConfigurationsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteSkillsId request
+	DeleteSkillsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSkillsId request
+	GetSkillsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchSkillsIdWithBody request with any body
+	PatchSkillsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchSkillsId(ctx context.Context, id IdPath, body PatchSkillsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetVolumeAttachments request
+	GetVolumeAttachments(ctx context.Context, params *GetVolumeAttachmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostVolumeAttachmentsWithBody request with any body
+	PostVolumeAttachmentsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostVolumeAttachments(ctx context.Context, body PostVolumeAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteVolumeAttachmentsId request
+	DeleteVolumeAttachmentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetVolumeAttachmentsId request
+	GetVolumeAttachmentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetVolumes request
+	GetVolumes(ctx context.Context, params *GetVolumesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostVolumesWithBody request with any body
+	PostVolumesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostVolumes(ctx context.Context, body PostVolumesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteVolumesId request
+	DeleteVolumesId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetVolumesId request
+	GetVolumesId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchVolumesIdWithBody request with any body
+	PatchVolumesIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchVolumesId(ctx context.Context, id IdPath, body PatchVolumesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetAgents(ctx context.Context, params *GetAgentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -687,7 +735,7 @@ func (c *Client) PostAgents(ctx context.Context, body PostAgentsJSONRequestBody,
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteAgentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) DeleteAgentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteAgentsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
@@ -699,7 +747,7 @@ func (c *Client) DeleteAgentsId(ctx context.Context, id openapi_types.UUID, reqE
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetAgentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) GetAgentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetAgentsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
@@ -711,7 +759,7 @@ func (c *Client) GetAgentsId(ctx context.Context, id openapi_types.UUID, reqEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchAgentsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PatchAgentsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPatchAgentsIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
@@ -723,7 +771,7 @@ func (c *Client) PatchAgentsIdWithBody(ctx context.Context, id openapi_types.UUI
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchAgentsId(ctx context.Context, id openapi_types.UUID, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+func (c *Client) PatchAgentsId(ctx context.Context, id IdPath, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPatchAgentsIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
@@ -735,8 +783,8 @@ func (c *Client) PatchAgentsId(ctx context.Context, id openapi_types.UUID, body 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetAttachments(ctx context.Context, params *GetAttachmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetAttachmentsRequest(c.Server, params)
+func (c *Client) GetEnvs(ctx context.Context, params *GetEnvsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEnvsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -747,8 +795,8 @@ func (c *Client) GetAttachments(ctx context.Context, params *GetAttachmentsParam
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAttachmentsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAttachmentsRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostEnvsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostEnvsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -759,8 +807,8 @@ func (c *Client) PostAttachmentsWithBody(ctx context.Context, contentType string
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostAttachments(ctx context.Context, body PostAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostAttachmentsRequest(c.Server, body)
+func (c *Client) PostEnvs(ctx context.Context, body PostEnvsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostEnvsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -771,8 +819,8 @@ func (c *Client) PostAttachments(ctx context.Context, body PostAttachmentsJSONRe
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteAttachmentsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteAttachmentsIdRequest(c.Server, id)
+func (c *Client) DeleteEnvsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteEnvsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -783,8 +831,8 @@ func (c *Client) DeleteAttachmentsId(ctx context.Context, id openapi_types.UUID,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetMcpServers(ctx context.Context, params *GetMcpServersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetMcpServersRequest(c.Server, params)
+func (c *Client) GetEnvsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEnvsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -795,8 +843,8 @@ func (c *Client) GetMcpServers(ctx context.Context, params *GetMcpServersParams,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostMcpServersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostMcpServersRequestWithBody(c.Server, contentType, body)
+func (c *Client) PatchEnvsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchEnvsIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -807,8 +855,8 @@ func (c *Client) PostMcpServersWithBody(ctx context.Context, contentType string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostMcpServers(ctx context.Context, body PostMcpServersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostMcpServersRequest(c.Server, body)
+func (c *Client) PatchEnvsId(ctx context.Context, id IdPath, body PatchEnvsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchEnvsIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -819,8 +867,8 @@ func (c *Client) PostMcpServers(ctx context.Context, body PostMcpServersJSONRequ
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteMcpServersId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteMcpServersIdRequest(c.Server, id)
+func (c *Client) GetHooks(ctx context.Context, params *GetHooksParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHooksRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -831,8 +879,8 @@ func (c *Client) DeleteMcpServersId(ctx context.Context, id openapi_types.UUID, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetMcpServersId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetMcpServersIdRequest(c.Server, id)
+func (c *Client) PostHooksWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostHooksRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -843,8 +891,8 @@ func (c *Client) GetMcpServersId(ctx context.Context, id openapi_types.UUID, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchMcpServersIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchMcpServersIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PostHooks(ctx context.Context, body PostHooksJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostHooksRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -855,8 +903,8 @@ func (c *Client) PatchMcpServersIdWithBody(ctx context.Context, id openapi_types
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchMcpServersId(ctx context.Context, id openapi_types.UUID, body PatchMcpServersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchMcpServersIdRequest(c.Server, id, body)
+func (c *Client) DeleteHooksId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteHooksIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -867,8 +915,8 @@ func (c *Client) PatchMcpServersId(ctx context.Context, id openapi_types.UUID, b
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetMemoryBuckets(ctx context.Context, params *GetMemoryBucketsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetMemoryBucketsRequest(c.Server, params)
+func (c *Client) GetHooksId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHooksIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -879,8 +927,8 @@ func (c *Client) GetMemoryBuckets(ctx context.Context, params *GetMemoryBucketsP
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostMemoryBucketsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostMemoryBucketsRequestWithBody(c.Server, contentType, body)
+func (c *Client) PatchHooksIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchHooksIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -891,8 +939,8 @@ func (c *Client) PostMemoryBucketsWithBody(ctx context.Context, contentType stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostMemoryBuckets(ctx context.Context, body PostMemoryBucketsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostMemoryBucketsRequest(c.Server, body)
+func (c *Client) PatchHooksId(ctx context.Context, id IdPath, body PatchHooksIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchHooksIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -903,8 +951,8 @@ func (c *Client) PostMemoryBuckets(ctx context.Context, body PostMemoryBucketsJS
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteMemoryBucketsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteMemoryBucketsIdRequest(c.Server, id)
+func (c *Client) GetInitScripts(ctx context.Context, params *GetInitScriptsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInitScriptsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -915,8 +963,8 @@ func (c *Client) DeleteMemoryBucketsId(ctx context.Context, id openapi_types.UUI
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetMemoryBucketsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetMemoryBucketsIdRequest(c.Server, id)
+func (c *Client) PostInitScriptsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostInitScriptsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -927,8 +975,8 @@ func (c *Client) GetMemoryBucketsId(ctx context.Context, id openapi_types.UUID, 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchMemoryBucketsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchMemoryBucketsIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PostInitScripts(ctx context.Context, body PostInitScriptsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostInitScriptsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -939,8 +987,8 @@ func (c *Client) PatchMemoryBucketsIdWithBody(ctx context.Context, id openapi_ty
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchMemoryBucketsId(ctx context.Context, id openapi_types.UUID, body PatchMemoryBucketsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchMemoryBucketsIdRequest(c.Server, id, body)
+func (c *Client) DeleteInitScriptsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteInitScriptsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -951,8 +999,8 @@ func (c *Client) PatchMemoryBucketsId(ctx context.Context, id openapi_types.UUID
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetTools(ctx context.Context, params *GetToolsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetToolsRequest(c.Server, params)
+func (c *Client) GetInitScriptsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInitScriptsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -963,8 +1011,8 @@ func (c *Client) GetTools(ctx context.Context, params *GetToolsParams, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostToolsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostToolsRequestWithBody(c.Server, contentType, body)
+func (c *Client) PatchInitScriptsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchInitScriptsIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -975,8 +1023,8 @@ func (c *Client) PostToolsWithBody(ctx context.Context, contentType string, body
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostTools(ctx context.Context, body PostToolsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostToolsRequest(c.Server, body)
+func (c *Client) PatchInitScriptsId(ctx context.Context, id IdPath, body PatchInitScriptsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchInitScriptsIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -987,8 +1035,8 @@ func (c *Client) PostTools(ctx context.Context, body PostToolsJSONRequestBody, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteToolsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteToolsIdRequest(c.Server, id)
+func (c *Client) GetMcps(ctx context.Context, params *GetMcpsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMcpsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -999,8 +1047,8 @@ func (c *Client) DeleteToolsId(ctx context.Context, id openapi_types.UUID, reqEd
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetToolsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetToolsIdRequest(c.Server, id)
+func (c *Client) PostMcpsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostMcpsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1011,8 +1059,8 @@ func (c *Client) GetToolsId(ctx context.Context, id openapi_types.UUID, reqEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchToolsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchToolsIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PostMcps(ctx context.Context, body PostMcpsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostMcpsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1023,8 +1071,8 @@ func (c *Client) PatchToolsIdWithBody(ctx context.Context, id openapi_types.UUID
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchToolsId(ctx context.Context, id openapi_types.UUID, body PatchToolsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchToolsIdRequest(c.Server, id, body)
+func (c *Client) DeleteMcpsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMcpsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -1035,8 +1083,8 @@ func (c *Client) PatchToolsId(ctx context.Context, id openapi_types.UUID, body P
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetWorkspaceConfigurations(ctx context.Context, params *GetWorkspaceConfigurationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetWorkspaceConfigurationsRequest(c.Server, params)
+func (c *Client) GetMcpsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMcpsIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -1047,8 +1095,8 @@ func (c *Client) GetWorkspaceConfigurations(ctx context.Context, params *GetWork
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostWorkspaceConfigurationsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostWorkspaceConfigurationsRequestWithBody(c.Server, contentType, body)
+func (c *Client) PatchMcpsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchMcpsIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1059,8 +1107,8 @@ func (c *Client) PostWorkspaceConfigurationsWithBody(ctx context.Context, conten
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostWorkspaceConfigurations(ctx context.Context, body PostWorkspaceConfigurationsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostWorkspaceConfigurationsRequest(c.Server, body)
+func (c *Client) PatchMcpsId(ctx context.Context, id IdPath, body PatchMcpsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchMcpsIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1071,8 +1119,8 @@ func (c *Client) PostWorkspaceConfigurations(ctx context.Context, body PostWorks
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteWorkspaceConfigurationsIdRequest(c.Server, id)
+func (c *Client) GetSkills(ctx context.Context, params *GetSkillsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSkillsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1083,8 +1131,8 @@ func (c *Client) DeleteWorkspaceConfigurationsId(ctx context.Context, id openapi
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetWorkspaceConfigurationsIdRequest(c.Server, id)
+func (c *Client) PostSkillsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostSkillsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1095,8 +1143,8 @@ func (c *Client) GetWorkspaceConfigurationsId(ctx context.Context, id openapi_ty
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchWorkspaceConfigurationsIdWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchWorkspaceConfigurationsIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PostSkills(ctx context.Context, body PostSkillsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostSkillsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1107,8 +1155,188 @@ func (c *Client) PatchWorkspaceConfigurationsIdWithBody(ctx context.Context, id 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchWorkspaceConfigurationsId(ctx context.Context, id openapi_types.UUID, body PatchWorkspaceConfigurationsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchWorkspaceConfigurationsIdRequest(c.Server, id, body)
+func (c *Client) DeleteSkillsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteSkillsIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSkillsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSkillsIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchSkillsIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchSkillsIdRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchSkillsId(ctx context.Context, id IdPath, body PatchSkillsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchSkillsIdRequest(c.Server, id, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetVolumeAttachments(ctx context.Context, params *GetVolumeAttachmentsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetVolumeAttachmentsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostVolumeAttachmentsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostVolumeAttachmentsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostVolumeAttachments(ctx context.Context, body PostVolumeAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostVolumeAttachmentsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteVolumeAttachmentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteVolumeAttachmentsIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetVolumeAttachmentsId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetVolumeAttachmentsIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetVolumes(ctx context.Context, params *GetVolumesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetVolumesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostVolumesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostVolumesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostVolumes(ctx context.Context, body PostVolumesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostVolumesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteVolumesId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteVolumesIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetVolumesId(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetVolumesIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchVolumesIdWithBody(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchVolumesIdRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchVolumesId(ctx context.Context, id IdPath, body PatchVolumesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchVolumesIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1141,9 +1369,9 @@ func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request,
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Q != nil {
+		if params.PageSize != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "q", runtime.ParamLocationQuery, *params.Q); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1157,25 +1385,9 @@ func NewGetAgentsRequest(server string, params *GetAgentsParams) (*http.Request,
 
 		}
 
-		if params.Page != nil {
+		if params.PageToken != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PerPage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1241,7 +1453,7 @@ func NewPostAgentsRequestWithBody(server string, contentType string, body io.Rea
 }
 
 // NewDeleteAgentsIdRequest generates requests for DeleteAgentsId
-func NewDeleteAgentsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+func NewDeleteAgentsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1275,7 +1487,7 @@ func NewDeleteAgentsIdRequest(server string, id openapi_types.UUID) (*http.Reque
 }
 
 // NewGetAgentsIdRequest generates requests for GetAgentsId
-func NewGetAgentsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+func NewGetAgentsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1309,7 +1521,7 @@ func NewGetAgentsIdRequest(server string, id openapi_types.UUID) (*http.Request,
 }
 
 // NewPatchAgentsIdRequest calls the generic PatchAgentsId builder with application/json body
-func NewPatchAgentsIdRequest(server string, id openapi_types.UUID, body PatchAgentsIdJSONRequestBody) (*http.Request, error) {
+func NewPatchAgentsIdRequest(server string, id IdPath, body PatchAgentsIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
@@ -1320,7 +1532,7 @@ func NewPatchAgentsIdRequest(server string, id openapi_types.UUID, body PatchAge
 }
 
 // NewPatchAgentsIdRequestWithBody generates requests for PatchAgentsId with any type of body
-func NewPatchAgentsIdRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+func NewPatchAgentsIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1355,8 +1567,8 @@ func NewPatchAgentsIdRequestWithBody(server string, id openapi_types.UUID, conte
 	return req, nil
 }
 
-// NewGetAttachmentsRequest generates requests for GetAttachments
-func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*http.Request, error) {
+// NewGetEnvsRequest generates requests for GetEnvs
+func NewGetEnvsRequest(server string, params *GetEnvsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1364,7 +1576,7 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/attachments")
+	operationPath := fmt.Sprintf("/envs")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1377,9 +1589,9 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.SourceType != nil {
+		if params.PageSize != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sourceType", runtime.ParamLocationQuery, *params.SourceType); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1393,9 +1605,9 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 
 		}
 
-		if params.SourceId != nil {
+		if params.PageToken != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sourceId", runtime.ParamLocationQuery, *params.SourceId); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1409,9 +1621,9 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 
 		}
 
-		if params.TargetType != nil {
+		if params.AgentId != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "targetType", runtime.ParamLocationQuery, *params.TargetType); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1425,9 +1637,9 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 
 		}
 
-		if params.TargetId != nil {
+		if params.McpId != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "targetId", runtime.ParamLocationQuery, *params.TargetId); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mcpId", runtime.ParamLocationQuery, *params.McpId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1441,41 +1653,9 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 
 		}
 
-		if params.Kind != nil {
+		if params.HookId != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "kind", runtime.ParamLocationQuery, *params.Kind); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PerPage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "hookId", runtime.ParamLocationQuery, *params.HookId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1500,19 +1680,19 @@ func NewGetAttachmentsRequest(server string, params *GetAttachmentsParams) (*htt
 	return req, nil
 }
 
-// NewPostAttachmentsRequest calls the generic PostAttachments builder with application/json body
-func NewPostAttachmentsRequest(server string, body PostAttachmentsJSONRequestBody) (*http.Request, error) {
+// NewPostEnvsRequest calls the generic PostEnvs builder with application/json body
+func NewPostEnvsRequest(server string, body PostEnvsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostAttachmentsRequestWithBody(server, "application/json", bodyReader)
+	return NewPostEnvsRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostAttachmentsRequestWithBody generates requests for PostAttachments with any type of body
-func NewPostAttachmentsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostEnvsRequestWithBody generates requests for PostEnvs with any type of body
+func NewPostEnvsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1520,7 +1700,7 @@ func NewPostAttachmentsRequestWithBody(server string, contentType string, body i
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/attachments")
+	operationPath := fmt.Sprintf("/envs")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1540,8 +1720,8 @@ func NewPostAttachmentsRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
-// NewDeleteAttachmentsIdRequest generates requests for DeleteAttachmentsId
-func NewDeleteAttachmentsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewDeleteEnvsIdRequest generates requests for DeleteEnvsId
+func NewDeleteEnvsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1556,7 +1736,7 @@ func NewDeleteAttachmentsIdRequest(server string, id openapi_types.UUID) (*http.
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/attachments/%s", pathParam0)
+	operationPath := fmt.Sprintf("/envs/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1574,113 +1754,8 @@ func NewDeleteAttachmentsIdRequest(server string, id openapi_types.UUID) (*http.
 	return req, nil
 }
 
-// NewGetMcpServersRequest generates requests for GetMcpServers
-func NewGetMcpServersRequest(server string, params *GetMcpServersParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/mcp-servers")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if params.Page != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if params.PerPage != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostMcpServersRequest calls the generic PostMcpServers builder with application/json body
-func NewPostMcpServersRequest(server string, body PostMcpServersJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostMcpServersRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostMcpServersRequestWithBody generates requests for PostMcpServers with any type of body
-func NewPostMcpServersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/mcp-servers")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewDeleteMcpServersIdRequest generates requests for DeleteMcpServersId
-func NewDeleteMcpServersIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewGetEnvsIdRequest generates requests for GetEnvsId
+func NewGetEnvsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1695,41 +1770,7 @@ func NewDeleteMcpServersIdRequest(server string, id openapi_types.UUID) (*http.R
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/mcp-servers/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetMcpServersIdRequest generates requests for GetMcpServersId
-func NewGetMcpServersIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/mcp-servers/%s", pathParam0)
+	operationPath := fmt.Sprintf("/envs/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1747,19 +1788,19 @@ func NewGetMcpServersIdRequest(server string, id openapi_types.UUID) (*http.Requ
 	return req, nil
 }
 
-// NewPatchMcpServersIdRequest calls the generic PatchMcpServersId builder with application/json body
-func NewPatchMcpServersIdRequest(server string, id openapi_types.UUID, body PatchMcpServersIdJSONRequestBody) (*http.Request, error) {
+// NewPatchEnvsIdRequest calls the generic PatchEnvsId builder with application/json body
+func NewPatchEnvsIdRequest(server string, id IdPath, body PatchEnvsIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchMcpServersIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPatchEnvsIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPatchMcpServersIdRequestWithBody generates requests for PatchMcpServersId with any type of body
-func NewPatchMcpServersIdRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchEnvsIdRequestWithBody generates requests for PatchEnvsId with any type of body
+func NewPatchEnvsIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1774,7 +1815,7 @@ func NewPatchMcpServersIdRequestWithBody(server string, id openapi_types.UUID, c
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/mcp-servers/%s", pathParam0)
+	operationPath := fmt.Sprintf("/envs/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1794,8 +1835,8 @@ func NewPatchMcpServersIdRequestWithBody(server string, id openapi_types.UUID, c
 	return req, nil
 }
 
-// NewGetMemoryBucketsRequest generates requests for GetMemoryBuckets
-func NewGetMemoryBucketsRequest(server string, params *GetMemoryBucketsParams) (*http.Request, error) {
+// NewGetHooksRequest generates requests for GetHooks
+func NewGetHooksRequest(server string, params *GetHooksParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1803,7 +1844,7 @@ func NewGetMemoryBucketsRequest(server string, params *GetMemoryBucketsParams) (
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/memory-buckets")
+	operationPath := fmt.Sprintf("/hooks")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1816,9 +1857,9 @@ func NewGetMemoryBucketsRequest(server string, params *GetMemoryBucketsParams) (
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Page != nil {
+		if params.PageSize != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1832,9 +1873,25 @@ func NewGetMemoryBucketsRequest(server string, params *GetMemoryBucketsParams) (
 
 		}
 
-		if params.PerPage != nil {
+		if params.PageToken != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AgentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -1859,19 +1916,19 @@ func NewGetMemoryBucketsRequest(server string, params *GetMemoryBucketsParams) (
 	return req, nil
 }
 
-// NewPostMemoryBucketsRequest calls the generic PostMemoryBuckets builder with application/json body
-func NewPostMemoryBucketsRequest(server string, body PostMemoryBucketsJSONRequestBody) (*http.Request, error) {
+// NewPostHooksRequest calls the generic PostHooks builder with application/json body
+func NewPostHooksRequest(server string, body PostHooksJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostMemoryBucketsRequestWithBody(server, "application/json", bodyReader)
+	return NewPostHooksRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostMemoryBucketsRequestWithBody generates requests for PostMemoryBuckets with any type of body
-func NewPostMemoryBucketsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostHooksRequestWithBody generates requests for PostHooks with any type of body
+func NewPostHooksRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1879,7 +1936,7 @@ func NewPostMemoryBucketsRequestWithBody(server string, contentType string, body
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/memory-buckets")
+	operationPath := fmt.Sprintf("/hooks")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1899,8 +1956,8 @@ func NewPostMemoryBucketsRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
-// NewDeleteMemoryBucketsIdRequest generates requests for DeleteMemoryBucketsId
-func NewDeleteMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewDeleteHooksIdRequest generates requests for DeleteHooksId
+func NewDeleteHooksIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1915,7 +1972,7 @@ func NewDeleteMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*htt
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/memory-buckets/%s", pathParam0)
+	operationPath := fmt.Sprintf("/hooks/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1933,8 +1990,8 @@ func NewDeleteMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*htt
 	return req, nil
 }
 
-// NewGetMemoryBucketsIdRequest generates requests for GetMemoryBucketsId
-func NewGetMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewGetHooksIdRequest generates requests for GetHooksId
+func NewGetHooksIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1949,7 +2006,7 @@ func NewGetMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*http.R
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/memory-buckets/%s", pathParam0)
+	operationPath := fmt.Sprintf("/hooks/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1967,19 +2024,19 @@ func NewGetMemoryBucketsIdRequest(server string, id openapi_types.UUID) (*http.R
 	return req, nil
 }
 
-// NewPatchMemoryBucketsIdRequest calls the generic PatchMemoryBucketsId builder with application/json body
-func NewPatchMemoryBucketsIdRequest(server string, id openapi_types.UUID, body PatchMemoryBucketsIdJSONRequestBody) (*http.Request, error) {
+// NewPatchHooksIdRequest calls the generic PatchHooksId builder with application/json body
+func NewPatchHooksIdRequest(server string, id IdPath, body PatchHooksIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchMemoryBucketsIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPatchHooksIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPatchMemoryBucketsIdRequestWithBody generates requests for PatchMemoryBucketsId with any type of body
-func NewPatchMemoryBucketsIdRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchHooksIdRequestWithBody generates requests for PatchHooksId with any type of body
+func NewPatchHooksIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -1994,7 +2051,7 @@ func NewPatchMemoryBucketsIdRequestWithBody(server string, id openapi_types.UUID
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/memory-buckets/%s", pathParam0)
+	operationPath := fmt.Sprintf("/hooks/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2014,8 +2071,8 @@ func NewPatchMemoryBucketsIdRequestWithBody(server string, id openapi_types.UUID
 	return req, nil
 }
 
-// NewGetToolsRequest generates requests for GetTools
-func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, error) {
+// NewGetInitScriptsRequest generates requests for GetInitScripts
+func NewGetInitScriptsRequest(server string, params *GetInitScriptsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2023,7 +2080,7 @@ func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, e
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/tools")
+	operationPath := fmt.Sprintf("/init-scripts")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2036,9 +2093,9 @@ func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, e
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Type != nil {
+		if params.PageSize != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "type", runtime.ParamLocationQuery, *params.Type); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2052,9 +2109,9 @@ func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, e
 
 		}
 
-		if params.Page != nil {
+		if params.PageToken != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2068,9 +2125,41 @@ func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, e
 
 		}
 
-		if params.PerPage != nil {
+		if params.AgentId != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.McpId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mcpId", runtime.ParamLocationQuery, *params.McpId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.HookId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "hookId", runtime.ParamLocationQuery, *params.HookId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2095,19 +2184,19 @@ func NewGetToolsRequest(server string, params *GetToolsParams) (*http.Request, e
 	return req, nil
 }
 
-// NewPostToolsRequest calls the generic PostTools builder with application/json body
-func NewPostToolsRequest(server string, body PostToolsJSONRequestBody) (*http.Request, error) {
+// NewPostInitScriptsRequest calls the generic PostInitScripts builder with application/json body
+func NewPostInitScriptsRequest(server string, body PostInitScriptsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostToolsRequestWithBody(server, "application/json", bodyReader)
+	return NewPostInitScriptsRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostToolsRequestWithBody generates requests for PostTools with any type of body
-func NewPostToolsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostInitScriptsRequestWithBody generates requests for PostInitScripts with any type of body
+func NewPostInitScriptsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2115,7 +2204,7 @@ func NewPostToolsRequestWithBody(server string, contentType string, body io.Read
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/tools")
+	operationPath := fmt.Sprintf("/init-scripts")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2135,8 +2224,8 @@ func NewPostToolsRequestWithBody(server string, contentType string, body io.Read
 	return req, nil
 }
 
-// NewDeleteToolsIdRequest generates requests for DeleteToolsId
-func NewDeleteToolsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewDeleteInitScriptsIdRequest generates requests for DeleteInitScriptsId
+func NewDeleteInitScriptsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2151,7 +2240,7 @@ func NewDeleteToolsIdRequest(server string, id openapi_types.UUID) (*http.Reques
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/tools/%s", pathParam0)
+	operationPath := fmt.Sprintf("/init-scripts/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2169,8 +2258,8 @@ func NewDeleteToolsIdRequest(server string, id openapi_types.UUID) (*http.Reques
 	return req, nil
 }
 
-// NewGetToolsIdRequest generates requests for GetToolsId
-func NewGetToolsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewGetInitScriptsIdRequest generates requests for GetInitScriptsId
+func NewGetInitScriptsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2185,7 +2274,7 @@ func NewGetToolsIdRequest(server string, id openapi_types.UUID) (*http.Request, 
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/tools/%s", pathParam0)
+	operationPath := fmt.Sprintf("/init-scripts/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2203,19 +2292,19 @@ func NewGetToolsIdRequest(server string, id openapi_types.UUID) (*http.Request, 
 	return req, nil
 }
 
-// NewPatchToolsIdRequest calls the generic PatchToolsId builder with application/json body
-func NewPatchToolsIdRequest(server string, id openapi_types.UUID, body PatchToolsIdJSONRequestBody) (*http.Request, error) {
+// NewPatchInitScriptsIdRequest calls the generic PatchInitScriptsId builder with application/json body
+func NewPatchInitScriptsIdRequest(server string, id IdPath, body PatchInitScriptsIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchToolsIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPatchInitScriptsIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPatchToolsIdRequestWithBody generates requests for PatchToolsId with any type of body
-func NewPatchToolsIdRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchInitScriptsIdRequestWithBody generates requests for PatchInitScriptsId with any type of body
+func NewPatchInitScriptsIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2230,7 +2319,7 @@ func NewPatchToolsIdRequestWithBody(server string, id openapi_types.UUID, conten
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/tools/%s", pathParam0)
+	operationPath := fmt.Sprintf("/init-scripts/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2250,8 +2339,8 @@ func NewPatchToolsIdRequestWithBody(server string, id openapi_types.UUID, conten
 	return req, nil
 }
 
-// NewGetWorkspaceConfigurationsRequest generates requests for GetWorkspaceConfigurations
-func NewGetWorkspaceConfigurationsRequest(server string, params *GetWorkspaceConfigurationsParams) (*http.Request, error) {
+// NewGetMcpsRequest generates requests for GetMcps
+func NewGetMcpsRequest(server string, params *GetMcpsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2259,7 +2348,7 @@ func NewGetWorkspaceConfigurationsRequest(server string, params *GetWorkspaceCon
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/workspace-configurations")
+	operationPath := fmt.Sprintf("/mcps")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2272,9 +2361,9 @@ func NewGetWorkspaceConfigurationsRequest(server string, params *GetWorkspaceCon
 	if params != nil {
 		queryValues := queryURL.Query()
 
-		if params.Page != nil {
+		if params.PageSize != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "page", runtime.ParamLocationQuery, *params.Page); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2288,9 +2377,25 @@ func NewGetWorkspaceConfigurationsRequest(server string, params *GetWorkspaceCon
 
 		}
 
-		if params.PerPage != nil {
+		if params.PageToken != nil {
 
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "perPage", runtime.ParamLocationQuery, *params.PerPage); err != nil {
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AgentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
 				return nil, err
 			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 				return nil, err
@@ -2315,19 +2420,19 @@ func NewGetWorkspaceConfigurationsRequest(server string, params *GetWorkspaceCon
 	return req, nil
 }
 
-// NewPostWorkspaceConfigurationsRequest calls the generic PostWorkspaceConfigurations builder with application/json body
-func NewPostWorkspaceConfigurationsRequest(server string, body PostWorkspaceConfigurationsJSONRequestBody) (*http.Request, error) {
+// NewPostMcpsRequest calls the generic PostMcps builder with application/json body
+func NewPostMcpsRequest(server string, body PostMcpsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostWorkspaceConfigurationsRequestWithBody(server, "application/json", bodyReader)
+	return NewPostMcpsRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostWorkspaceConfigurationsRequestWithBody generates requests for PostWorkspaceConfigurations with any type of body
-func NewPostWorkspaceConfigurationsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostMcpsRequestWithBody generates requests for PostMcps with any type of body
+func NewPostMcpsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -2335,7 +2440,7 @@ func NewPostWorkspaceConfigurationsRequestWithBody(server string, contentType st
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/workspace-configurations")
+	operationPath := fmt.Sprintf("/mcps")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2355,8 +2460,8 @@ func NewPostWorkspaceConfigurationsRequestWithBody(server string, contentType st
 	return req, nil
 }
 
-// NewDeleteWorkspaceConfigurationsIdRequest generates requests for DeleteWorkspaceConfigurationsId
-func NewDeleteWorkspaceConfigurationsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewDeleteMcpsIdRequest generates requests for DeleteMcpsId
+func NewDeleteMcpsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2371,7 +2476,7 @@ func NewDeleteWorkspaceConfigurationsIdRequest(server string, id openapi_types.U
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/workspace-configurations/%s", pathParam0)
+	operationPath := fmt.Sprintf("/mcps/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2389,8 +2494,8 @@ func NewDeleteWorkspaceConfigurationsIdRequest(server string, id openapi_types.U
 	return req, nil
 }
 
-// NewGetWorkspaceConfigurationsIdRequest generates requests for GetWorkspaceConfigurationsId
-func NewGetWorkspaceConfigurationsIdRequest(server string, id openapi_types.UUID) (*http.Request, error) {
+// NewGetMcpsIdRequest generates requests for GetMcpsId
+func NewGetMcpsIdRequest(server string, id IdPath) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2405,7 +2510,7 @@ func NewGetWorkspaceConfigurationsIdRequest(server string, id openapi_types.UUID
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/workspace-configurations/%s", pathParam0)
+	operationPath := fmt.Sprintf("/mcps/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2423,19 +2528,19 @@ func NewGetWorkspaceConfigurationsIdRequest(server string, id openapi_types.UUID
 	return req, nil
 }
 
-// NewPatchWorkspaceConfigurationsIdRequest calls the generic PatchWorkspaceConfigurationsId builder with application/json body
-func NewPatchWorkspaceConfigurationsIdRequest(server string, id openapi_types.UUID, body PatchWorkspaceConfigurationsIdJSONRequestBody) (*http.Request, error) {
+// NewPatchMcpsIdRequest calls the generic PatchMcpsId builder with application/json body
+func NewPatchMcpsIdRequest(server string, id IdPath, body PatchMcpsIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchWorkspaceConfigurationsIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPatchMcpsIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPatchWorkspaceConfigurationsIdRequestWithBody generates requests for PatchWorkspaceConfigurationsId with any type of body
-func NewPatchWorkspaceConfigurationsIdRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchMcpsIdRequestWithBody generates requests for PatchMcpsId with any type of body
+func NewPatchMcpsIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -2450,7 +2555,700 @@ func NewPatchWorkspaceConfigurationsIdRequestWithBody(server string, id openapi_
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/workspace-configurations/%s", pathParam0)
+	operationPath := fmt.Sprintf("/mcps/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetSkillsRequest generates requests for GetSkills
+func NewGetSkillsRequest(server string, params *GetSkillsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/skills")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageToken != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AgentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostSkillsRequest calls the generic PostSkills builder with application/json body
+func NewPostSkillsRequest(server string, body PostSkillsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostSkillsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostSkillsRequestWithBody generates requests for PostSkills with any type of body
+func NewPostSkillsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/skills")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteSkillsIdRequest generates requests for DeleteSkillsId
+func NewDeleteSkillsIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/skills/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSkillsIdRequest generates requests for GetSkillsId
+func NewGetSkillsIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/skills/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchSkillsIdRequest calls the generic PatchSkillsId builder with application/json body
+func NewPatchSkillsIdRequest(server string, id IdPath, body PatchSkillsIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchSkillsIdRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPatchSkillsIdRequestWithBody generates requests for PatchSkillsId with any type of body
+func NewPatchSkillsIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/skills/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetVolumeAttachmentsRequest generates requests for GetVolumeAttachments
+func NewGetVolumeAttachmentsRequest(server string, params *GetVolumeAttachmentsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volume-attachments")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageToken != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.VolumeId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "volumeId", runtime.ParamLocationQuery, *params.VolumeId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.AgentId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "agentId", runtime.ParamLocationQuery, *params.AgentId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.McpId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mcpId", runtime.ParamLocationQuery, *params.McpId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.HookId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "hookId", runtime.ParamLocationQuery, *params.HookId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostVolumeAttachmentsRequest calls the generic PostVolumeAttachments builder with application/json body
+func NewPostVolumeAttachmentsRequest(server string, body PostVolumeAttachmentsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostVolumeAttachmentsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostVolumeAttachmentsRequestWithBody generates requests for PostVolumeAttachments with any type of body
+func NewPostVolumeAttachmentsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volume-attachments")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteVolumeAttachmentsIdRequest generates requests for DeleteVolumeAttachmentsId
+func NewDeleteVolumeAttachmentsIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volume-attachments/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetVolumeAttachmentsIdRequest generates requests for GetVolumeAttachmentsId
+func NewGetVolumeAttachmentsIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volume-attachments/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetVolumesRequest generates requests for GetVolumes
+func NewGetVolumesRequest(server string, params *GetVolumesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volumes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if params.PageSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageSize", runtime.ParamLocationQuery, *params.PageSize); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if params.PageToken != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "pageToken", runtime.ParamLocationQuery, *params.PageToken); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostVolumesRequest calls the generic PostVolumes builder with application/json body
+func NewPostVolumesRequest(server string, body PostVolumesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostVolumesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostVolumesRequestWithBody generates requests for PostVolumes with any type of body
+func NewPostVolumesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volumes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteVolumesIdRequest generates requests for DeleteVolumesId
+func NewDeleteVolumesIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volumes/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetVolumesIdRequest generates requests for GetVolumesId
+func NewGetVolumesIdRequest(server string, id IdPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volumes/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchVolumesIdRequest calls the generic PatchVolumesId builder with application/json body
+func NewPatchVolumesIdRequest(server string, id IdPath, body PatchVolumesIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchVolumesIdRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPatchVolumesIdRequestWithBody generates requests for PatchVolumesId with any type of body
+func NewPatchVolumesIdRequestWithBody(server string, id IdPath, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/volumes/%s", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -2522,144 +3320,151 @@ type ClientWithResponsesInterface interface {
 	PostAgentsWithResponse(ctx context.Context, body PostAgentsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAgentsResponse, error)
 
 	// DeleteAgentsIdWithResponse request
-	DeleteAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error)
+	DeleteAgentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error)
 
 	// GetAgentsIdWithResponse request
-	GetAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error)
+	GetAgentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error)
 
 	// PatchAgentsIdWithBodyWithResponse request with any body
-	PatchAgentsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error)
+	PatchAgentsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error)
 
-	PatchAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error)
+	PatchAgentsIdWithResponse(ctx context.Context, id IdPath, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error)
 
-	// GetAttachmentsWithResponse request
-	GetAttachmentsWithResponse(ctx context.Context, params *GetAttachmentsParams, reqEditors ...RequestEditorFn) (*GetAttachmentsResponse, error)
+	// GetEnvsWithResponse request
+	GetEnvsWithResponse(ctx context.Context, params *GetEnvsParams, reqEditors ...RequestEditorFn) (*GetEnvsResponse, error)
 
-	// PostAttachmentsWithBodyWithResponse request with any body
-	PostAttachmentsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAttachmentsResponse, error)
+	// PostEnvsWithBodyWithResponse request with any body
+	PostEnvsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostEnvsResponse, error)
 
-	PostAttachmentsWithResponse(ctx context.Context, body PostAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAttachmentsResponse, error)
+	PostEnvsWithResponse(ctx context.Context, body PostEnvsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostEnvsResponse, error)
 
-	// DeleteAttachmentsIdWithResponse request
-	DeleteAttachmentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAttachmentsIdResponse, error)
+	// DeleteEnvsIdWithResponse request
+	DeleteEnvsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteEnvsIdResponse, error)
 
-	// GetMcpServersWithResponse request
-	GetMcpServersWithResponse(ctx context.Context, params *GetMcpServersParams, reqEditors ...RequestEditorFn) (*GetMcpServersResponse, error)
+	// GetEnvsIdWithResponse request
+	GetEnvsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetEnvsIdResponse, error)
 
-	// PostMcpServersWithBodyWithResponse request with any body
-	PostMcpServersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMcpServersResponse, error)
+	// PatchEnvsIdWithBodyWithResponse request with any body
+	PatchEnvsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchEnvsIdResponse, error)
 
-	PostMcpServersWithResponse(ctx context.Context, body PostMcpServersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMcpServersResponse, error)
+	PatchEnvsIdWithResponse(ctx context.Context, id IdPath, body PatchEnvsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchEnvsIdResponse, error)
 
-	// DeleteMcpServersIdWithResponse request
-	DeleteMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteMcpServersIdResponse, error)
+	// GetHooksWithResponse request
+	GetHooksWithResponse(ctx context.Context, params *GetHooksParams, reqEditors ...RequestEditorFn) (*GetHooksResponse, error)
 
-	// GetMcpServersIdWithResponse request
-	GetMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetMcpServersIdResponse, error)
+	// PostHooksWithBodyWithResponse request with any body
+	PostHooksWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostHooksResponse, error)
 
-	// PatchMcpServersIdWithBodyWithResponse request with any body
-	PatchMcpServersIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMcpServersIdResponse, error)
+	PostHooksWithResponse(ctx context.Context, body PostHooksJSONRequestBody, reqEditors ...RequestEditorFn) (*PostHooksResponse, error)
 
-	PatchMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchMcpServersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMcpServersIdResponse, error)
+	// DeleteHooksIdWithResponse request
+	DeleteHooksIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteHooksIdResponse, error)
 
-	// GetMemoryBucketsWithResponse request
-	GetMemoryBucketsWithResponse(ctx context.Context, params *GetMemoryBucketsParams, reqEditors ...RequestEditorFn) (*GetMemoryBucketsResponse, error)
+	// GetHooksIdWithResponse request
+	GetHooksIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetHooksIdResponse, error)
 
-	// PostMemoryBucketsWithBodyWithResponse request with any body
-	PostMemoryBucketsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMemoryBucketsResponse, error)
+	// PatchHooksIdWithBodyWithResponse request with any body
+	PatchHooksIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchHooksIdResponse, error)
 
-	PostMemoryBucketsWithResponse(ctx context.Context, body PostMemoryBucketsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMemoryBucketsResponse, error)
+	PatchHooksIdWithResponse(ctx context.Context, id IdPath, body PatchHooksIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchHooksIdResponse, error)
 
-	// DeleteMemoryBucketsIdWithResponse request
-	DeleteMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteMemoryBucketsIdResponse, error)
+	// GetInitScriptsWithResponse request
+	GetInitScriptsWithResponse(ctx context.Context, params *GetInitScriptsParams, reqEditors ...RequestEditorFn) (*GetInitScriptsResponse, error)
 
-	// GetMemoryBucketsIdWithResponse request
-	GetMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetMemoryBucketsIdResponse, error)
+	// PostInitScriptsWithBodyWithResponse request with any body
+	PostInitScriptsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInitScriptsResponse, error)
 
-	// PatchMemoryBucketsIdWithBodyWithResponse request with any body
-	PatchMemoryBucketsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMemoryBucketsIdResponse, error)
+	PostInitScriptsWithResponse(ctx context.Context, body PostInitScriptsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInitScriptsResponse, error)
 
-	PatchMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchMemoryBucketsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMemoryBucketsIdResponse, error)
+	// DeleteInitScriptsIdWithResponse request
+	DeleteInitScriptsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteInitScriptsIdResponse, error)
 
-	// GetToolsWithResponse request
-	GetToolsWithResponse(ctx context.Context, params *GetToolsParams, reqEditors ...RequestEditorFn) (*GetToolsResponse, error)
+	// GetInitScriptsIdWithResponse request
+	GetInitScriptsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetInitScriptsIdResponse, error)
 
-	// PostToolsWithBodyWithResponse request with any body
-	PostToolsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostToolsResponse, error)
+	// PatchInitScriptsIdWithBodyWithResponse request with any body
+	PatchInitScriptsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchInitScriptsIdResponse, error)
 
-	PostToolsWithResponse(ctx context.Context, body PostToolsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostToolsResponse, error)
+	PatchInitScriptsIdWithResponse(ctx context.Context, id IdPath, body PatchInitScriptsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchInitScriptsIdResponse, error)
 
-	// DeleteToolsIdWithResponse request
-	DeleteToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteToolsIdResponse, error)
+	// GetMcpsWithResponse request
+	GetMcpsWithResponse(ctx context.Context, params *GetMcpsParams, reqEditors ...RequestEditorFn) (*GetMcpsResponse, error)
 
-	// GetToolsIdWithResponse request
-	GetToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetToolsIdResponse, error)
+	// PostMcpsWithBodyWithResponse request with any body
+	PostMcpsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMcpsResponse, error)
 
-	// PatchToolsIdWithBodyWithResponse request with any body
-	PatchToolsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchToolsIdResponse, error)
+	PostMcpsWithResponse(ctx context.Context, body PostMcpsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMcpsResponse, error)
 
-	PatchToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchToolsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchToolsIdResponse, error)
+	// DeleteMcpsIdWithResponse request
+	DeleteMcpsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteMcpsIdResponse, error)
 
-	// GetWorkspaceConfigurationsWithResponse request
-	GetWorkspaceConfigurationsWithResponse(ctx context.Context, params *GetWorkspaceConfigurationsParams, reqEditors ...RequestEditorFn) (*GetWorkspaceConfigurationsResponse, error)
+	// GetMcpsIdWithResponse request
+	GetMcpsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetMcpsIdResponse, error)
 
-	// PostWorkspaceConfigurationsWithBodyWithResponse request with any body
-	PostWorkspaceConfigurationsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostWorkspaceConfigurationsResponse, error)
+	// PatchMcpsIdWithBodyWithResponse request with any body
+	PatchMcpsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMcpsIdResponse, error)
 
-	PostWorkspaceConfigurationsWithResponse(ctx context.Context, body PostWorkspaceConfigurationsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostWorkspaceConfigurationsResponse, error)
+	PatchMcpsIdWithResponse(ctx context.Context, id IdPath, body PatchMcpsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMcpsIdResponse, error)
 
-	// DeleteWorkspaceConfigurationsIdWithResponse request
-	DeleteWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteWorkspaceConfigurationsIdResponse, error)
+	// GetSkillsWithResponse request
+	GetSkillsWithResponse(ctx context.Context, params *GetSkillsParams, reqEditors ...RequestEditorFn) (*GetSkillsResponse, error)
 
-	// GetWorkspaceConfigurationsIdWithResponse request
-	GetWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetWorkspaceConfigurationsIdResponse, error)
+	// PostSkillsWithBodyWithResponse request with any body
+	PostSkillsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSkillsResponse, error)
 
-	// PatchWorkspaceConfigurationsIdWithBodyWithResponse request with any body
-	PatchWorkspaceConfigurationsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchWorkspaceConfigurationsIdResponse, error)
+	PostSkillsWithResponse(ctx context.Context, body PostSkillsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSkillsResponse, error)
 
-	PatchWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchWorkspaceConfigurationsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchWorkspaceConfigurationsIdResponse, error)
+	// DeleteSkillsIdWithResponse request
+	DeleteSkillsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteSkillsIdResponse, error)
+
+	// GetSkillsIdWithResponse request
+	GetSkillsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetSkillsIdResponse, error)
+
+	// PatchSkillsIdWithBodyWithResponse request with any body
+	PatchSkillsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchSkillsIdResponse, error)
+
+	PatchSkillsIdWithResponse(ctx context.Context, id IdPath, body PatchSkillsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchSkillsIdResponse, error)
+
+	// GetVolumeAttachmentsWithResponse request
+	GetVolumeAttachmentsWithResponse(ctx context.Context, params *GetVolumeAttachmentsParams, reqEditors ...RequestEditorFn) (*GetVolumeAttachmentsResponse, error)
+
+	// PostVolumeAttachmentsWithBodyWithResponse request with any body
+	PostVolumeAttachmentsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostVolumeAttachmentsResponse, error)
+
+	PostVolumeAttachmentsWithResponse(ctx context.Context, body PostVolumeAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostVolumeAttachmentsResponse, error)
+
+	// DeleteVolumeAttachmentsIdWithResponse request
+	DeleteVolumeAttachmentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteVolumeAttachmentsIdResponse, error)
+
+	// GetVolumeAttachmentsIdWithResponse request
+	GetVolumeAttachmentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetVolumeAttachmentsIdResponse, error)
+
+	// GetVolumesWithResponse request
+	GetVolumesWithResponse(ctx context.Context, params *GetVolumesParams, reqEditors ...RequestEditorFn) (*GetVolumesResponse, error)
+
+	// PostVolumesWithBodyWithResponse request with any body
+	PostVolumesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostVolumesResponse, error)
+
+	PostVolumesWithResponse(ctx context.Context, body PostVolumesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostVolumesResponse, error)
+
+	// DeleteVolumesIdWithResponse request
+	DeleteVolumesIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteVolumesIdResponse, error)
+
+	// GetVolumesIdWithResponse request
+	GetVolumesIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetVolumesIdResponse, error)
+
+	// PatchVolumesIdWithBodyWithResponse request with any body
+	PatchVolumesIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchVolumesIdResponse, error)
+
+	PatchVolumesIdWithResponse(ctx context.Context, id IdPath, body PatchVolumesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchVolumesIdResponse, error)
 }
 
 type GetAgentsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			Config struct {
-				DebounceMs                *int                                  `json:"debounceMs,omitempty"`
-				Model                     *string                               `json:"model,omitempty"`
-				Name                      *string                               `json:"name,omitempty"`
-				ProcessBuffer             *GetAgents200ItemsConfigProcessBuffer `json:"processBuffer,omitempty"`
-				RestrictOutput            *bool                                 `json:"restrictOutput,omitempty"`
-				RestrictionMaxInjections  *int                                  `json:"restrictionMaxInjections,omitempty"`
-				RestrictionMessage        *string                               `json:"restrictionMessage,omitempty"`
-				Role                      *string                               `json:"role,omitempty"`
-				SendFinalResponseToThread *bool                                 `json:"sendFinalResponseToThread,omitempty"`
-				SummarizationKeepTokens   *int                                  `json:"summarizationKeepTokens,omitempty"`
-				SummarizationMaxTokens    *int                                  `json:"summarizationMaxTokens,omitempty"`
-				SystemPrompt              *string                               `json:"systemPrompt,omitempty"`
-				WhenBusy                  *GetAgents200ItemsConfigWhenBusy      `json:"whenBusy,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedAgents
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type GetAgents200ItemsConfigProcessBuffer string
-type GetAgents200ItemsConfigWhenBusy string
 
 // Status returns HTTPResponse.Status
 func (r GetAgentsResponse) Status() string {
@@ -2678,40 +3483,11 @@ func (r GetAgentsResponse) StatusCode() int {
 }
 
 type PostAgentsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		Config struct {
-			DebounceMs                *int                              `json:"debounceMs,omitempty"`
-			Model                     *string                           `json:"model,omitempty"`
-			Name                      *string                           `json:"name,omitempty"`
-			ProcessBuffer             *PostAgents201ConfigProcessBuffer `json:"processBuffer,omitempty"`
-			RestrictOutput            *bool                             `json:"restrictOutput,omitempty"`
-			RestrictionMaxInjections  *int                              `json:"restrictionMaxInjections,omitempty"`
-			RestrictionMessage        *string                           `json:"restrictionMessage,omitempty"`
-			Role                      *string                           `json:"role,omitempty"`
-			SendFinalResponseToThread *bool                             `json:"sendFinalResponseToThread,omitempty"`
-			SummarizationKeepTokens   *int                              `json:"summarizationKeepTokens,omitempty"`
-			SummarizationMaxTokens    *int                              `json:"summarizationMaxTokens,omitempty"`
-			SystemPrompt              *string                           `json:"systemPrompt,omitempty"`
-			WhenBusy                  *PostAgents201ConfigWhenBusy      `json:"whenBusy,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *Agent
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type PostAgents201ConfigProcessBuffer string
-type PostAgents201ConfigWhenBusy string
 
 // Status returns HTTPResponse.Status
 func (r PostAgentsResponse) Status() string {
@@ -2732,13 +3508,7 @@ func (r PostAgentsResponse) StatusCode() int {
 type DeleteAgentsIdResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
@@ -2758,40 +3528,11 @@ func (r DeleteAgentsIdResponse) StatusCode() int {
 }
 
 type GetAgentsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			DebounceMs                *int                               `json:"debounceMs,omitempty"`
-			Model                     *string                            `json:"model,omitempty"`
-			Name                      *string                            `json:"name,omitempty"`
-			ProcessBuffer             *GetAgentsId200ConfigProcessBuffer `json:"processBuffer,omitempty"`
-			RestrictOutput            *bool                              `json:"restrictOutput,omitempty"`
-			RestrictionMaxInjections  *int                               `json:"restrictionMaxInjections,omitempty"`
-			RestrictionMessage        *string                            `json:"restrictionMessage,omitempty"`
-			Role                      *string                            `json:"role,omitempty"`
-			SendFinalResponseToThread *bool                              `json:"sendFinalResponseToThread,omitempty"`
-			SummarizationKeepTokens   *int                               `json:"summarizationKeepTokens,omitempty"`
-			SummarizationMaxTokens    *int                               `json:"summarizationMaxTokens,omitempty"`
-			SystemPrompt              *string                            `json:"systemPrompt,omitempty"`
-			WhenBusy                  *GetAgentsId200ConfigWhenBusy      `json:"whenBusy,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Agent
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type GetAgentsId200ConfigProcessBuffer string
-type GetAgentsId200ConfigWhenBusy string
 
 // Status returns HTTPResponse.Status
 func (r GetAgentsIdResponse) Status() string {
@@ -2810,40 +3551,11 @@ func (r GetAgentsIdResponse) StatusCode() int {
 }
 
 type PatchAgentsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			DebounceMs                *int                                 `json:"debounceMs,omitempty"`
-			Model                     *string                              `json:"model,omitempty"`
-			Name                      *string                              `json:"name,omitempty"`
-			ProcessBuffer             *PatchAgentsId200ConfigProcessBuffer `json:"processBuffer,omitempty"`
-			RestrictOutput            *bool                                `json:"restrictOutput,omitempty"`
-			RestrictionMaxInjections  *int                                 `json:"restrictionMaxInjections,omitempty"`
-			RestrictionMessage        *string                              `json:"restrictionMessage,omitempty"`
-			Role                      *string                              `json:"role,omitempty"`
-			SendFinalResponseToThread *bool                                `json:"sendFinalResponseToThread,omitempty"`
-			SummarizationKeepTokens   *int                                 `json:"summarizationKeepTokens,omitempty"`
-			SummarizationMaxTokens    *int                                 `json:"summarizationMaxTokens,omitempty"`
-			SystemPrompt              *string                              `json:"systemPrompt,omitempty"`
-			WhenBusy                  *PatchAgentsId200ConfigWhenBusy      `json:"whenBusy,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Agent
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type PatchAgentsId200ConfigProcessBuffer string
-type PatchAgentsId200ConfigWhenBusy string
 
 // Status returns HTTPResponse.Status
 func (r PatchAgentsIdResponse) Status() string {
@@ -2861,111 +3573,15 @@ func (r PatchAgentsIdResponse) StatusCode() int {
 	return 0
 }
 
-type GetAttachmentsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			CreatedAt time.Time          `json:"createdAt"`
-			Id        openapi_types.UUID `json:"id"`
-
-			// Kind Relation type between entities
-			Kind       GetAttachments200ItemsKind       `json:"kind"`
-			SourceId   openapi_types.UUID               `json:"sourceId"`
-			SourceType GetAttachments200ItemsSourceType `json:"sourceType"`
-			TargetId   openapi_types.UUID               `json:"targetId"`
-			TargetType GetAttachments200ItemsTargetType `json:"targetType"`
-			UpdatedAt  *time.Time                       `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetAttachments200ItemsKind string
-type GetAttachments200ItemsSourceType string
-type GetAttachments200ItemsTargetType string
-
-// Status returns HTTPResponse.Status
-func (r GetAttachmentsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetAttachmentsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostAttachmentsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		CreatedAt time.Time          `json:"createdAt"`
-		Id        openapi_types.UUID `json:"id"`
-
-		// Kind Relation type between entities
-		Kind       PostAttachments201Kind       `json:"kind"`
-		SourceId   openapi_types.UUID           `json:"sourceId"`
-		SourceType PostAttachments201SourceType `json:"sourceType"`
-		TargetId   openapi_types.UUID           `json:"targetId"`
-		TargetType PostAttachments201TargetType `json:"targetType"`
-		UpdatedAt  *time.Time                   `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PostAttachments201Kind string
-type PostAttachments201SourceType string
-type PostAttachments201TargetType string
-
-// Status returns HTTPResponse.Status
-func (r PostAttachmentsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostAttachmentsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteAttachmentsIdResponse struct {
+type GetEnvsResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	JSON200                       *PaginatedEnvs
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteAttachmentsIdResponse) Status() string {
+func (r GetEnvsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -2973,136 +3589,22 @@ func (r DeleteAttachmentsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteAttachmentsIdResponse) StatusCode() int {
+func (r GetEnvsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetMcpServersResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			Config struct {
-				Command *string `json:"command,omitempty"`
-				Env     *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-				Namespace           *string `json:"namespace,omitempty"`
-				RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-				Restart             *struct {
-					BackoffMs   *int `json:"backoffMs,omitempty"`
-					MaxAttempts *int `json:"maxAttempts,omitempty"`
-				} `json:"restart,omitempty"`
-				StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-				StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-				Workdir          *string `json:"workdir,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetMcpServersResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetMcpServersResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostMcpServersResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		Config struct {
-			Command *string `json:"command,omitempty"`
-			Env     *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-			Namespace           *string `json:"namespace,omitempty"`
-			RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-			Restart             *struct {
-				BackoffMs   *int `json:"backoffMs,omitempty"`
-				MaxAttempts *int `json:"maxAttempts,omitempty"`
-			} `json:"restart,omitempty"`
-			StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-			StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-			Workdir          *string `json:"workdir,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostMcpServersResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostMcpServersResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteMcpServersIdResponse struct {
+type PostEnvsResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	JSON201                       *Env
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteMcpServersIdResponse) Status() string {
+func (r PostEnvsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3110,216 +3612,21 @@ func (r DeleteMcpServersIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteMcpServersIdResponse) StatusCode() int {
+func (r PostEnvsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetMcpServersIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			Command *string `json:"command,omitempty"`
-			Env     *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-			Namespace           *string `json:"namespace,omitempty"`
-			RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-			Restart             *struct {
-				BackoffMs   *int `json:"backoffMs,omitempty"`
-				MaxAttempts *int `json:"maxAttempts,omitempty"`
-			} `json:"restart,omitempty"`
-			StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-			StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-			Workdir          *string `json:"workdir,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetMcpServersIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetMcpServersIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PatchMcpServersIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			Command *string `json:"command,omitempty"`
-			Env     *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-			Namespace           *string `json:"namespace,omitempty"`
-			RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-			Restart             *struct {
-				BackoffMs   *int `json:"backoffMs,omitempty"`
-				MaxAttempts *int `json:"maxAttempts,omitempty"`
-			} `json:"restart,omitempty"`
-			StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-			StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-			Workdir          *string `json:"workdir,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PatchMcpServersIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PatchMcpServersIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetMemoryBucketsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			Config struct {
-				CollectionPrefix *string                              `json:"collectionPrefix,omitempty"`
-				Scope            *GetMemoryBuckets200ItemsConfigScope `json:"scope,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetMemoryBuckets200ItemsConfigScope string
-
-// Status returns HTTPResponse.Status
-func (r GetMemoryBucketsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetMemoryBucketsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostMemoryBucketsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		Config struct {
-			CollectionPrefix *string                          `json:"collectionPrefix,omitempty"`
-			Scope            *PostMemoryBuckets201ConfigScope `json:"scope,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PostMemoryBuckets201ConfigScope string
-
-// Status returns HTTPResponse.Status
-func (r PostMemoryBucketsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostMemoryBucketsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteMemoryBucketsIdResponse struct {
+type DeleteEnvsIdResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteMemoryBucketsIdResponse) Status() string {
+func (r DeleteEnvsIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3327,188 +3634,22 @@ func (r DeleteMemoryBucketsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteMemoryBucketsIdResponse) StatusCode() int {
+func (r DeleteEnvsIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetMemoryBucketsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			CollectionPrefix *string                           `json:"collectionPrefix,omitempty"`
-			Scope            *GetMemoryBucketsId200ConfigScope `json:"scope,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetMemoryBucketsId200ConfigScope string
-
-// Status returns HTTPResponse.Status
-func (r GetMemoryBucketsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetMemoryBucketsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PatchMemoryBucketsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			CollectionPrefix *string                             `json:"collectionPrefix,omitempty"`
-			Scope            *PatchMemoryBucketsId200ConfigScope `json:"scope,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PatchMemoryBucketsId200ConfigScope string
-
-// Status returns HTTPResponse.Status
-func (r PatchMemoryBucketsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PatchMemoryBucketsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetToolsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			Config      *map[string]interface{} `json:"config,omitempty"`
-			CreatedAt   time.Time               `json:"createdAt"`
-			Description *string                 `json:"description,omitempty"`
-			Id          openapi_types.UUID      `json:"id"`
-			Name        *string                 `json:"name,omitempty"`
-			Type        GetTools200ItemsType    `json:"type"`
-			UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetTools200ItemsType string
-
-// Status returns HTTPResponse.Status
-func (r GetToolsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetToolsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostToolsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		Config      *map[string]interface{} `json:"config,omitempty"`
-		CreatedAt   time.Time               `json:"createdAt"`
-		Description *string                 `json:"description,omitempty"`
-		Id          openapi_types.UUID      `json:"id"`
-		Name        *string                 `json:"name,omitempty"`
-		Type        PostTools201Type        `json:"type"`
-		UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PostTools201Type string
-
-// Status returns HTTPResponse.Status
-func (r PostToolsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostToolsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteToolsIdResponse struct {
+type GetEnvsIdResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	JSON200                       *Env
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteToolsIdResponse) Status() string {
+func (r GetEnvsIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3516,236 +3657,22 @@ func (r DeleteToolsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteToolsIdResponse) StatusCode() int {
+func (r GetEnvsIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetToolsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config      *map[string]interface{} `json:"config,omitempty"`
-		CreatedAt   time.Time               `json:"createdAt"`
-		Description *string                 `json:"description,omitempty"`
-		Id          openapi_types.UUID      `json:"id"`
-		Name        *string                 `json:"name,omitempty"`
-		Type        GetToolsId200Type       `json:"type"`
-		UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetToolsId200Type string
-
-// Status returns HTTPResponse.Status
-func (r GetToolsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetToolsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PatchToolsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config      *map[string]interface{} `json:"config,omitempty"`
-		CreatedAt   time.Time               `json:"createdAt"`
-		Description *string                 `json:"description,omitempty"`
-		Id          openapi_types.UUID      `json:"id"`
-		Name        *string                 `json:"name,omitempty"`
-		Type        PatchToolsId200Type     `json:"type"`
-		UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PatchToolsId200Type string
-
-// Status returns HTTPResponse.Status
-func (r PatchToolsIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PatchToolsIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetWorkspaceConfigurationsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Items []struct {
-			Config struct {
-				CpuLimit   *GetWorkspaceConfigurations_200_Items_Config_CpuLimit `json:"cpu_limit,omitempty"`
-				EnableDinD *bool                                                 `json:"enableDinD,omitempty"`
-				Env        *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				Image         *string                                                  `json:"image,omitempty"`
-				InitialScript *string                                                  `json:"initialScript,omitempty"`
-				MemoryLimit   *GetWorkspaceConfigurations_200_Items_Config_MemoryLimit `json:"memory_limit,omitempty"`
-				Nix           *map[string]interface{}                                  `json:"nix,omitempty"`
-				Platform      *GetWorkspaceConfigurations200ItemsConfigPlatform        `json:"platform,omitempty"`
-				TtlSeconds    *int                                                     `json:"ttlSeconds,omitempty"`
-				Volumes       *struct {
-					Enabled   *bool   `json:"enabled,omitempty"`
-					MountPath *string `json:"mountPath,omitempty"`
-				} `json:"volumes,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		} `json:"items"`
-		Page    int `json:"page"`
-		PerPage int `json:"perPage"`
-		Total   int `json:"total"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type GetWorkspaceConfigurations200ItemsConfigCpuLimit0 = float32
-type GetWorkspaceConfigurations200ItemsConfigCpuLimit1 = string
-type GetWorkspaceConfigurations_200_Items_Config_CpuLimit struct {
-	union json.RawMessage
-}
-type GetWorkspaceConfigurations200ItemsConfigMemoryLimit0 = float32
-type GetWorkspaceConfigurations200ItemsConfigMemoryLimit1 = string
-type GetWorkspaceConfigurations_200_Items_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-type GetWorkspaceConfigurations200ItemsConfigPlatform string
-
-// Status returns HTTPResponse.Status
-func (r GetWorkspaceConfigurationsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetWorkspaceConfigurationsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostWorkspaceConfigurationsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON201      *struct {
-		Config struct {
-			CpuLimit   *PostWorkspaceConfigurations_201_Config_CpuLimit `json:"cpu_limit,omitempty"`
-			EnableDinD *bool                                            `json:"enableDinD,omitempty"`
-			Env        *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			Image         *string                                             `json:"image,omitempty"`
-			InitialScript *string                                             `json:"initialScript,omitempty"`
-			MemoryLimit   *PostWorkspaceConfigurations_201_Config_MemoryLimit `json:"memory_limit,omitempty"`
-			Nix           *map[string]interface{}                             `json:"nix,omitempty"`
-			Platform      *PostWorkspaceConfigurations201ConfigPlatform       `json:"platform,omitempty"`
-			TtlSeconds    *int                                                `json:"ttlSeconds,omitempty"`
-			Volumes       *struct {
-				Enabled   *bool   `json:"enabled,omitempty"`
-				MountPath *string `json:"mountPath,omitempty"`
-			} `json:"volumes,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
-}
-type PostWorkspaceConfigurations201ConfigCpuLimit0 = float32
-type PostWorkspaceConfigurations201ConfigCpuLimit1 = string
-type PostWorkspaceConfigurations_201_Config_CpuLimit struct {
-	union json.RawMessage
-}
-type PostWorkspaceConfigurations201ConfigMemoryLimit0 = float32
-type PostWorkspaceConfigurations201ConfigMemoryLimit1 = string
-type PostWorkspaceConfigurations_201_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-type PostWorkspaceConfigurations201ConfigPlatform string
-
-// Status returns HTTPResponse.Status
-func (r PostWorkspaceConfigurationsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostWorkspaceConfigurationsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type DeleteWorkspaceConfigurationsIdResponse struct {
+type PatchEnvsIdResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+	JSON200                       *Env
+	ApplicationproblemJSONDefault *ProblemResponse
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteWorkspaceConfigurationsIdResponse) Status() string {
+func (r PatchEnvsIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3753,63 +3680,22 @@ func (r DeleteWorkspaceConfigurationsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteWorkspaceConfigurationsIdResponse) StatusCode() int {
+func (r PatchEnvsIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetWorkspaceConfigurationsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			CpuLimit   *GetWorkspaceConfigurationsId_200_Config_CpuLimit `json:"cpu_limit,omitempty"`
-			EnableDinD *bool                                             `json:"enableDinD,omitempty"`
-			Env        *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			Image         *string                                              `json:"image,omitempty"`
-			InitialScript *string                                              `json:"initialScript,omitempty"`
-			MemoryLimit   *GetWorkspaceConfigurationsId_200_Config_MemoryLimit `json:"memory_limit,omitempty"`
-			Nix           *map[string]interface{}                              `json:"nix,omitempty"`
-			Platform      *GetWorkspaceConfigurationsId200ConfigPlatform       `json:"platform,omitempty"`
-			TtlSeconds    *int                                                 `json:"ttlSeconds,omitempty"`
-			Volumes       *struct {
-				Enabled   *bool   `json:"enabled,omitempty"`
-				MountPath *string `json:"mountPath,omitempty"`
-			} `json:"volumes,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+type GetHooksResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedHooks
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type GetWorkspaceConfigurationsId200ConfigCpuLimit0 = float32
-type GetWorkspaceConfigurationsId200ConfigCpuLimit1 = string
-type GetWorkspaceConfigurationsId_200_Config_CpuLimit struct {
-	union json.RawMessage
-}
-type GetWorkspaceConfigurationsId200ConfigMemoryLimit0 = float32
-type GetWorkspaceConfigurationsId200ConfigMemoryLimit1 = string
-type GetWorkspaceConfigurationsId_200_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-type GetWorkspaceConfigurationsId200ConfigPlatform string
 
 // Status returns HTTPResponse.Status
-func (r GetWorkspaceConfigurationsIdResponse) Status() string {
+func (r GetHooksResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3817,63 +3703,22 @@ func (r GetWorkspaceConfigurationsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetWorkspaceConfigurationsIdResponse) StatusCode() int {
+func (r GetHooksResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PatchWorkspaceConfigurationsIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		Config struct {
-			CpuLimit   *PatchWorkspaceConfigurationsId_200_Config_CpuLimit `json:"cpu_limit,omitempty"`
-			EnableDinD *bool                                               `json:"enableDinD,omitempty"`
-			Env        *[]struct {
-				Name  string `json:"name"`
-				Value string `json:"value"`
-			} `json:"env,omitempty"`
-			Image         *string                                                `json:"image,omitempty"`
-			InitialScript *string                                                `json:"initialScript,omitempty"`
-			MemoryLimit   *PatchWorkspaceConfigurationsId_200_Config_MemoryLimit `json:"memory_limit,omitempty"`
-			Nix           *map[string]interface{}                                `json:"nix,omitempty"`
-			Platform      *PatchWorkspaceConfigurationsId200ConfigPlatform       `json:"platform,omitempty"`
-			TtlSeconds    *int                                                   `json:"ttlSeconds,omitempty"`
-			Volumes       *struct {
-				Enabled   *bool   `json:"enabled,omitempty"`
-				MountPath *string `json:"mountPath,omitempty"`
-			} `json:"volumes,omitempty"`
-		} `json:"config"`
-		CreatedAt   time.Time          `json:"createdAt"`
-		Description *string            `json:"description,omitempty"`
-		Id          openapi_types.UUID `json:"id"`
-		Title       *string            `json:"title,omitempty"`
-		UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-	}
-	ApplicationproblemJSONDefault *struct {
-		Detail   *string `json:"detail,omitempty"`
-		Instance *string `json:"instance,omitempty"`
-		Status   int     `json:"status"`
-		Title    string  `json:"title"`
-		Type     *string `json:"type,omitempty"`
-	}
+type PostHooksResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *Hook
+	ApplicationproblemJSONDefault *ProblemResponse
 }
-type PatchWorkspaceConfigurationsId200ConfigCpuLimit0 = float32
-type PatchWorkspaceConfigurationsId200ConfigCpuLimit1 = string
-type PatchWorkspaceConfigurationsId_200_Config_CpuLimit struct {
-	union json.RawMessage
-}
-type PatchWorkspaceConfigurationsId200ConfigMemoryLimit0 = float32
-type PatchWorkspaceConfigurationsId200ConfigMemoryLimit1 = string
-type PatchWorkspaceConfigurationsId_200_Config_MemoryLimit struct {
-	union json.RawMessage
-}
-type PatchWorkspaceConfigurationsId200ConfigPlatform string
 
 // Status returns HTTPResponse.Status
-func (r PatchWorkspaceConfigurationsIdResponse) Status() string {
+func (r PostHooksResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -3881,7 +3726,622 @@ func (r PatchWorkspaceConfigurationsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PatchWorkspaceConfigurationsIdResponse) StatusCode() int {
+func (r PostHooksResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteHooksIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteHooksIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteHooksIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetHooksIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Hook
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetHooksIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetHooksIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchHooksIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Hook
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchHooksIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchHooksIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetInitScriptsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedInitScripts
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInitScriptsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInitScriptsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostInitScriptsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *InitScript
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostInitScriptsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostInitScriptsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteInitScriptsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteInitScriptsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteInitScriptsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetInitScriptsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *InitScript
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInitScriptsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInitScriptsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchInitScriptsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *InitScript
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchInitScriptsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchInitScriptsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetMcpsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedMcps
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMcpsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMcpsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostMcpsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *Mcp
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostMcpsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostMcpsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteMcpsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteMcpsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteMcpsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetMcpsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Mcp
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMcpsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMcpsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchMcpsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Mcp
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchMcpsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchMcpsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSkillsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedSkills
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSkillsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSkillsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostSkillsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *Skill
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostSkillsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostSkillsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteSkillsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteSkillsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteSkillsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSkillsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Skill
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSkillsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSkillsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchSkillsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Skill
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchSkillsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchSkillsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetVolumeAttachmentsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedVolumeAttachments
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetVolumeAttachmentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetVolumeAttachmentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostVolumeAttachmentsResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *VolumeAttachment
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostVolumeAttachmentsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostVolumeAttachmentsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteVolumeAttachmentsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteVolumeAttachmentsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteVolumeAttachmentsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetVolumeAttachmentsIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *VolumeAttachment
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetVolumeAttachmentsIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetVolumeAttachmentsIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetVolumesResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *PaginatedVolumes
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetVolumesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetVolumesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostVolumesResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON201                       *Volume
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PostVolumesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostVolumesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteVolumesIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteVolumesIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteVolumesIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetVolumesIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Volume
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r GetVolumesIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetVolumesIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchVolumesIdResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *Volume
+	ApplicationproblemJSONDefault *ProblemResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchVolumesIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchVolumesIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -3915,7 +4375,7 @@ func (c *ClientWithResponses) PostAgentsWithResponse(ctx context.Context, body P
 }
 
 // DeleteAgentsIdWithResponse request returning *DeleteAgentsIdResponse
-func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error) {
+func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteAgentsIdResponse, error) {
 	rsp, err := c.DeleteAgentsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -3924,7 +4384,7 @@ func (c *ClientWithResponses) DeleteAgentsIdWithResponse(ctx context.Context, id
 }
 
 // GetAgentsIdWithResponse request returning *GetAgentsIdResponse
-func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error) {
+func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetAgentsIdResponse, error) {
 	rsp, err := c.GetAgentsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -3933,7 +4393,7 @@ func (c *ClientWithResponses) GetAgentsIdWithResponse(ctx context.Context, id op
 }
 
 // PatchAgentsIdWithBodyWithResponse request with arbitrary body returning *PatchAgentsIdResponse
-func (c *ClientWithResponses) PatchAgentsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error) {
+func (c *ClientWithResponses) PatchAgentsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error) {
 	rsp, err := c.PatchAgentsIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -3941,7 +4401,7 @@ func (c *ClientWithResponses) PatchAgentsIdWithBodyWithResponse(ctx context.Cont
 	return ParsePatchAgentsIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchAgentsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error) {
+func (c *ClientWithResponses) PatchAgentsIdWithResponse(ctx context.Context, id IdPath, body PatchAgentsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchAgentsIdResponse, error) {
 	rsp, err := c.PatchAgentsId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
@@ -3949,283 +4409,414 @@ func (c *ClientWithResponses) PatchAgentsIdWithResponse(ctx context.Context, id 
 	return ParsePatchAgentsIdResponse(rsp)
 }
 
-// GetAttachmentsWithResponse request returning *GetAttachmentsResponse
-func (c *ClientWithResponses) GetAttachmentsWithResponse(ctx context.Context, params *GetAttachmentsParams, reqEditors ...RequestEditorFn) (*GetAttachmentsResponse, error) {
-	rsp, err := c.GetAttachments(ctx, params, reqEditors...)
+// GetEnvsWithResponse request returning *GetEnvsResponse
+func (c *ClientWithResponses) GetEnvsWithResponse(ctx context.Context, params *GetEnvsParams, reqEditors ...RequestEditorFn) (*GetEnvsResponse, error) {
+	rsp, err := c.GetEnvs(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetAttachmentsResponse(rsp)
+	return ParseGetEnvsResponse(rsp)
 }
 
-// PostAttachmentsWithBodyWithResponse request with arbitrary body returning *PostAttachmentsResponse
-func (c *ClientWithResponses) PostAttachmentsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostAttachmentsResponse, error) {
-	rsp, err := c.PostAttachmentsWithBody(ctx, contentType, body, reqEditors...)
+// PostEnvsWithBodyWithResponse request with arbitrary body returning *PostEnvsResponse
+func (c *ClientWithResponses) PostEnvsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostEnvsResponse, error) {
+	rsp, err := c.PostEnvsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostAttachmentsResponse(rsp)
+	return ParsePostEnvsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostAttachmentsWithResponse(ctx context.Context, body PostAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostAttachmentsResponse, error) {
-	rsp, err := c.PostAttachments(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostEnvsWithResponse(ctx context.Context, body PostEnvsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostEnvsResponse, error) {
+	rsp, err := c.PostEnvs(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostAttachmentsResponse(rsp)
+	return ParsePostEnvsResponse(rsp)
 }
 
-// DeleteAttachmentsIdWithResponse request returning *DeleteAttachmentsIdResponse
-func (c *ClientWithResponses) DeleteAttachmentsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteAttachmentsIdResponse, error) {
-	rsp, err := c.DeleteAttachmentsId(ctx, id, reqEditors...)
+// DeleteEnvsIdWithResponse request returning *DeleteEnvsIdResponse
+func (c *ClientWithResponses) DeleteEnvsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteEnvsIdResponse, error) {
+	rsp, err := c.DeleteEnvsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteAttachmentsIdResponse(rsp)
+	return ParseDeleteEnvsIdResponse(rsp)
 }
 
-// GetMcpServersWithResponse request returning *GetMcpServersResponse
-func (c *ClientWithResponses) GetMcpServersWithResponse(ctx context.Context, params *GetMcpServersParams, reqEditors ...RequestEditorFn) (*GetMcpServersResponse, error) {
-	rsp, err := c.GetMcpServers(ctx, params, reqEditors...)
+// GetEnvsIdWithResponse request returning *GetEnvsIdResponse
+func (c *ClientWithResponses) GetEnvsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetEnvsIdResponse, error) {
+	rsp, err := c.GetEnvsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetMcpServersResponse(rsp)
+	return ParseGetEnvsIdResponse(rsp)
 }
 
-// PostMcpServersWithBodyWithResponse request with arbitrary body returning *PostMcpServersResponse
-func (c *ClientWithResponses) PostMcpServersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMcpServersResponse, error) {
-	rsp, err := c.PostMcpServersWithBody(ctx, contentType, body, reqEditors...)
+// PatchEnvsIdWithBodyWithResponse request with arbitrary body returning *PatchEnvsIdResponse
+func (c *ClientWithResponses) PatchEnvsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchEnvsIdResponse, error) {
+	rsp, err := c.PatchEnvsIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostMcpServersResponse(rsp)
+	return ParsePatchEnvsIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostMcpServersWithResponse(ctx context.Context, body PostMcpServersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMcpServersResponse, error) {
-	rsp, err := c.PostMcpServers(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PatchEnvsIdWithResponse(ctx context.Context, id IdPath, body PatchEnvsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchEnvsIdResponse, error) {
+	rsp, err := c.PatchEnvsId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostMcpServersResponse(rsp)
+	return ParsePatchEnvsIdResponse(rsp)
 }
 
-// DeleteMcpServersIdWithResponse request returning *DeleteMcpServersIdResponse
-func (c *ClientWithResponses) DeleteMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteMcpServersIdResponse, error) {
-	rsp, err := c.DeleteMcpServersId(ctx, id, reqEditors...)
+// GetHooksWithResponse request returning *GetHooksResponse
+func (c *ClientWithResponses) GetHooksWithResponse(ctx context.Context, params *GetHooksParams, reqEditors ...RequestEditorFn) (*GetHooksResponse, error) {
+	rsp, err := c.GetHooks(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteMcpServersIdResponse(rsp)
+	return ParseGetHooksResponse(rsp)
 }
 
-// GetMcpServersIdWithResponse request returning *GetMcpServersIdResponse
-func (c *ClientWithResponses) GetMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetMcpServersIdResponse, error) {
-	rsp, err := c.GetMcpServersId(ctx, id, reqEditors...)
+// PostHooksWithBodyWithResponse request with arbitrary body returning *PostHooksResponse
+func (c *ClientWithResponses) PostHooksWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostHooksResponse, error) {
+	rsp, err := c.PostHooksWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetMcpServersIdResponse(rsp)
+	return ParsePostHooksResponse(rsp)
 }
 
-// PatchMcpServersIdWithBodyWithResponse request with arbitrary body returning *PatchMcpServersIdResponse
-func (c *ClientWithResponses) PatchMcpServersIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMcpServersIdResponse, error) {
-	rsp, err := c.PatchMcpServersIdWithBody(ctx, id, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostHooksWithResponse(ctx context.Context, body PostHooksJSONRequestBody, reqEditors ...RequestEditorFn) (*PostHooksResponse, error) {
+	rsp, err := c.PostHooks(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchMcpServersIdResponse(rsp)
+	return ParsePostHooksResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchMcpServersIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchMcpServersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMcpServersIdResponse, error) {
-	rsp, err := c.PatchMcpServersId(ctx, id, body, reqEditors...)
+// DeleteHooksIdWithResponse request returning *DeleteHooksIdResponse
+func (c *ClientWithResponses) DeleteHooksIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteHooksIdResponse, error) {
+	rsp, err := c.DeleteHooksId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchMcpServersIdResponse(rsp)
+	return ParseDeleteHooksIdResponse(rsp)
 }
 
-// GetMemoryBucketsWithResponse request returning *GetMemoryBucketsResponse
-func (c *ClientWithResponses) GetMemoryBucketsWithResponse(ctx context.Context, params *GetMemoryBucketsParams, reqEditors ...RequestEditorFn) (*GetMemoryBucketsResponse, error) {
-	rsp, err := c.GetMemoryBuckets(ctx, params, reqEditors...)
+// GetHooksIdWithResponse request returning *GetHooksIdResponse
+func (c *ClientWithResponses) GetHooksIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetHooksIdResponse, error) {
+	rsp, err := c.GetHooksId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetMemoryBucketsResponse(rsp)
+	return ParseGetHooksIdResponse(rsp)
 }
 
-// PostMemoryBucketsWithBodyWithResponse request with arbitrary body returning *PostMemoryBucketsResponse
-func (c *ClientWithResponses) PostMemoryBucketsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMemoryBucketsResponse, error) {
-	rsp, err := c.PostMemoryBucketsWithBody(ctx, contentType, body, reqEditors...)
+// PatchHooksIdWithBodyWithResponse request with arbitrary body returning *PatchHooksIdResponse
+func (c *ClientWithResponses) PatchHooksIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchHooksIdResponse, error) {
+	rsp, err := c.PatchHooksIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostMemoryBucketsResponse(rsp)
+	return ParsePatchHooksIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostMemoryBucketsWithResponse(ctx context.Context, body PostMemoryBucketsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMemoryBucketsResponse, error) {
-	rsp, err := c.PostMemoryBuckets(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PatchHooksIdWithResponse(ctx context.Context, id IdPath, body PatchHooksIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchHooksIdResponse, error) {
+	rsp, err := c.PatchHooksId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostMemoryBucketsResponse(rsp)
+	return ParsePatchHooksIdResponse(rsp)
 }
 
-// DeleteMemoryBucketsIdWithResponse request returning *DeleteMemoryBucketsIdResponse
-func (c *ClientWithResponses) DeleteMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteMemoryBucketsIdResponse, error) {
-	rsp, err := c.DeleteMemoryBucketsId(ctx, id, reqEditors...)
+// GetInitScriptsWithResponse request returning *GetInitScriptsResponse
+func (c *ClientWithResponses) GetInitScriptsWithResponse(ctx context.Context, params *GetInitScriptsParams, reqEditors ...RequestEditorFn) (*GetInitScriptsResponse, error) {
+	rsp, err := c.GetInitScripts(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteMemoryBucketsIdResponse(rsp)
+	return ParseGetInitScriptsResponse(rsp)
 }
 
-// GetMemoryBucketsIdWithResponse request returning *GetMemoryBucketsIdResponse
-func (c *ClientWithResponses) GetMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetMemoryBucketsIdResponse, error) {
-	rsp, err := c.GetMemoryBucketsId(ctx, id, reqEditors...)
+// PostInitScriptsWithBodyWithResponse request with arbitrary body returning *PostInitScriptsResponse
+func (c *ClientWithResponses) PostInitScriptsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostInitScriptsResponse, error) {
+	rsp, err := c.PostInitScriptsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetMemoryBucketsIdResponse(rsp)
+	return ParsePostInitScriptsResponse(rsp)
 }
 
-// PatchMemoryBucketsIdWithBodyWithResponse request with arbitrary body returning *PatchMemoryBucketsIdResponse
-func (c *ClientWithResponses) PatchMemoryBucketsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMemoryBucketsIdResponse, error) {
-	rsp, err := c.PatchMemoryBucketsIdWithBody(ctx, id, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostInitScriptsWithResponse(ctx context.Context, body PostInitScriptsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostInitScriptsResponse, error) {
+	rsp, err := c.PostInitScripts(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchMemoryBucketsIdResponse(rsp)
+	return ParsePostInitScriptsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchMemoryBucketsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchMemoryBucketsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMemoryBucketsIdResponse, error) {
-	rsp, err := c.PatchMemoryBucketsId(ctx, id, body, reqEditors...)
+// DeleteInitScriptsIdWithResponse request returning *DeleteInitScriptsIdResponse
+func (c *ClientWithResponses) DeleteInitScriptsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteInitScriptsIdResponse, error) {
+	rsp, err := c.DeleteInitScriptsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchMemoryBucketsIdResponse(rsp)
+	return ParseDeleteInitScriptsIdResponse(rsp)
 }
 
-// GetToolsWithResponse request returning *GetToolsResponse
-func (c *ClientWithResponses) GetToolsWithResponse(ctx context.Context, params *GetToolsParams, reqEditors ...RequestEditorFn) (*GetToolsResponse, error) {
-	rsp, err := c.GetTools(ctx, params, reqEditors...)
+// GetInitScriptsIdWithResponse request returning *GetInitScriptsIdResponse
+func (c *ClientWithResponses) GetInitScriptsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetInitScriptsIdResponse, error) {
+	rsp, err := c.GetInitScriptsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetToolsResponse(rsp)
+	return ParseGetInitScriptsIdResponse(rsp)
 }
 
-// PostToolsWithBodyWithResponse request with arbitrary body returning *PostToolsResponse
-func (c *ClientWithResponses) PostToolsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostToolsResponse, error) {
-	rsp, err := c.PostToolsWithBody(ctx, contentType, body, reqEditors...)
+// PatchInitScriptsIdWithBodyWithResponse request with arbitrary body returning *PatchInitScriptsIdResponse
+func (c *ClientWithResponses) PatchInitScriptsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchInitScriptsIdResponse, error) {
+	rsp, err := c.PatchInitScriptsIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostToolsResponse(rsp)
+	return ParsePatchInitScriptsIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostToolsWithResponse(ctx context.Context, body PostToolsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostToolsResponse, error) {
-	rsp, err := c.PostTools(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PatchInitScriptsIdWithResponse(ctx context.Context, id IdPath, body PatchInitScriptsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchInitScriptsIdResponse, error) {
+	rsp, err := c.PatchInitScriptsId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostToolsResponse(rsp)
+	return ParsePatchInitScriptsIdResponse(rsp)
 }
 
-// DeleteToolsIdWithResponse request returning *DeleteToolsIdResponse
-func (c *ClientWithResponses) DeleteToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteToolsIdResponse, error) {
-	rsp, err := c.DeleteToolsId(ctx, id, reqEditors...)
+// GetMcpsWithResponse request returning *GetMcpsResponse
+func (c *ClientWithResponses) GetMcpsWithResponse(ctx context.Context, params *GetMcpsParams, reqEditors ...RequestEditorFn) (*GetMcpsResponse, error) {
+	rsp, err := c.GetMcps(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteToolsIdResponse(rsp)
+	return ParseGetMcpsResponse(rsp)
 }
 
-// GetToolsIdWithResponse request returning *GetToolsIdResponse
-func (c *ClientWithResponses) GetToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetToolsIdResponse, error) {
-	rsp, err := c.GetToolsId(ctx, id, reqEditors...)
+// PostMcpsWithBodyWithResponse request with arbitrary body returning *PostMcpsResponse
+func (c *ClientWithResponses) PostMcpsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMcpsResponse, error) {
+	rsp, err := c.PostMcpsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetToolsIdResponse(rsp)
+	return ParsePostMcpsResponse(rsp)
 }
 
-// PatchToolsIdWithBodyWithResponse request with arbitrary body returning *PatchToolsIdResponse
-func (c *ClientWithResponses) PatchToolsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchToolsIdResponse, error) {
-	rsp, err := c.PatchToolsIdWithBody(ctx, id, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostMcpsWithResponse(ctx context.Context, body PostMcpsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMcpsResponse, error) {
+	rsp, err := c.PostMcps(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchToolsIdResponse(rsp)
+	return ParsePostMcpsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchToolsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchToolsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchToolsIdResponse, error) {
-	rsp, err := c.PatchToolsId(ctx, id, body, reqEditors...)
+// DeleteMcpsIdWithResponse request returning *DeleteMcpsIdResponse
+func (c *ClientWithResponses) DeleteMcpsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteMcpsIdResponse, error) {
+	rsp, err := c.DeleteMcpsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchToolsIdResponse(rsp)
+	return ParseDeleteMcpsIdResponse(rsp)
 }
 
-// GetWorkspaceConfigurationsWithResponse request returning *GetWorkspaceConfigurationsResponse
-func (c *ClientWithResponses) GetWorkspaceConfigurationsWithResponse(ctx context.Context, params *GetWorkspaceConfigurationsParams, reqEditors ...RequestEditorFn) (*GetWorkspaceConfigurationsResponse, error) {
-	rsp, err := c.GetWorkspaceConfigurations(ctx, params, reqEditors...)
+// GetMcpsIdWithResponse request returning *GetMcpsIdResponse
+func (c *ClientWithResponses) GetMcpsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetMcpsIdResponse, error) {
+	rsp, err := c.GetMcpsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetWorkspaceConfigurationsResponse(rsp)
+	return ParseGetMcpsIdResponse(rsp)
 }
 
-// PostWorkspaceConfigurationsWithBodyWithResponse request with arbitrary body returning *PostWorkspaceConfigurationsResponse
-func (c *ClientWithResponses) PostWorkspaceConfigurationsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostWorkspaceConfigurationsResponse, error) {
-	rsp, err := c.PostWorkspaceConfigurationsWithBody(ctx, contentType, body, reqEditors...)
+// PatchMcpsIdWithBodyWithResponse request with arbitrary body returning *PatchMcpsIdResponse
+func (c *ClientWithResponses) PatchMcpsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMcpsIdResponse, error) {
+	rsp, err := c.PatchMcpsIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostWorkspaceConfigurationsResponse(rsp)
+	return ParsePatchMcpsIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostWorkspaceConfigurationsWithResponse(ctx context.Context, body PostWorkspaceConfigurationsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostWorkspaceConfigurationsResponse, error) {
-	rsp, err := c.PostWorkspaceConfigurations(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PatchMcpsIdWithResponse(ctx context.Context, id IdPath, body PatchMcpsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMcpsIdResponse, error) {
+	rsp, err := c.PatchMcpsId(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostWorkspaceConfigurationsResponse(rsp)
+	return ParsePatchMcpsIdResponse(rsp)
 }
 
-// DeleteWorkspaceConfigurationsIdWithResponse request returning *DeleteWorkspaceConfigurationsIdResponse
-func (c *ClientWithResponses) DeleteWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*DeleteWorkspaceConfigurationsIdResponse, error) {
-	rsp, err := c.DeleteWorkspaceConfigurationsId(ctx, id, reqEditors...)
+// GetSkillsWithResponse request returning *GetSkillsResponse
+func (c *ClientWithResponses) GetSkillsWithResponse(ctx context.Context, params *GetSkillsParams, reqEditors ...RequestEditorFn) (*GetSkillsResponse, error) {
+	rsp, err := c.GetSkills(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteWorkspaceConfigurationsIdResponse(rsp)
+	return ParseGetSkillsResponse(rsp)
 }
 
-// GetWorkspaceConfigurationsIdWithResponse request returning *GetWorkspaceConfigurationsIdResponse
-func (c *ClientWithResponses) GetWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, reqEditors ...RequestEditorFn) (*GetWorkspaceConfigurationsIdResponse, error) {
-	rsp, err := c.GetWorkspaceConfigurationsId(ctx, id, reqEditors...)
+// PostSkillsWithBodyWithResponse request with arbitrary body returning *PostSkillsResponse
+func (c *ClientWithResponses) PostSkillsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSkillsResponse, error) {
+	rsp, err := c.PostSkillsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetWorkspaceConfigurationsIdResponse(rsp)
+	return ParsePostSkillsResponse(rsp)
 }
 
-// PatchWorkspaceConfigurationsIdWithBodyWithResponse request with arbitrary body returning *PatchWorkspaceConfigurationsIdResponse
-func (c *ClientWithResponses) PatchWorkspaceConfigurationsIdWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchWorkspaceConfigurationsIdResponse, error) {
-	rsp, err := c.PatchWorkspaceConfigurationsIdWithBody(ctx, id, contentType, body, reqEditors...)
+func (c *ClientWithResponses) PostSkillsWithResponse(ctx context.Context, body PostSkillsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSkillsResponse, error) {
+	rsp, err := c.PostSkills(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchWorkspaceConfigurationsIdResponse(rsp)
+	return ParsePostSkillsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchWorkspaceConfigurationsIdWithResponse(ctx context.Context, id openapi_types.UUID, body PatchWorkspaceConfigurationsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchWorkspaceConfigurationsIdResponse, error) {
-	rsp, err := c.PatchWorkspaceConfigurationsId(ctx, id, body, reqEditors...)
+// DeleteSkillsIdWithResponse request returning *DeleteSkillsIdResponse
+func (c *ClientWithResponses) DeleteSkillsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteSkillsIdResponse, error) {
+	rsp, err := c.DeleteSkillsId(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchWorkspaceConfigurationsIdResponse(rsp)
+	return ParseDeleteSkillsIdResponse(rsp)
+}
+
+// GetSkillsIdWithResponse request returning *GetSkillsIdResponse
+func (c *ClientWithResponses) GetSkillsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetSkillsIdResponse, error) {
+	rsp, err := c.GetSkillsId(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSkillsIdResponse(rsp)
+}
+
+// PatchSkillsIdWithBodyWithResponse request with arbitrary body returning *PatchSkillsIdResponse
+func (c *ClientWithResponses) PatchSkillsIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchSkillsIdResponse, error) {
+	rsp, err := c.PatchSkillsIdWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchSkillsIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchSkillsIdWithResponse(ctx context.Context, id IdPath, body PatchSkillsIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchSkillsIdResponse, error) {
+	rsp, err := c.PatchSkillsId(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchSkillsIdResponse(rsp)
+}
+
+// GetVolumeAttachmentsWithResponse request returning *GetVolumeAttachmentsResponse
+func (c *ClientWithResponses) GetVolumeAttachmentsWithResponse(ctx context.Context, params *GetVolumeAttachmentsParams, reqEditors ...RequestEditorFn) (*GetVolumeAttachmentsResponse, error) {
+	rsp, err := c.GetVolumeAttachments(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetVolumeAttachmentsResponse(rsp)
+}
+
+// PostVolumeAttachmentsWithBodyWithResponse request with arbitrary body returning *PostVolumeAttachmentsResponse
+func (c *ClientWithResponses) PostVolumeAttachmentsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostVolumeAttachmentsResponse, error) {
+	rsp, err := c.PostVolumeAttachmentsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostVolumeAttachmentsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostVolumeAttachmentsWithResponse(ctx context.Context, body PostVolumeAttachmentsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostVolumeAttachmentsResponse, error) {
+	rsp, err := c.PostVolumeAttachments(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostVolumeAttachmentsResponse(rsp)
+}
+
+// DeleteVolumeAttachmentsIdWithResponse request returning *DeleteVolumeAttachmentsIdResponse
+func (c *ClientWithResponses) DeleteVolumeAttachmentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteVolumeAttachmentsIdResponse, error) {
+	rsp, err := c.DeleteVolumeAttachmentsId(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteVolumeAttachmentsIdResponse(rsp)
+}
+
+// GetVolumeAttachmentsIdWithResponse request returning *GetVolumeAttachmentsIdResponse
+func (c *ClientWithResponses) GetVolumeAttachmentsIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetVolumeAttachmentsIdResponse, error) {
+	rsp, err := c.GetVolumeAttachmentsId(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetVolumeAttachmentsIdResponse(rsp)
+}
+
+// GetVolumesWithResponse request returning *GetVolumesResponse
+func (c *ClientWithResponses) GetVolumesWithResponse(ctx context.Context, params *GetVolumesParams, reqEditors ...RequestEditorFn) (*GetVolumesResponse, error) {
+	rsp, err := c.GetVolumes(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetVolumesResponse(rsp)
+}
+
+// PostVolumesWithBodyWithResponse request with arbitrary body returning *PostVolumesResponse
+func (c *ClientWithResponses) PostVolumesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostVolumesResponse, error) {
+	rsp, err := c.PostVolumesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostVolumesResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostVolumesWithResponse(ctx context.Context, body PostVolumesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostVolumesResponse, error) {
+	rsp, err := c.PostVolumes(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostVolumesResponse(rsp)
+}
+
+// DeleteVolumesIdWithResponse request returning *DeleteVolumesIdResponse
+func (c *ClientWithResponses) DeleteVolumesIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*DeleteVolumesIdResponse, error) {
+	rsp, err := c.DeleteVolumesId(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteVolumesIdResponse(rsp)
+}
+
+// GetVolumesIdWithResponse request returning *GetVolumesIdResponse
+func (c *ClientWithResponses) GetVolumesIdWithResponse(ctx context.Context, id IdPath, reqEditors ...RequestEditorFn) (*GetVolumesIdResponse, error) {
+	rsp, err := c.GetVolumesId(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetVolumesIdResponse(rsp)
+}
+
+// PatchVolumesIdWithBodyWithResponse request with arbitrary body returning *PatchVolumesIdResponse
+func (c *ClientWithResponses) PatchVolumesIdWithBodyWithResponse(ctx context.Context, id IdPath, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchVolumesIdResponse, error) {
+	rsp, err := c.PatchVolumesIdWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchVolumesIdResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchVolumesIdWithResponse(ctx context.Context, id IdPath, body PatchVolumesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchVolumesIdResponse, error) {
+	rsp, err := c.PatchVolumesId(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchVolumesIdResponse(rsp)
 }
 
 // ParseGetAgentsResponse parses an HTTP response from a GetAgentsWithResponse call
@@ -4243,46 +4834,14 @@ func ParseGetAgentsResponse(rsp *http.Response) (*GetAgentsResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				Config struct {
-					DebounceMs                *int                                  `json:"debounceMs,omitempty"`
-					Model                     *string                               `json:"model,omitempty"`
-					Name                      *string                               `json:"name,omitempty"`
-					ProcessBuffer             *GetAgents200ItemsConfigProcessBuffer `json:"processBuffer,omitempty"`
-					RestrictOutput            *bool                                 `json:"restrictOutput,omitempty"`
-					RestrictionMaxInjections  *int                                  `json:"restrictionMaxInjections,omitempty"`
-					RestrictionMessage        *string                               `json:"restrictionMessage,omitempty"`
-					Role                      *string                               `json:"role,omitempty"`
-					SendFinalResponseToThread *bool                                 `json:"sendFinalResponseToThread,omitempty"`
-					SummarizationKeepTokens   *int                                  `json:"summarizationKeepTokens,omitempty"`
-					SummarizationMaxTokens    *int                                  `json:"summarizationMaxTokens,omitempty"`
-					SystemPrompt              *string                               `json:"systemPrompt,omitempty"`
-					WhenBusy                  *GetAgents200ItemsConfigWhenBusy      `json:"whenBusy,omitempty"`
-				} `json:"config"`
-				CreatedAt   time.Time          `json:"createdAt"`
-				Description *string            `json:"description,omitempty"`
-				Id          openapi_types.UUID `json:"id"`
-				Title       *string            `json:"title,omitempty"`
-				UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest PaginatedAgents
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4308,41 +4867,14 @@ func ParsePostAgentsResponse(rsp *http.Response) (*PostAgentsResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Config struct {
-				DebounceMs                *int                              `json:"debounceMs,omitempty"`
-				Model                     *string                           `json:"model,omitempty"`
-				Name                      *string                           `json:"name,omitempty"`
-				ProcessBuffer             *PostAgents201ConfigProcessBuffer `json:"processBuffer,omitempty"`
-				RestrictOutput            *bool                             `json:"restrictOutput,omitempty"`
-				RestrictionMaxInjections  *int                              `json:"restrictionMaxInjections,omitempty"`
-				RestrictionMessage        *string                           `json:"restrictionMessage,omitempty"`
-				Role                      *string                           `json:"role,omitempty"`
-				SendFinalResponseToThread *bool                             `json:"sendFinalResponseToThread,omitempty"`
-				SummarizationKeepTokens   *int                              `json:"summarizationKeepTokens,omitempty"`
-				SummarizationMaxTokens    *int                              `json:"summarizationMaxTokens,omitempty"`
-				SystemPrompt              *string                           `json:"systemPrompt,omitempty"`
-				WhenBusy                  *PostAgents201ConfigWhenBusy      `json:"whenBusy,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Agent
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4368,13 +4900,7 @@ func ParseDeleteAgentsIdResponse(rsp *http.Response) (*DeleteAgentsIdResponse, e
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4400,41 +4926,14 @@ func ParseGetAgentsIdResponse(rsp *http.Response) (*GetAgentsIdResponse, error) 
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				DebounceMs                *int                               `json:"debounceMs,omitempty"`
-				Model                     *string                            `json:"model,omitempty"`
-				Name                      *string                            `json:"name,omitempty"`
-				ProcessBuffer             *GetAgentsId200ConfigProcessBuffer `json:"processBuffer,omitempty"`
-				RestrictOutput            *bool                              `json:"restrictOutput,omitempty"`
-				RestrictionMaxInjections  *int                               `json:"restrictionMaxInjections,omitempty"`
-				RestrictionMessage        *string                            `json:"restrictionMessage,omitempty"`
-				Role                      *string                            `json:"role,omitempty"`
-				SendFinalResponseToThread *bool                              `json:"sendFinalResponseToThread,omitempty"`
-				SummarizationKeepTokens   *int                               `json:"summarizationKeepTokens,omitempty"`
-				SummarizationMaxTokens    *int                               `json:"summarizationMaxTokens,omitempty"`
-				SystemPrompt              *string                            `json:"systemPrompt,omitempty"`
-				WhenBusy                  *GetAgentsId200ConfigWhenBusy      `json:"whenBusy,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Agent
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4460,41 +4959,14 @@ func ParsePatchAgentsIdResponse(rsp *http.Response) (*PatchAgentsIdResponse, err
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				DebounceMs                *int                                 `json:"debounceMs,omitempty"`
-				Model                     *string                              `json:"model,omitempty"`
-				Name                      *string                              `json:"name,omitempty"`
-				ProcessBuffer             *PatchAgentsId200ConfigProcessBuffer `json:"processBuffer,omitempty"`
-				RestrictOutput            *bool                                `json:"restrictOutput,omitempty"`
-				RestrictionMaxInjections  *int                                 `json:"restrictionMaxInjections,omitempty"`
-				RestrictionMessage        *string                              `json:"restrictionMessage,omitempty"`
-				Role                      *string                              `json:"role,omitempty"`
-				SendFinalResponseToThread *bool                                `json:"sendFinalResponseToThread,omitempty"`
-				SummarizationKeepTokens   *int                                 `json:"summarizationKeepTokens,omitempty"`
-				SummarizationMaxTokens    *int                                 `json:"summarizationMaxTokens,omitempty"`
-				SystemPrompt              *string                              `json:"systemPrompt,omitempty"`
-				WhenBusy                  *PatchAgentsId200ConfigWhenBusy      `json:"whenBusy,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Agent
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4505,51 +4977,29 @@ func ParsePatchAgentsIdResponse(rsp *http.Response) (*PatchAgentsIdResponse, err
 	return response, nil
 }
 
-// ParseGetAttachmentsResponse parses an HTTP response from a GetAttachmentsWithResponse call
-func ParseGetAttachmentsResponse(rsp *http.Response) (*GetAttachmentsResponse, error) {
+// ParseGetEnvsResponse parses an HTTP response from a GetEnvsWithResponse call
+func ParseGetEnvsResponse(rsp *http.Response) (*GetEnvsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetAttachmentsResponse{
+	response := &GetEnvsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				CreatedAt time.Time          `json:"createdAt"`
-				Id        openapi_types.UUID `json:"id"`
-
-				// Kind Relation type between entities
-				Kind       GetAttachments200ItemsKind       `json:"kind"`
-				SourceId   openapi_types.UUID               `json:"sourceId"`
-				SourceType GetAttachments200ItemsSourceType `json:"sourceType"`
-				TargetId   openapi_types.UUID               `json:"targetId"`
-				TargetType GetAttachments200ItemsTargetType `json:"targetType"`
-				UpdatedAt  *time.Time                       `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest PaginatedEnvs
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4560,46 +5010,29 @@ func ParseGetAttachmentsResponse(rsp *http.Response) (*GetAttachmentsResponse, e
 	return response, nil
 }
 
-// ParsePostAttachmentsResponse parses an HTTP response from a PostAttachmentsWithResponse call
-func ParsePostAttachmentsResponse(rsp *http.Response) (*PostAttachmentsResponse, error) {
+// ParsePostEnvsResponse parses an HTTP response from a PostEnvsWithResponse call
+func ParsePostEnvsResponse(rsp *http.Response) (*PostEnvsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostAttachmentsResponse{
+	response := &PostEnvsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			CreatedAt time.Time          `json:"createdAt"`
-			Id        openapi_types.UUID `json:"id"`
-
-			// Kind Relation type between entities
-			Kind       PostAttachments201Kind       `json:"kind"`
-			SourceId   openapi_types.UUID           `json:"sourceId"`
-			SourceType PostAttachments201SourceType `json:"sourceType"`
-			TargetId   openapi_types.UUID           `json:"targetId"`
-			TargetType PostAttachments201TargetType `json:"targetType"`
-			UpdatedAt  *time.Time                   `json:"updatedAt,omitempty"`
-		}
+		var dest Env
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4610,28 +5043,22 @@ func ParsePostAttachmentsResponse(rsp *http.Response) (*PostAttachmentsResponse,
 	return response, nil
 }
 
-// ParseDeleteAttachmentsIdResponse parses an HTTP response from a DeleteAttachmentsIdWithResponse call
-func ParseDeleteAttachmentsIdResponse(rsp *http.Response) (*DeleteAttachmentsIdResponse, error) {
+// ParseDeleteEnvsIdResponse parses an HTTP response from a DeleteEnvsIdWithResponse call
+func ParseDeleteEnvsIdResponse(rsp *http.Response) (*DeleteEnvsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteAttachmentsIdResponse{
+	response := &DeleteEnvsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4642,63 +5069,29 @@ func ParseDeleteAttachmentsIdResponse(rsp *http.Response) (*DeleteAttachmentsIdR
 	return response, nil
 }
 
-// ParseGetMcpServersResponse parses an HTTP response from a GetMcpServersWithResponse call
-func ParseGetMcpServersResponse(rsp *http.Response) (*GetMcpServersResponse, error) {
+// ParseGetEnvsIdResponse parses an HTTP response from a GetEnvsIdWithResponse call
+func ParseGetEnvsIdResponse(rsp *http.Response) (*GetEnvsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetMcpServersResponse{
+	response := &GetEnvsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				Config struct {
-					Command *string `json:"command,omitempty"`
-					Env     *[]struct {
-						Name  string `json:"name"`
-						Value string `json:"value"`
-					} `json:"env,omitempty"`
-					HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-					Namespace           *string `json:"namespace,omitempty"`
-					RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-					Restart             *struct {
-						BackoffMs   *int `json:"backoffMs,omitempty"`
-						MaxAttempts *int `json:"maxAttempts,omitempty"`
-					} `json:"restart,omitempty"`
-					StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-					StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-					Workdir          *string `json:"workdir,omitempty"`
-				} `json:"config"`
-				CreatedAt   time.Time          `json:"createdAt"`
-				Description *string            `json:"description,omitempty"`
-				Id          openapi_types.UUID `json:"id"`
-				Title       *string            `json:"title,omitempty"`
-				UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest Env
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4709,58 +5102,95 @@ func ParseGetMcpServersResponse(rsp *http.Response) (*GetMcpServersResponse, err
 	return response, nil
 }
 
-// ParsePostMcpServersResponse parses an HTTP response from a PostMcpServersWithResponse call
-func ParsePostMcpServersResponse(rsp *http.Response) (*PostMcpServersResponse, error) {
+// ParsePatchEnvsIdResponse parses an HTTP response from a PatchEnvsIdWithResponse call
+func ParsePatchEnvsIdResponse(rsp *http.Response) (*PatchEnvsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostMcpServersResponse{
+	response := &PatchEnvsIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Env
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetHooksResponse parses an HTTP response from a GetHooksWithResponse call
+func ParseGetHooksResponse(rsp *http.Response) (*GetHooksResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetHooksResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedHooks
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostHooksResponse parses an HTTP response from a PostHooksWithResponse call
+func ParsePostHooksResponse(rsp *http.Response) (*PostHooksResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostHooksResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Config struct {
-				Command *string `json:"command,omitempty"`
-				Env     *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-				Namespace           *string `json:"namespace,omitempty"`
-				RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-				Restart             *struct {
-					BackoffMs   *int `json:"backoffMs,omitempty"`
-					MaxAttempts *int `json:"maxAttempts,omitempty"`
-				} `json:"restart,omitempty"`
-				StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-				StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-				Workdir          *string `json:"workdir,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Hook
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4771,28 +5201,22 @@ func ParsePostMcpServersResponse(rsp *http.Response) (*PostMcpServersResponse, e
 	return response, nil
 }
 
-// ParseDeleteMcpServersIdResponse parses an HTTP response from a DeleteMcpServersIdWithResponse call
-func ParseDeleteMcpServersIdResponse(rsp *http.Response) (*DeleteMcpServersIdResponse, error) {
+// ParseDeleteHooksIdResponse parses an HTTP response from a DeleteHooksIdWithResponse call
+func ParseDeleteHooksIdResponse(rsp *http.Response) (*DeleteHooksIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteMcpServersIdResponse{
+	response := &DeleteHooksIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4803,58 +5227,29 @@ func ParseDeleteMcpServersIdResponse(rsp *http.Response) (*DeleteMcpServersIdRes
 	return response, nil
 }
 
-// ParseGetMcpServersIdResponse parses an HTTP response from a GetMcpServersIdWithResponse call
-func ParseGetMcpServersIdResponse(rsp *http.Response) (*GetMcpServersIdResponse, error) {
+// ParseGetHooksIdResponse parses an HTTP response from a GetHooksIdWithResponse call
+func ParseGetHooksIdResponse(rsp *http.Response) (*GetHooksIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetMcpServersIdResponse{
+	response := &GetHooksIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				Command *string `json:"command,omitempty"`
-				Env     *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-				Namespace           *string `json:"namespace,omitempty"`
-				RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-				Restart             *struct {
-					BackoffMs   *int `json:"backoffMs,omitempty"`
-					MaxAttempts *int `json:"maxAttempts,omitempty"`
-				} `json:"restart,omitempty"`
-				StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-				StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-				Workdir          *string `json:"workdir,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Hook
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4865,58 +5260,29 @@ func ParseGetMcpServersIdResponse(rsp *http.Response) (*GetMcpServersIdResponse,
 	return response, nil
 }
 
-// ParsePatchMcpServersIdResponse parses an HTTP response from a PatchMcpServersIdWithResponse call
-func ParsePatchMcpServersIdResponse(rsp *http.Response) (*PatchMcpServersIdResponse, error) {
+// ParsePatchHooksIdResponse parses an HTTP response from a PatchHooksIdWithResponse call
+func ParsePatchHooksIdResponse(rsp *http.Response) (*PatchHooksIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchMcpServersIdResponse{
+	response := &PatchHooksIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				Command *string `json:"command,omitempty"`
-				Env     *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				HeartbeatIntervalMs *int    `json:"heartbeatIntervalMs,omitempty"`
-				Namespace           *string `json:"namespace,omitempty"`
-				RequestTimeoutMs    *int    `json:"requestTimeoutMs,omitempty"`
-				Restart             *struct {
-					BackoffMs   *int `json:"backoffMs,omitempty"`
-					MaxAttempts *int `json:"maxAttempts,omitempty"`
-				} `json:"restart,omitempty"`
-				StaleTimeoutMs   *int    `json:"staleTimeoutMs,omitempty"`
-				StartupTimeoutMs *int    `json:"startupTimeoutMs,omitempty"`
-				Workdir          *string `json:"workdir,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Hook
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4927,50 +5293,29 @@ func ParsePatchMcpServersIdResponse(rsp *http.Response) (*PatchMcpServersIdRespo
 	return response, nil
 }
 
-// ParseGetMemoryBucketsResponse parses an HTTP response from a GetMemoryBucketsWithResponse call
-func ParseGetMemoryBucketsResponse(rsp *http.Response) (*GetMemoryBucketsResponse, error) {
+// ParseGetInitScriptsResponse parses an HTTP response from a GetInitScriptsWithResponse call
+func ParseGetInitScriptsResponse(rsp *http.Response) (*GetInitScriptsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetMemoryBucketsResponse{
+	response := &GetInitScriptsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				Config struct {
-					CollectionPrefix *string                              `json:"collectionPrefix,omitempty"`
-					Scope            *GetMemoryBuckets200ItemsConfigScope `json:"scope,omitempty"`
-				} `json:"config"`
-				CreatedAt   time.Time          `json:"createdAt"`
-				Description *string            `json:"description,omitempty"`
-				Id          openapi_types.UUID `json:"id"`
-				Title       *string            `json:"title,omitempty"`
-				UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest PaginatedInitScripts
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -4981,45 +5326,29 @@ func ParseGetMemoryBucketsResponse(rsp *http.Response) (*GetMemoryBucketsRespons
 	return response, nil
 }
 
-// ParsePostMemoryBucketsResponse parses an HTTP response from a PostMemoryBucketsWithResponse call
-func ParsePostMemoryBucketsResponse(rsp *http.Response) (*PostMemoryBucketsResponse, error) {
+// ParsePostInitScriptsResponse parses an HTTP response from a PostInitScriptsWithResponse call
+func ParsePostInitScriptsResponse(rsp *http.Response) (*PostInitScriptsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostMemoryBucketsResponse{
+	response := &PostInitScriptsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Config struct {
-				CollectionPrefix *string                          `json:"collectionPrefix,omitempty"`
-				Scope            *PostMemoryBuckets201ConfigScope `json:"scope,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest InitScript
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5030,28 +5359,22 @@ func ParsePostMemoryBucketsResponse(rsp *http.Response) (*PostMemoryBucketsRespo
 	return response, nil
 }
 
-// ParseDeleteMemoryBucketsIdResponse parses an HTTP response from a DeleteMemoryBucketsIdWithResponse call
-func ParseDeleteMemoryBucketsIdResponse(rsp *http.Response) (*DeleteMemoryBucketsIdResponse, error) {
+// ParseDeleteInitScriptsIdResponse parses an HTTP response from a DeleteInitScriptsIdWithResponse call
+func ParseDeleteInitScriptsIdResponse(rsp *http.Response) (*DeleteInitScriptsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteMemoryBucketsIdResponse{
+	response := &DeleteInitScriptsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5062,45 +5385,29 @@ func ParseDeleteMemoryBucketsIdResponse(rsp *http.Response) (*DeleteMemoryBucket
 	return response, nil
 }
 
-// ParseGetMemoryBucketsIdResponse parses an HTTP response from a GetMemoryBucketsIdWithResponse call
-func ParseGetMemoryBucketsIdResponse(rsp *http.Response) (*GetMemoryBucketsIdResponse, error) {
+// ParseGetInitScriptsIdResponse parses an HTTP response from a GetInitScriptsIdWithResponse call
+func ParseGetInitScriptsIdResponse(rsp *http.Response) (*GetInitScriptsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetMemoryBucketsIdResponse{
+	response := &GetInitScriptsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				CollectionPrefix *string                           `json:"collectionPrefix,omitempty"`
-				Scope            *GetMemoryBucketsId200ConfigScope `json:"scope,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest InitScript
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5111,45 +5418,29 @@ func ParseGetMemoryBucketsIdResponse(rsp *http.Response) (*GetMemoryBucketsIdRes
 	return response, nil
 }
 
-// ParsePatchMemoryBucketsIdResponse parses an HTTP response from a PatchMemoryBucketsIdWithResponse call
-func ParsePatchMemoryBucketsIdResponse(rsp *http.Response) (*PatchMemoryBucketsIdResponse, error) {
+// ParsePatchInitScriptsIdResponse parses an HTTP response from a PatchInitScriptsIdWithResponse call
+func ParsePatchInitScriptsIdResponse(rsp *http.Response) (*PatchInitScriptsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchMemoryBucketsIdResponse{
+	response := &PatchInitScriptsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				CollectionPrefix *string                             `json:"collectionPrefix,omitempty"`
-				Scope            *PatchMemoryBucketsId200ConfigScope `json:"scope,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest InitScript
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5160,48 +5451,29 @@ func ParsePatchMemoryBucketsIdResponse(rsp *http.Response) (*PatchMemoryBucketsI
 	return response, nil
 }
 
-// ParseGetToolsResponse parses an HTTP response from a GetToolsWithResponse call
-func ParseGetToolsResponse(rsp *http.Response) (*GetToolsResponse, error) {
+// ParseGetMcpsResponse parses an HTTP response from a GetMcpsWithResponse call
+func ParseGetMcpsResponse(rsp *http.Response) (*GetMcpsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetToolsResponse{
+	response := &GetMcpsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				Config      *map[string]interface{} `json:"config,omitempty"`
-				CreatedAt   time.Time               `json:"createdAt"`
-				Description *string                 `json:"description,omitempty"`
-				Id          openapi_types.UUID      `json:"id"`
-				Name        *string                 `json:"name,omitempty"`
-				Type        GetTools200ItemsType    `json:"type"`
-				UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest PaginatedMcps
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5212,43 +5484,29 @@ func ParseGetToolsResponse(rsp *http.Response) (*GetToolsResponse, error) {
 	return response, nil
 }
 
-// ParsePostToolsResponse parses an HTTP response from a PostToolsWithResponse call
-func ParsePostToolsResponse(rsp *http.Response) (*PostToolsResponse, error) {
+// ParsePostMcpsResponse parses an HTTP response from a PostMcpsWithResponse call
+func ParsePostMcpsResponse(rsp *http.Response) (*PostMcpsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostToolsResponse{
+	response := &PostMcpsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Config      *map[string]interface{} `json:"config,omitempty"`
-			CreatedAt   time.Time               `json:"createdAt"`
-			Description *string                 `json:"description,omitempty"`
-			Id          openapi_types.UUID      `json:"id"`
-			Name        *string                 `json:"name,omitempty"`
-			Type        PostTools201Type        `json:"type"`
-			UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-		}
+		var dest Mcp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5259,28 +5517,22 @@ func ParsePostToolsResponse(rsp *http.Response) (*PostToolsResponse, error) {
 	return response, nil
 }
 
-// ParseDeleteToolsIdResponse parses an HTTP response from a DeleteToolsIdWithResponse call
-func ParseDeleteToolsIdResponse(rsp *http.Response) (*DeleteToolsIdResponse, error) {
+// ParseDeleteMcpsIdResponse parses an HTTP response from a DeleteMcpsIdWithResponse call
+func ParseDeleteMcpsIdResponse(rsp *http.Response) (*DeleteMcpsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteToolsIdResponse{
+	response := &DeleteMcpsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5291,43 +5543,29 @@ func ParseDeleteToolsIdResponse(rsp *http.Response) (*DeleteToolsIdResponse, err
 	return response, nil
 }
 
-// ParseGetToolsIdResponse parses an HTTP response from a GetToolsIdWithResponse call
-func ParseGetToolsIdResponse(rsp *http.Response) (*GetToolsIdResponse, error) {
+// ParseGetMcpsIdResponse parses an HTTP response from a GetMcpsIdWithResponse call
+func ParseGetMcpsIdResponse(rsp *http.Response) (*GetMcpsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetToolsIdResponse{
+	response := &GetMcpsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config      *map[string]interface{} `json:"config,omitempty"`
-			CreatedAt   time.Time               `json:"createdAt"`
-			Description *string                 `json:"description,omitempty"`
-			Id          openapi_types.UUID      `json:"id"`
-			Name        *string                 `json:"name,omitempty"`
-			Type        GetToolsId200Type       `json:"type"`
-			UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-		}
+		var dest Mcp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5338,43 +5576,29 @@ func ParseGetToolsIdResponse(rsp *http.Response) (*GetToolsIdResponse, error) {
 	return response, nil
 }
 
-// ParsePatchToolsIdResponse parses an HTTP response from a PatchToolsIdWithResponse call
-func ParsePatchToolsIdResponse(rsp *http.Response) (*PatchToolsIdResponse, error) {
+// ParsePatchMcpsIdResponse parses an HTTP response from a PatchMcpsIdWithResponse call
+func ParsePatchMcpsIdResponse(rsp *http.Response) (*PatchMcpsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchToolsIdResponse{
+	response := &PatchMcpsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config      *map[string]interface{} `json:"config,omitempty"`
-			CreatedAt   time.Time               `json:"createdAt"`
-			Description *string                 `json:"description,omitempty"`
-			Id          openapi_types.UUID      `json:"id"`
-			Name        *string                 `json:"name,omitempty"`
-			Type        PatchToolsId200Type     `json:"type"`
-			UpdatedAt   *time.Time              `json:"updatedAt,omitempty"`
-		}
+		var dest Mcp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5385,64 +5609,29 @@ func ParsePatchToolsIdResponse(rsp *http.Response) (*PatchToolsIdResponse, error
 	return response, nil
 }
 
-// ParseGetWorkspaceConfigurationsResponse parses an HTTP response from a GetWorkspaceConfigurationsWithResponse call
-func ParseGetWorkspaceConfigurationsResponse(rsp *http.Response) (*GetWorkspaceConfigurationsResponse, error) {
+// ParseGetSkillsResponse parses an HTTP response from a GetSkillsWithResponse call
+func ParseGetSkillsResponse(rsp *http.Response) (*GetSkillsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetWorkspaceConfigurationsResponse{
+	response := &GetSkillsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Items []struct {
-				Config struct {
-					CpuLimit   *GetWorkspaceConfigurations_200_Items_Config_CpuLimit `json:"cpu_limit,omitempty"`
-					EnableDinD *bool                                                 `json:"enableDinD,omitempty"`
-					Env        *[]struct {
-						Name  string `json:"name"`
-						Value string `json:"value"`
-					} `json:"env,omitempty"`
-					Image         *string                                                  `json:"image,omitempty"`
-					InitialScript *string                                                  `json:"initialScript,omitempty"`
-					MemoryLimit   *GetWorkspaceConfigurations_200_Items_Config_MemoryLimit `json:"memory_limit,omitempty"`
-					Nix           *map[string]interface{}                                  `json:"nix,omitempty"`
-					Platform      *GetWorkspaceConfigurations200ItemsConfigPlatform        `json:"platform,omitempty"`
-					TtlSeconds    *int                                                     `json:"ttlSeconds,omitempty"`
-					Volumes       *struct {
-						Enabled   *bool   `json:"enabled,omitempty"`
-						MountPath *string `json:"mountPath,omitempty"`
-					} `json:"volumes,omitempty"`
-				} `json:"config"`
-				CreatedAt   time.Time          `json:"createdAt"`
-				Description *string            `json:"description,omitempty"`
-				Id          openapi_types.UUID `json:"id"`
-				Title       *string            `json:"title,omitempty"`
-				UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-			} `json:"items"`
-			Page    int `json:"page"`
-			PerPage int `json:"perPage"`
-			Total   int `json:"total"`
-		}
+		var dest PaginatedSkills
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5453,59 +5642,29 @@ func ParseGetWorkspaceConfigurationsResponse(rsp *http.Response) (*GetWorkspaceC
 	return response, nil
 }
 
-// ParsePostWorkspaceConfigurationsResponse parses an HTTP response from a PostWorkspaceConfigurationsWithResponse call
-func ParsePostWorkspaceConfigurationsResponse(rsp *http.Response) (*PostWorkspaceConfigurationsResponse, error) {
+// ParsePostSkillsResponse parses an HTTP response from a PostSkillsWithResponse call
+func ParsePostSkillsResponse(rsp *http.Response) (*PostSkillsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostWorkspaceConfigurationsResponse{
+	response := &PostSkillsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest struct {
-			Config struct {
-				CpuLimit   *PostWorkspaceConfigurations_201_Config_CpuLimit `json:"cpu_limit,omitempty"`
-				EnableDinD *bool                                            `json:"enableDinD,omitempty"`
-				Env        *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				Image         *string                                             `json:"image,omitempty"`
-				InitialScript *string                                             `json:"initialScript,omitempty"`
-				MemoryLimit   *PostWorkspaceConfigurations_201_Config_MemoryLimit `json:"memory_limit,omitempty"`
-				Nix           *map[string]interface{}                             `json:"nix,omitempty"`
-				Platform      *PostWorkspaceConfigurations201ConfigPlatform       `json:"platform,omitempty"`
-				TtlSeconds    *int                                                `json:"ttlSeconds,omitempty"`
-				Volumes       *struct {
-					Enabled   *bool   `json:"enabled,omitempty"`
-					MountPath *string `json:"mountPath,omitempty"`
-				} `json:"volumes,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Skill
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5516,28 +5675,22 @@ func ParsePostWorkspaceConfigurationsResponse(rsp *http.Response) (*PostWorkspac
 	return response, nil
 }
 
-// ParseDeleteWorkspaceConfigurationsIdResponse parses an HTTP response from a DeleteWorkspaceConfigurationsIdWithResponse call
-func ParseDeleteWorkspaceConfigurationsIdResponse(rsp *http.Response) (*DeleteWorkspaceConfigurationsIdResponse, error) {
+// ParseDeleteSkillsIdResponse parses an HTTP response from a DeleteSkillsIdWithResponse call
+func ParseDeleteSkillsIdResponse(rsp *http.Response) (*DeleteSkillsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteWorkspaceConfigurationsIdResponse{
+	response := &DeleteSkillsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5548,59 +5701,29 @@ func ParseDeleteWorkspaceConfigurationsIdResponse(rsp *http.Response) (*DeleteWo
 	return response, nil
 }
 
-// ParseGetWorkspaceConfigurationsIdResponse parses an HTTP response from a GetWorkspaceConfigurationsIdWithResponse call
-func ParseGetWorkspaceConfigurationsIdResponse(rsp *http.Response) (*GetWorkspaceConfigurationsIdResponse, error) {
+// ParseGetSkillsIdResponse parses an HTTP response from a GetSkillsIdWithResponse call
+func ParseGetSkillsIdResponse(rsp *http.Response) (*GetSkillsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetWorkspaceConfigurationsIdResponse{
+	response := &GetSkillsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				CpuLimit   *GetWorkspaceConfigurationsId_200_Config_CpuLimit `json:"cpu_limit,omitempty"`
-				EnableDinD *bool                                             `json:"enableDinD,omitempty"`
-				Env        *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				Image         *string                                              `json:"image,omitempty"`
-				InitialScript *string                                              `json:"initialScript,omitempty"`
-				MemoryLimit   *GetWorkspaceConfigurationsId_200_Config_MemoryLimit `json:"memory_limit,omitempty"`
-				Nix           *map[string]interface{}                              `json:"nix,omitempty"`
-				Platform      *GetWorkspaceConfigurationsId200ConfigPlatform       `json:"platform,omitempty"`
-				TtlSeconds    *int                                                 `json:"ttlSeconds,omitempty"`
-				Volumes       *struct {
-					Enabled   *bool   `json:"enabled,omitempty"`
-					MountPath *string `json:"mountPath,omitempty"`
-				} `json:"volumes,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Skill
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
-		}
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -5611,59 +5734,312 @@ func ParseGetWorkspaceConfigurationsIdResponse(rsp *http.Response) (*GetWorkspac
 	return response, nil
 }
 
-// ParsePatchWorkspaceConfigurationsIdResponse parses an HTTP response from a PatchWorkspaceConfigurationsIdWithResponse call
-func ParsePatchWorkspaceConfigurationsIdResponse(rsp *http.Response) (*PatchWorkspaceConfigurationsIdResponse, error) {
+// ParsePatchSkillsIdResponse parses an HTTP response from a PatchSkillsIdWithResponse call
+func ParsePatchSkillsIdResponse(rsp *http.Response) (*PatchSkillsIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchWorkspaceConfigurationsIdResponse{
+	response := &PatchSkillsIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			Config struct {
-				CpuLimit   *PatchWorkspaceConfigurationsId_200_Config_CpuLimit `json:"cpu_limit,omitempty"`
-				EnableDinD *bool                                               `json:"enableDinD,omitempty"`
-				Env        *[]struct {
-					Name  string `json:"name"`
-					Value string `json:"value"`
-				} `json:"env,omitempty"`
-				Image         *string                                                `json:"image,omitempty"`
-				InitialScript *string                                                `json:"initialScript,omitempty"`
-				MemoryLimit   *PatchWorkspaceConfigurationsId_200_Config_MemoryLimit `json:"memory_limit,omitempty"`
-				Nix           *map[string]interface{}                                `json:"nix,omitempty"`
-				Platform      *PatchWorkspaceConfigurationsId200ConfigPlatform       `json:"platform,omitempty"`
-				TtlSeconds    *int                                                   `json:"ttlSeconds,omitempty"`
-				Volumes       *struct {
-					Enabled   *bool   `json:"enabled,omitempty"`
-					MountPath *string `json:"mountPath,omitempty"`
-				} `json:"volumes,omitempty"`
-			} `json:"config"`
-			CreatedAt   time.Time          `json:"createdAt"`
-			Description *string            `json:"description,omitempty"`
-			Id          openapi_types.UUID `json:"id"`
-			Title       *string            `json:"title,omitempty"`
-			UpdatedAt   *time.Time         `json:"updatedAt,omitempty"`
-		}
+		var dest Skill
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest struct {
-			Detail   *string `json:"detail,omitempty"`
-			Instance *string `json:"instance,omitempty"`
-			Status   int     `json:"status"`
-			Title    string  `json:"title"`
-			Type     *string `json:"type,omitempty"`
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
 		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetVolumeAttachmentsResponse parses an HTTP response from a GetVolumeAttachmentsWithResponse call
+func ParseGetVolumeAttachmentsResponse(rsp *http.Response) (*GetVolumeAttachmentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetVolumeAttachmentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedVolumeAttachments
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostVolumeAttachmentsResponse parses an HTTP response from a PostVolumeAttachmentsWithResponse call
+func ParsePostVolumeAttachmentsResponse(rsp *http.Response) (*PostVolumeAttachmentsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostVolumeAttachmentsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest VolumeAttachment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteVolumeAttachmentsIdResponse parses an HTTP response from a DeleteVolumeAttachmentsIdWithResponse call
+func ParseDeleteVolumeAttachmentsIdResponse(rsp *http.Response) (*DeleteVolumeAttachmentsIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteVolumeAttachmentsIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetVolumeAttachmentsIdResponse parses an HTTP response from a GetVolumeAttachmentsIdWithResponse call
+func ParseGetVolumeAttachmentsIdResponse(rsp *http.Response) (*GetVolumeAttachmentsIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetVolumeAttachmentsIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest VolumeAttachment
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetVolumesResponse parses an HTTP response from a GetVolumesWithResponse call
+func ParseGetVolumesResponse(rsp *http.Response) (*GetVolumesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetVolumesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedVolumes
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostVolumesResponse parses an HTTP response from a PostVolumesWithResponse call
+func ParsePostVolumesResponse(rsp *http.Response) (*PostVolumesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostVolumesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest Volume
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteVolumesIdResponse parses an HTTP response from a DeleteVolumesIdWithResponse call
+func ParseDeleteVolumesIdResponse(rsp *http.Response) (*DeleteVolumesIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteVolumesIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetVolumesIdResponse parses an HTTP response from a GetVolumesIdWithResponse call
+func ParseGetVolumesIdResponse(rsp *http.Response) (*GetVolumesIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetVolumesIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Volume
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchVolumesIdResponse parses an HTTP response from a PatchVolumesIdWithResponse call
+func ParsePatchVolumesIdResponse(rsp *http.Response) (*PatchVolumesIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchVolumesIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Volume
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ProblemResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

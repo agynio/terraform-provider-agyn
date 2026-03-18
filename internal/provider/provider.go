@@ -83,11 +83,13 @@ func buildTeamAPIURL(baseURL string) string {
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		resources.NewAgentResource,
-		resources.NewToolResource,
-		resources.NewMCPServerResource,
-		resources.NewWorkspaceConfigurationResource,
-		resources.NewMemoryBucketResource,
-		resources.NewAttachmentResource,
+		resources.NewVolumeResource,
+		resources.NewVolumeAttachmentResource,
+		resources.NewMcpResource,
+		resources.NewSkillResource,
+		resources.NewHookResource,
+		resources.NewEnvResource,
+		resources.NewInitScriptResource,
 	}
 }
 
