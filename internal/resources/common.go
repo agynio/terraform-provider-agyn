@@ -10,11 +10,18 @@ func stringPointer(v types.String) *string {
 	return &value
 }
 
-func int64Pointer(v types.Int64) *int64 {
-	if v.IsNull() || v.IsUnknown() {
+func updateStringPointer(plan types.String, prior types.String) *string {
+	if plan.IsUnknown() {
 		return nil
 	}
-	value := v.ValueInt64()
+	if plan.IsNull() {
+		if prior.IsNull() || prior.IsUnknown() {
+			return nil
+		}
+		empty := ""
+		return &empty
+	}
+	value := plan.ValueString()
 	return &value
 }
 
@@ -33,11 +40,11 @@ func optionalString(v *string) types.String {
 	return types.StringValue(*v)
 }
 
-func optionalInt64(v *int64) types.Int64 {
-	if v == nil {
-		return types.Int64Null()
+func preserveSensitiveString(fallback types.String, apiValue *string) types.String {
+	if apiValue == nil {
+		return fallback
 	}
-	return types.Int64Value(*v)
+	return types.StringValue(*apiValue)
 }
 
 func optionalBool(v *bool) types.Bool {
@@ -45,27 +52,6 @@ func optionalBool(v *bool) types.Bool {
 		return types.BoolNull()
 	}
 	return types.BoolValue(*v)
-}
-
-func preserveOrApplyString(prior types.String, apiValue *string) types.String {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalString(apiValue)
-}
-
-func preserveOrApplyInt64(prior types.Int64, apiValue *int64) types.Int64 {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalInt64(apiValue)
-}
-
-func preserveOrApplyBool(prior types.Bool, apiValue *bool) types.Bool {
-	if !prior.IsNull() && !prior.IsUnknown() {
-		return prior
-	}
-	return optionalBool(apiValue)
 }
 
 const httpStatusNotFound = 404

@@ -1,3 +1,4 @@
+# Spec: ../../api/dist/team-v1.yaml
 package: teamclient
 generate:
   models: true

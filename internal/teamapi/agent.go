@@ -10,35 +10,69 @@ import (
 )
 
 type Agent struct {
-	ID          string
-	Title       *string
-	Description *string
-	Config      AgentConfig
-	CreatedAt   time.Time
-	UpdatedAt   *time.Time
+	ID            string
+	Name          string
+	Role          string
+	Model         string
+	Image         string
+	Description   *string
+	Configuration *string
+	Resources     *ComputeResources
+	CreatedAt     time.Time
+	UpdatedAt     *time.Time
 }
 
 type AgentCreate struct {
-	Title       *string
-	Description *string
-	Config      AgentConfig
+	Name          string
+	Role          string
+	Model         string
+	Image         string
+	Description   *string
+	Configuration *string
+	Resources     *ComputeResources
 }
 
 type AgentUpdate struct {
-	Title       *string
-	Description *string
-	Config      *AgentConfig
+	Name          *string
+	Role          *string
+	Model         *string
+	Image         *string
+	Description   *string
+	Configuration *string
+	Resources     *ComputeResources
 }
 
 func (c *Client) CreateAgent(ctx context.Context, input AgentCreate) (*Agent, error) {
-	payload := map[string]any{
-		"config": input.Config,
+	if input.Name == "" {
+		return nil, fmt.Errorf("name is required")
 	}
-	if input.Title != nil {
-		payload["title"] = *input.Title
+	if input.Role == "" {
+		return nil, fmt.Errorf("role is required")
+	}
+	if input.Model == "" {
+		return nil, fmt.Errorf("model is required")
+	}
+	if input.Image == "" {
+		return nil, fmt.Errorf("image is required")
+	}
+	if _, err := parseUUID(input.Model); err != nil {
+		return nil, fmt.Errorf("invalid model: %w", err)
+	}
+
+	payload := map[string]any{
+		"name":  input.Name,
+		"role":  input.Role,
+		"model": input.Model,
+		"image": input.Image,
 	}
 	if input.Description != nil {
 		payload["description"] = *input.Description
+	}
+	if input.Configuration != nil {
+		payload["configuration"] = *input.Configuration
+	}
+	if input.Resources != nil {
+		payload["resources"] = *input.Resources
 	}
 
 	bodyBytes, err := json.Marshal(payload)
@@ -93,14 +127,32 @@ func (c *Client) UpdateAgent(ctx context.Context, id string, input AgentUpdate) 
 	}
 
 	payload := make(map[string]any)
-	if input.Title != nil {
-		payload["title"] = *input.Title
+	if input.Name != nil {
+		payload["name"] = *input.Name
+	}
+	if input.Role != nil {
+		payload["role"] = *input.Role
+	}
+	if input.Model != nil {
+		if *input.Model == "" {
+			return nil, fmt.Errorf("model cannot be empty")
+		}
+		if _, err := parseUUID(*input.Model); err != nil {
+			return nil, fmt.Errorf("invalid model: %w", err)
+		}
+		payload["model"] = *input.Model
+	}
+	if input.Image != nil {
+		payload["image"] = *input.Image
 	}
 	if input.Description != nil {
 		payload["description"] = *input.Description
 	}
-	if input.Config != nil {
-		payload["config"] = *input.Config
+	if input.Configuration != nil {
+		payload["configuration"] = *input.Configuration
+	}
+	if input.Resources != nil {
+		payload["resources"] = *input.Resources
 	}
 
 	if len(payload) == 0 {
@@ -149,12 +201,16 @@ func (c *Client) DeleteAgent(ctx context.Context, id string) error {
 }
 
 type agentPayload struct {
-	ID          string          `json:"id"`
-	Title       *string         `json:"title,omitempty"`
-	Description *string         `json:"description,omitempty"`
-	Config      AgentConfig     `json:"config"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	UpdatedAt   *time.Time      `json:"updatedAt,omitempty"`
+	ID            string            `json:"id"`
+	Name          string            `json:"name"`
+	Role          string            `json:"role"`
+	Model         string            `json:"model"`
+	Image         string            `json:"image"`
+	Description   *string           `json:"description,omitempty"`
+	Configuration *string           `json:"configuration,omitempty"`
+	Resources     *ComputeResources `json:"resources,omitempty"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     *time.Time        `json:"updatedAt,omitempty"`
 }
 
 func mapAgent(source any) (*Agent, error) {
@@ -163,11 +219,15 @@ func mapAgent(source any) (*Agent, error) {
 		return nil, err
 	}
 	return &Agent{
-		ID:          payload.ID,
-		Title:       payload.Title,
-		Description: payload.Description,
-		Config:      payload.Config,
-		CreatedAt:   payload.CreatedAt,
-		UpdatedAt:   payload.UpdatedAt,
+		ID:            payload.ID,
+		Name:          payload.Name,
+		Role:          payload.Role,
+		Model:         payload.Model,
+		Image:         payload.Image,
+		Description:   payload.Description,
+		Configuration: payload.Configuration,
+		Resources:     payload.Resources,
+		CreatedAt:     payload.CreatedAt,
+		UpdatedAt:     payload.UpdatedAt,
 	}, nil
 }

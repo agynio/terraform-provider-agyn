@@ -16,6 +16,12 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("AGYN_BASE_URL") == "" {
 		t.Skip("AGYN_BASE_URL must be set for acceptance tests")
 	}
+	if os.Getenv("AGYN_MODEL_ID") == "" {
+		t.Skip("AGYN_MODEL_ID must be set for acceptance tests")
+	}
+	if os.Getenv("AGYN_AGENT_IMAGE") == "" {
+		t.Skip("AGYN_AGENT_IMAGE must be set for acceptance tests")
+	}
 }
 
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -83,14 +89,14 @@ func TestBuildTeamAPIURLResolvesOperationPaths(t *testing.T) {
 			want:          "https://gateway.example.com" + teamAPIPath + "/agents",
 		},
 		{
-			name:          "tools",
-			operationPath: "/tools",
-			want:          "https://gateway.example.com" + teamAPIPath + "/tools",
+			name:          "volumes",
+			operationPath: "/volumes",
+			want:          "https://gateway.example.com" + teamAPIPath + "/volumes",
 		},
 		{
-			name:          "workspace configurations",
-			operationPath: "/workspace-configurations",
-			want:          "https://gateway.example.com" + teamAPIPath + "/workspace-configurations",
+			name:          "envs",
+			operationPath: "/envs",
+			want:          "https://gateway.example.com" + teamAPIPath + "/envs",
 		},
 	}
 
