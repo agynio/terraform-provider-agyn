@@ -2,9 +2,6 @@ package provider
 
 import (
 	"context"
-	"net/http"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,16 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 	"github.com/agynio/terraform-provider-agyn/internal/resources"
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
 )
 
 type agynProvider struct {
 	version string
 	commit  string
 }
-
-const teamAPIPath = "/team/v1"
 
 func New(version, commit string) func() provider.Provider {
 	return func() provider.Provider { return &agynProvider{version: version, commit: commit} }
@@ -35,8 +30,8 @@ func (p *agynProvider) Metadata(_ context.Context, _ provider.MetadataRequest, r
 
 func (p *agynProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Provider for Agyn Team API via Gateway.",
-		MarkdownDescription: "Provider for Agyn Team API via Gateway.",
+		Description:         "Provider for Agyn Agents API via Gateway.",
+		MarkdownDescription: "Provider for Agyn Agents API via Gateway.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Required:            true,
@@ -60,12 +55,8 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 		return
 	}
 
-	httpClient := &http.Client{Timeout: 30 * time.Second}
-	apiURL := buildTeamAPIURL(data.APIURL.ValueString())
-
-	client, err := teamapi.NewClient(teamapi.Config{
-		BaseURL:    apiURL,
-		HTTPClient: httpClient,
+	client, err := agentapi.NewClient(agentapi.Config{
+		BaseURL: data.APIURL.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to configure client", err.Error())
@@ -74,10 +65,6 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 	resp.DataSourceData = client
 	resp.ResourceData = client
-}
-
-func buildTeamAPIURL(baseURL string) string {
-	return strings.TrimSuffix(baseURL, "/") + teamAPIPath + "/"
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {

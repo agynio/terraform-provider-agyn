@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type mcpResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &mcpResource{}
@@ -75,9 +75,9 @@ func (r *mcpResource) Configure(_ context.Context, req resource.ConfigureRequest
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -95,11 +95,11 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	input := teamapi.McpCreate{
-		AgentID:     plan.AgentID.ValueString(),
+	input := &agentsv1.CreateMcpRequest{
+		AgentId:     plan.AgentID.ValueString(),
 		Image:       plan.Image.ValueString(),
 		Command:     plan.Command.ValueString(),
-		Description: stringPointer(plan.Description),
+		Description: stringValue(plan.Description),
 		Resources:   computeResourcesFromModel(plan.Resources),
 	}
 
@@ -110,8 +110,8 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	updatedState := mcpModel{
-		ID:          types.StringValue(mcp.ID),
-		AgentID:     types.StringValue(mcp.AgentID),
+		ID:          types.StringValue(mcp.Meta.Id),
+		AgentID:     types.StringValue(mcp.AgentId),
 		Image:       types.StringValue(mcp.Image),
 		Command:     types.StringValue(mcp.Command),
 		Description: optionalString(mcp.Description),
@@ -135,8 +135,7 @@ func (r *mcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	mcp, err := r.client.GetMcp(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -144,7 +143,7 @@ func (r *mcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	state.AgentID = types.StringValue(mcp.AgentID)
+	state.AgentID = types.StringValue(mcp.AgentId)
 	state.Image = types.StringValue(mcp.Image)
 	state.Command = types.StringValue(mcp.Command)
 	state.Description = optionalString(mcp.Description)
@@ -167,22 +166,23 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	input := teamapi.McpUpdate{
-		Image:       stringPointer(plan.Image),
-		Command:     stringPointer(plan.Command),
+	input := &agentsv1.UpdateMcpRequest{
+		Id:          plan.ID.ValueString(),
+		Image:       updateStringPointer(plan.Image, state.Image),
+		Command:     updateStringPointer(plan.Command, state.Command),
 		Description: updateStringPointer(plan.Description, state.Description),
 		Resources:   updateComputeResources(plan.Resources, state.Resources),
 	}
 
-	mcp, err := r.client.UpdateMcp(ctx, plan.ID.ValueString(), input)
+	mcp, err := r.client.UpdateMcp(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update MCP", err.Error())
 		return
 	}
 
 	updatedState := mcpModel{
-		ID:          types.StringValue(mcp.ID),
-		AgentID:     types.StringValue(mcp.AgentID),
+		ID:          types.StringValue(mcp.Meta.Id),
+		AgentID:     types.StringValue(mcp.AgentId),
 		Image:       types.StringValue(mcp.Image),
 		Command:     types.StringValue(mcp.Command),
 		Description: optionalString(mcp.Description),
@@ -205,8 +205,7 @@ func (r *mcpResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	if err := r.client.DeleteMcp(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete MCP", err.Error())

@@ -11,6 +11,13 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: '1.22'
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: Generate protobufs
+        run: |
+          buf dep update
+          buf generate
       - name: Build
         run: go build ./...
       - name: Unit tests

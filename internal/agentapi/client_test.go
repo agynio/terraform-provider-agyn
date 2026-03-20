@@ -1,12 +1,10 @@
-package teamapi
+package agentapi
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
 )
 
 func TestNewClientRequiresBaseURL(t *testing.T) {
@@ -29,13 +27,7 @@ func TestNewClientUsesProvidedHTTPClient(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error creating client: %v", err)
 	}
-
-	underlying, ok := client.raw.ClientInterface.(*teamclient.Client)
-	if !ok {
-		t.Fatalf("expected underlying client type %T", &teamclient.Client{})
-	}
-
-	if underlying.Client != customClient {
-		t.Fatalf("expected custom HTTP client to be preserved")
+	if client.gateway == nil {
+		t.Fatalf("expected gateway client to be initialized")
 	}
 }

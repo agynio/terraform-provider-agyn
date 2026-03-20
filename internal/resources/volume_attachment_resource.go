@@ -2,7 +2,7 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,11 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type volumeAttachmentResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &volumeAttachmentResource{}
@@ -85,9 +86,9 @@ func (r *volumeAttachmentResource) Configure(_ context.Context, req resource.Con
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -105,11 +106,9 @@ func (r *volumeAttachmentResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	input := teamapi.VolumeAttachmentCreate{
-		VolumeID: plan.VolumeID.ValueString(),
-		AgentID:  stringPointer(plan.AgentID),
-		McpID:    stringPointer(plan.McpID),
-		HookID:   stringPointer(plan.HookID),
+	input := &agentsv1.CreateVolumeAttachmentRequest{VolumeId: plan.VolumeID.ValueString()}
+	if setVolumeAttachmentTarget(input, plan.AgentID, plan.McpID, plan.HookID, resp) {
+		return
 	}
 
 	attachment, err := r.client.CreateVolumeAttachment(ctx, input)
@@ -118,12 +117,13 @@ func (r *volumeAttachmentResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
+	agentID, mcpID, hookID := volumeAttachmentTargetState(attachment)
 	state := volumeAttachmentModel{
-		ID:       types.StringValue(attachment.ID),
-		VolumeID: types.StringValue(attachment.VolumeID),
-		AgentID:  optionalString(attachment.AgentID),
-		McpID:    optionalString(attachment.McpID),
-		HookID:   optionalString(attachment.HookID),
+		ID:       types.StringValue(attachment.Meta.Id),
+		VolumeID: types.StringValue(attachment.VolumeId),
+		AgentID:  agentID,
+		McpID:    mcpID,
+		HookID:   hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -143,8 +143,7 @@ func (r *volumeAttachmentResource) Read(ctx context.Context, req resource.ReadRe
 
 	attachment, err := r.client.GetVolumeAttachment(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -152,10 +151,11 @@ func (r *volumeAttachmentResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	state.VolumeID = types.StringValue(attachment.VolumeID)
-	state.AgentID = optionalString(attachment.AgentID)
-	state.McpID = optionalString(attachment.McpID)
-	state.HookID = optionalString(attachment.HookID)
+	agentID, mcpID, hookID := volumeAttachmentTargetState(attachment)
+	state.VolumeID = types.StringValue(attachment.VolumeId)
+	state.AgentID = agentID
+	state.McpID = mcpID
+	state.HookID = hookID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -185,8 +185,7 @@ func (r *volumeAttachmentResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	if err := r.client.DeleteVolumeAttachment(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete volume attachment", err.Error())
@@ -196,4 +195,38 @@ func (r *volumeAttachmentResource) Delete(ctx context.Context, req resource.Dele
 
 func (r *volumeAttachmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func setVolumeAttachmentTarget(req *agentsv1.CreateVolumeAttachmentRequest, agentID types.String, mcpID types.String, hookID types.String, resp *resource.CreateResponse) bool {
+	if !agentID.IsNull() && !agentID.IsUnknown() {
+		req.Target = &agentsv1.CreateVolumeAttachmentRequest_AgentId{AgentId: agentID.ValueString()}
+		return false
+	}
+	if !mcpID.IsNull() && !mcpID.IsUnknown() {
+		req.Target = &agentsv1.CreateVolumeAttachmentRequest_McpId{McpId: mcpID.ValueString()}
+		return false
+	}
+	if !hookID.IsNull() && !hookID.IsUnknown() {
+		req.Target = &agentsv1.CreateVolumeAttachmentRequest_HookId{HookId: hookID.ValueString()}
+		return false
+	}
+	resp.Diagnostics.AddError("Missing attachment target", "volume attachment requires one of agent_id, mcp_id, or hook_id")
+	return true
+}
+
+func volumeAttachmentTargetState(attachment *agentsv1.VolumeAttachment) (types.String, types.String, types.String) {
+	agentID := types.StringNull()
+	mcpID := types.StringNull()
+	hookID := types.StringNull()
+	switch target := attachment.GetTarget().(type) {
+	case *agentsv1.VolumeAttachment_AgentId:
+		agentID = types.StringValue(target.AgentId)
+	case *agentsv1.VolumeAttachment_McpId:
+		mcpID = types.StringValue(target.McpId)
+	case *agentsv1.VolumeAttachment_HookId:
+		hookID = types.StringValue(target.HookId)
+	default:
+		panic(fmt.Sprintf("unexpected volume attachment target type: %T", target))
+	}
+	return agentID, mcpID, hookID
 }

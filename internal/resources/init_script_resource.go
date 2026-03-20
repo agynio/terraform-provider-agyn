@@ -2,7 +2,7 @@ package resources
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,11 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type initScriptResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &initScriptResource{}
@@ -89,9 +90,9 @@ func (r *initScriptResource) Configure(_ context.Context, req resource.Configure
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -109,12 +110,12 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	input := teamapi.InitScriptCreate{
+	input := &agentsv1.CreateInitScriptRequest{
 		Script:      plan.Script.ValueString(),
-		Description: stringPointer(plan.Description),
-		AgentID:     stringPointer(plan.AgentID),
-		McpID:       stringPointer(plan.McpID),
-		HookID:      stringPointer(plan.HookID),
+		Description: stringValue(plan.Description),
+	}
+	if setInitScriptTarget(input, plan.AgentID, plan.McpID, plan.HookID, "create init script", resp) {
+		return
 	}
 
 	script, err := r.client.CreateInitScript(ctx, input)
@@ -123,13 +124,14 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	agentID, mcpID, hookID := initScriptTargetState(script)
 	updatedState := initScriptModel{
-		ID:          types.StringValue(script.ID),
+		ID:          types.StringValue(script.Meta.Id),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
-		AgentID:     optionalString(script.AgentID),
-		McpID:       optionalString(script.McpID),
-		HookID:      optionalString(script.HookID),
+		AgentID:     agentID,
+		McpID:       mcpID,
+		HookID:      hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -149,8 +151,7 @@ func (r *initScriptResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	script, err := r.client.GetInitScript(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -158,11 +159,12 @@ func (r *initScriptResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	agentID, mcpID, hookID := initScriptTargetState(script)
 	state.Script = types.StringValue(script.Script)
 	state.Description = optionalString(script.Description)
-	state.AgentID = optionalString(script.AgentID)
-	state.McpID = optionalString(script.McpID)
-	state.HookID = optionalString(script.HookID)
+	state.AgentID = agentID
+	state.McpID = mcpID
+	state.HookID = hookID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -181,24 +183,26 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	input := teamapi.InitScriptUpdate{
-		Script:      stringPointer(plan.Script),
+	input := &agentsv1.UpdateInitScriptRequest{
+		Id:          plan.ID.ValueString(),
+		Script:      updateStringPointer(plan.Script, state.Script),
 		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
-	script, err := r.client.UpdateInitScript(ctx, plan.ID.ValueString(), input)
+	script, err := r.client.UpdateInitScript(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update init script", err.Error())
 		return
 	}
 
+	agentID, mcpID, hookID := initScriptTargetState(script)
 	updatedState := initScriptModel{
-		ID:          types.StringValue(script.ID),
+		ID:          types.StringValue(script.Meta.Id),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
-		AgentID:     optionalString(script.AgentID),
-		McpID:       optionalString(script.McpID),
-		HookID:      optionalString(script.HookID),
+		AgentID:     agentID,
+		McpID:       mcpID,
+		HookID:      hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -217,8 +221,7 @@ func (r *initScriptResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	if err := r.client.DeleteInitScript(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete init script", err.Error())
@@ -228,4 +231,38 @@ func (r *initScriptResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *initScriptResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func setInitScriptTarget(req *agentsv1.CreateInitScriptRequest, agentID types.String, mcpID types.String, hookID types.String, op string, resp *resource.CreateResponse) bool {
+	if !agentID.IsNull() && !agentID.IsUnknown() {
+		req.Target = &agentsv1.CreateInitScriptRequest_AgentId{AgentId: agentID.ValueString()}
+		return false
+	}
+	if !mcpID.IsNull() && !mcpID.IsUnknown() {
+		req.Target = &agentsv1.CreateInitScriptRequest_McpId{McpId: mcpID.ValueString()}
+		return false
+	}
+	if !hookID.IsNull() && !hookID.IsUnknown() {
+		req.Target = &agentsv1.CreateInitScriptRequest_HookId{HookId: hookID.ValueString()}
+		return false
+	}
+	resp.Diagnostics.AddError("Missing init script target", op+" requires one of agent_id, mcp_id, or hook_id")
+	return true
+}
+
+func initScriptTargetState(script *agentsv1.InitScript) (types.String, types.String, types.String) {
+	agentID := types.StringNull()
+	mcpID := types.StringNull()
+	hookID := types.StringNull()
+	switch target := script.GetTarget().(type) {
+	case *agentsv1.InitScript_AgentId:
+		agentID = types.StringValue(target.AgentId)
+	case *agentsv1.InitScript_McpId:
+		mcpID = types.StringValue(target.McpId)
+	case *agentsv1.InitScript_HookId:
+		hookID = types.StringValue(target.HookId)
+	default:
+		panic(fmt.Sprintf("unexpected init script target type: %T", target))
+	}
+	return agentID, mcpID, hookID
 }

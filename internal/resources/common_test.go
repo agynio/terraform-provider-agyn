@@ -6,21 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func TestStringPointer(t *testing.T) {
-	pointer := stringPointer(types.StringValue("value"))
-	if pointer == nil || *pointer != "value" {
-		t.Fatalf("expected pointer with value, got %v", pointer)
-	}
-
-	if ptr := stringPointer(types.StringNull()); ptr != nil {
-		t.Fatalf("expected nil pointer for null string")
-	}
-
-	if ptr := stringPointer(types.StringUnknown()); ptr != nil {
-		t.Fatalf("expected nil pointer for unknown string")
-	}
-}
-
 func TestBoolPointer(t *testing.T) {
 	pointer := boolPointer(types.BoolValue(true))
 	if pointer == nil || *pointer != true {
@@ -37,26 +22,13 @@ func TestBoolPointer(t *testing.T) {
 }
 
 func TestOptionalString(t *testing.T) {
-	if v := optionalString(nil); !v.IsNull() {
-		t.Fatalf("expected null value for nil pointer")
+	if v := optionalString(""); !v.IsNull() {
+		t.Fatalf("expected null value for empty string")
 	}
 
-	str := "hello"
-	v := optionalString(&str)
+	v := optionalString("hello")
 	if v.IsNull() || v.ValueString() != "hello" {
 		t.Fatalf("unexpected optional string value: %v", v)
-	}
-}
-
-func TestOptionalBool(t *testing.T) {
-	if v := optionalBool(nil); !v.IsNull() {
-		t.Fatalf("expected null value for nil pointer")
-	}
-
-	value := true
-	v := optionalBool(&value)
-	if v.IsNull() || !v.ValueBool() {
-		t.Fatalf("unexpected optional bool value: %v", v)
 	}
 }
 
@@ -80,12 +52,11 @@ func TestUpdateStringPointer(t *testing.T) {
 
 func TestPreserveSensitiveString(t *testing.T) {
 	fallback := types.StringValue("fallback")
-	if got := preserveSensitiveString(fallback, nil); got.ValueString() != "fallback" {
+	if got := preserveSensitiveString(fallback, ""); got.ValueString() != "fallback" {
 		t.Fatalf("expected fallback value, got %v", got)
 	}
 
-	apiValue := "secret"
-	if got := preserveSensitiveString(fallback, &apiValue); got.ValueString() != "secret" {
+	if got := preserveSensitiveString(fallback, "secret"); got.ValueString() != "secret" {
 		t.Fatalf("expected api value, got %v", got)
 	}
 }

@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type volumeResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &volumeResource{}
@@ -68,9 +68,9 @@ func (r *volumeResource) Configure(_ context.Context, req resource.ConfigureRequ
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -88,11 +88,11 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	input := teamapi.VolumeCreate{
+	input := &agentsv1.CreateVolumeRequest{
 		Persistent:  plan.Persistent.ValueBool(),
 		MountPath:   plan.MountPath.ValueString(),
-		Size:        stringPointer(plan.Size),
-		Description: stringPointer(plan.Description),
+		Size:        stringValue(plan.Size),
+		Description: stringValue(plan.Description),
 	}
 
 	volume, err := r.client.CreateVolume(ctx, input)
@@ -102,7 +102,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	updatedState := volumeModel{
-		ID:          types.StringValue(volume.ID),
+		ID:          types.StringValue(volume.Meta.Id),
 		Persistent:  types.BoolValue(volume.Persistent),
 		MountPath:   types.StringValue(volume.MountPath),
 		Size:        optionalString(volume.Size),
@@ -126,8 +126,7 @@ func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	volume, err := r.client.GetVolume(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -157,21 +156,22 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	input := teamapi.VolumeUpdate{
+	input := &agentsv1.UpdateVolumeRequest{
+		Id:          plan.ID.ValueString(),
 		Persistent:  boolPointer(plan.Persistent),
-		MountPath:   stringPointer(plan.MountPath),
+		MountPath:   updateStringPointer(plan.MountPath, state.MountPath),
 		Size:        updateStringPointer(plan.Size, state.Size),
 		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
-	volume, err := r.client.UpdateVolume(ctx, plan.ID.ValueString(), input)
+	volume, err := r.client.UpdateVolume(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update volume", err.Error())
 		return
 	}
 
 	updatedState := volumeModel{
-		ID:          types.StringValue(volume.ID),
+		ID:          types.StringValue(volume.Meta.Id),
 		Persistent:  types.BoolValue(volume.Persistent),
 		MountPath:   types.StringValue(volume.MountPath),
 		Size:        optionalString(volume.Size),
@@ -194,8 +194,7 @@ func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	if err := r.client.DeleteVolume(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete volume", err.Error())

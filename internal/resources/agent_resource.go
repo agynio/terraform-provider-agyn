@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -12,11 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type agentResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &agentResource{}
@@ -86,9 +86,9 @@ func (r *agentResource) Configure(_ context.Context, req resource.ConfigureReque
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -113,13 +113,13 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
-	input := teamapi.AgentCreate{
+	input := &agentsv1.CreateAgentRequest{
 		Name:          plan.Name.ValueString(),
 		Role:          plan.Role.ValueString(),
 		Model:         plan.Model.ValueString(),
 		Image:         plan.Image.ValueString(),
-		Description:   stringPointer(plan.Description),
-		Configuration: stringPointer(plan.Configuration),
+		Description:   stringValue(plan.Description),
+		Configuration: stringValue(plan.Configuration),
 		Resources:     computeResourcesFromModel(plan.Resources),
 	}
 
@@ -136,7 +136,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:            types.StringValue(agent.ID),
+		ID:            types.StringValue(agent.Meta.Id),
 		Name:          types.StringValue(agent.Name),
 		Role:          types.StringValue(agent.Role),
 		Model:         types.StringValue(agent.Model),
@@ -163,8 +163,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	agent, err := r.client.GetAgent(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -210,17 +209,18 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	input := teamapi.AgentUpdate{
-		Name:          stringPointer(plan.Name),
-		Role:          stringPointer(plan.Role),
-		Model:         stringPointer(plan.Model),
-		Image:         stringPointer(plan.Image),
+	input := &agentsv1.UpdateAgentRequest{
+		Id:            plan.ID.ValueString(),
+		Name:          updateStringPointer(plan.Name, state.Name),
+		Role:          updateStringPointer(plan.Role, state.Role),
+		Model:         updateStringPointer(plan.Model, state.Model),
+		Image:         updateStringPointer(plan.Image, state.Image),
 		Description:   updateStringPointer(plan.Description, state.Description),
 		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
 		Resources:     updateComputeResources(plan.Resources, state.Resources),
 	}
 
-	agent, err := r.client.UpdateAgent(ctx, plan.ID.ValueString(), input)
+	agent, err := r.client.UpdateAgent(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update agent", err.Error())
 		return
@@ -233,7 +233,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:            types.StringValue(agent.ID),
+		ID:            types.StringValue(agent.Meta.Id),
 		Name:          types.StringValue(agent.Name),
 		Role:          types.StringValue(agent.Role),
 		Model:         types.StringValue(agent.Model),
@@ -259,8 +259,7 @@ func (r *agentResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if err := r.client.DeleteAgent(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete agent", err.Error())
