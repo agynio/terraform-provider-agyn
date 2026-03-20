@@ -18,6 +18,13 @@ jobs:
           go-version: '1.22'
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4.1.1
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: Generate protobufs
+        run: |
+          buf dep update
+          buf generate
       - name: Get dependencies
         run: go mod download
       - name: Build
@@ -34,6 +41,13 @@ jobs:
           go-version: '1.22'
       - name: Check out code into the Go module directory
         uses: actions/checkout@v4.1.1
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: Generate protobufs
+        run: |
+          buf dep update
+          buf generate
       - name: Get dependencies
         run: go mod download
       - name: Unit tests

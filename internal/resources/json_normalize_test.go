@@ -16,55 +16,55 @@ func TestNormalizeJSONState(t *testing.T) {
 	tests := []struct {
 		name     string
 		config   types.String
-		apiValue *string
+		apiValue string
 		want     types.String
 	}{
 		{
 			name:     "api nil config null",
 			config:   types.StringNull(),
-			apiValue: nil,
+			apiValue: "",
 			want:     types.StringNull(),
 		},
 		{
 			name:     "api nil config unknown",
 			config:   types.StringUnknown(),
-			apiValue: nil,
+			apiValue: "",
 			want:     types.StringNull(),
 		},
 		{
 			name:     "api nil config set",
 			config:   types.StringValue(`{"a":1}`),
-			apiValue: nil,
+			apiValue: "",
 			want:     types.StringValue(`{"a":1}`),
 		},
 		{
 			name:     "api value config null",
 			config:   types.StringNull(),
-			apiValue: &apiConfig,
+			apiValue: apiConfig,
 			want:     types.StringValue(apiConfig),
 		},
 		{
 			name:     "api value config unknown",
 			config:   types.StringUnknown(),
-			apiValue: &apiConfig,
+			apiValue: apiConfig,
 			want:     types.StringValue(apiConfig),
 		},
 		{
 			name:     "api semantically equal",
 			config:   types.StringValue(`{"b":1,"a":2}`),
-			apiValue: &apiConfig,
+			apiValue: apiConfig,
 			want:     types.StringValue(`{"b":1,"a":2}`),
 		},
 		{
 			name:     "api adds keys",
 			config:   types.StringValue(`{"a":1,"b":2}`),
-			apiValue: &apiConfigExtra,
+			apiValue: apiConfigExtra,
 			want:     types.StringValue(`{"a":1,"b":2}`),
 		},
 		{
 			name:     "api differs",
 			config:   types.StringValue(`{"a":1}`),
-			apiValue: &apiConfigDifferent,
+			apiValue: apiConfigDifferent,
 			want:     types.StringValue(apiConfigDifferent),
 		},
 	}

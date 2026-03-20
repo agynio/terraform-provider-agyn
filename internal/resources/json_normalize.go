@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func normalizeJSONState(config types.String, apiValue *string) (types.String, diag.Diagnostics) {
+func normalizeJSONState(config types.String, apiValue string) (types.String, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	if apiValue == nil {
+	if apiValue == "" {
 		if config.IsNull() || config.IsUnknown() {
 			return types.StringNull(), diags
 		}
@@ -18,20 +18,20 @@ func normalizeJSONState(config types.String, apiValue *string) (types.String, di
 	}
 
 	if config.IsNull() || config.IsUnknown() {
-		return types.StringValue(*apiValue), diags
+		return types.StringValue(apiValue), diags
 	}
 
 	original := config.ValueString()
-	if jsonSemanticallyEqual(original, *apiValue) {
+	if jsonSemanticallyEqual(original, apiValue) {
 		return config, diags
 	}
 
-	projected, err := projectJSONKeys(original, *apiValue)
+	projected, err := projectJSONKeys(original, apiValue)
 	if err == nil && jsonSemanticallyEqual(original, projected) {
 		return config, diags
 	}
 
-	return types.StringValue(*apiValue), diags
+	return types.StringValue(apiValue), diags
 }
 
 func jsonSemanticallyEqual(a, b string) bool {

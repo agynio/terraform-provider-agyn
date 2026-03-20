@@ -1,4 +1,4 @@
-package teamapi
+package agentapi
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
+	gatewayv1connect "github.com/agynio/terraform-provider-agyn/gen/agynio/api/gateway/v1/gatewayv1connect"
 )
 
 const defaultTimeout = 30 * time.Second
@@ -17,7 +17,7 @@ type Config struct {
 }
 
 type Client struct {
-	raw *teamclient.ClientWithResponses
+	gateway gatewayv1connect.AgentsGatewayClient
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -33,10 +33,5 @@ func NewClient(cfg Config) (*Client, error) {
 		httpClient = &http.Client{Timeout: defaultTimeout}
 	}
 
-	rawClient, err := teamclient.NewClientWithResponses(cfg.BaseURL, teamclient.WithHTTPClient(httpClient))
-	if err != nil {
-		return nil, fmt.Errorf("create team client: %w", err)
-	}
-
-	return &Client{raw: rawClient}, nil
+	return &Client{gateway: gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL)}, nil
 }

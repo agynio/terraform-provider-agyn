@@ -1,13 +1,23 @@
 package resources
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"google.golang.org/protobuf/proto"
+)
+
+func stringValue(v types.String) string {
+	if v.IsNull() || v.IsUnknown() {
+		return ""
+	}
+	return v.ValueString()
+}
 
 func stringPointer(v types.String) *string {
 	if v.IsNull() || v.IsUnknown() {
 		return nil
 	}
 	value := v.ValueString()
-	return &value
+	return proto.String(value)
 }
 
 func updateStringPointer(plan types.String, prior types.String) *string {
@@ -18,11 +28,10 @@ func updateStringPointer(plan types.String, prior types.String) *string {
 		if prior.IsNull() || prior.IsUnknown() {
 			return nil
 		}
-		empty := ""
-		return &empty
+		return proto.String("")
 	}
 	value := plan.ValueString()
-	return &value
+	return proto.String(value)
 }
 
 func boolPointer(v types.Bool) *bool {
@@ -30,28 +39,19 @@ func boolPointer(v types.Bool) *bool {
 		return nil
 	}
 	value := v.ValueBool()
-	return &value
+	return proto.Bool(value)
 }
 
-func optionalString(v *string) types.String {
-	if v == nil {
+func optionalString(v string) types.String {
+	if v == "" {
 		return types.StringNull()
 	}
-	return types.StringValue(*v)
+	return types.StringValue(v)
 }
 
-func preserveSensitiveString(fallback types.String, apiValue *string) types.String {
-	if apiValue == nil {
+func preserveSensitiveString(fallback types.String, apiValue string) types.String {
+	if apiValue == "" {
 		return fallback
 	}
-	return types.StringValue(*apiValue)
+	return types.StringValue(apiValue)
 }
-
-func optionalBool(v *bool) types.Bool {
-	if v == nil {
-		return types.BoolNull()
-	}
-	return types.BoolValue(*v)
-}
-
-const httpStatusNotFound = 404

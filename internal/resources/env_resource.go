@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -13,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type envResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &envResource{}
@@ -108,9 +108,9 @@ func (r *envResource) Configure(_ context.Context, req resource.ConfigureRequest
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -128,14 +128,15 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	input := teamapi.EnvCreate{
+	input := &agentsv1.CreateEnvRequest{
 		Name:        plan.Name.ValueString(),
-		Description: stringPointer(plan.Description),
-		AgentID:     stringPointer(plan.AgentID),
-		McpID:       stringPointer(plan.McpID),
-		HookID:      stringPointer(plan.HookID),
-		Value:       stringPointer(plan.Value),
-		SecretID:    stringPointer(plan.SecretID),
+		Description: stringValue(plan.Description),
+	}
+	if setEnvTarget(input, plan.AgentID, plan.McpID, plan.HookID, "create env", resp) {
+		return
+	}
+	if setEnvSource(input, plan.Value, plan.SecretID, "create env", resp) {
+		return
 	}
 
 	env, err := r.client.CreateEnv(ctx, input)
@@ -144,15 +145,18 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
+	agentID, mcpID, hookID := envTargetState(env)
+	value, secretID := envSourceState(env, plan.Value)
+
 	updatedState := envModel{
-		ID:          types.StringValue(env.ID),
+		ID:          types.StringValue(env.Meta.Id),
 		Name:        types.StringValue(env.Name),
 		Description: optionalString(env.Description),
-		AgentID:     optionalString(env.AgentID),
-		McpID:       optionalString(env.McpID),
-		HookID:      optionalString(env.HookID),
-		Value:       preserveSensitiveString(plan.Value, env.Value),
-		SecretID:    optionalString(env.SecretID),
+		AgentID:     agentID,
+		McpID:       mcpID,
+		HookID:      hookID,
+		Value:       value,
+		SecretID:    secretID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -172,8 +176,7 @@ func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	env, err := r.client.GetEnv(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -181,13 +184,16 @@ func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
+	agentID, mcpID, hookID := envTargetState(env)
+	value, secretID := envSourceState(env, state.Value)
+
 	state.Name = types.StringValue(env.Name)
 	state.Description = optionalString(env.Description)
-	state.AgentID = optionalString(env.AgentID)
-	state.McpID = optionalString(env.McpID)
-	state.HookID = optionalString(env.HookID)
-	state.Value = preserveSensitiveString(state.Value, env.Value)
-	state.SecretID = optionalString(env.SecretID)
+	state.AgentID = agentID
+	state.McpID = mcpID
+	state.HookID = hookID
+	state.Value = value
+	state.SecretID = secretID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -206,28 +212,32 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	input := teamapi.EnvUpdate{
-		Name:        stringPointer(plan.Name),
+	input := &agentsv1.UpdateEnvRequest{
+		Id:          plan.ID.ValueString(),
+		Name:        updateStringPointer(plan.Name, state.Name),
 		Description: updateStringPointer(plan.Description, state.Description),
 		Value:       updateStringPointer(plan.Value, state.Value),
-		SecretID:    updateStringPointer(plan.SecretID, state.SecretID),
+		SecretId:    updateStringPointer(plan.SecretID, state.SecretID),
 	}
 
-	env, err := r.client.UpdateEnv(ctx, plan.ID.ValueString(), input)
+	env, err := r.client.UpdateEnv(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update env", err.Error())
 		return
 	}
 
+	agentID, mcpID, hookID := envTargetState(env)
+	value, secretID := envSourceState(env, plan.Value)
+
 	updatedState := envModel{
-		ID:          types.StringValue(env.ID),
+		ID:          types.StringValue(env.Meta.Id),
 		Name:        types.StringValue(env.Name),
 		Description: optionalString(env.Description),
-		AgentID:     optionalString(env.AgentID),
-		McpID:       optionalString(env.McpID),
-		HookID:      optionalString(env.HookID),
-		Value:       preserveSensitiveString(plan.Value, env.Value),
-		SecretID:    optionalString(env.SecretID),
+		AgentID:     agentID,
+		McpID:       mcpID,
+		HookID:      hookID,
+		Value:       value,
+		SecretID:    secretID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -246,8 +256,7 @@ func (r *envResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	if err := r.client.DeleteEnv(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete env", err.Error())
@@ -257,4 +266,61 @@ func (r *envResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 func (r *envResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func setEnvTarget(req *agentsv1.CreateEnvRequest, agentID types.String, mcpID types.String, hookID types.String, op string, resp *resource.CreateResponse) bool {
+	if !agentID.IsNull() && !agentID.IsUnknown() {
+		req.Target = &agentsv1.CreateEnvRequest_AgentId{AgentId: agentID.ValueString()}
+		return false
+	}
+	if !mcpID.IsNull() && !mcpID.IsUnknown() {
+		req.Target = &agentsv1.CreateEnvRequest_McpId{McpId: mcpID.ValueString()}
+		return false
+	}
+	if !hookID.IsNull() && !hookID.IsUnknown() {
+		req.Target = &agentsv1.CreateEnvRequest_HookId{HookId: hookID.ValueString()}
+		return false
+	}
+	resp.Diagnostics.AddError("Missing env target", op+" requires one of agent_id, mcp_id, or hook_id")
+	return true
+}
+
+func setEnvSource(req *agentsv1.CreateEnvRequest, value types.String, secretID types.String, op string, resp *resource.CreateResponse) bool {
+	if !value.IsNull() && !value.IsUnknown() {
+		req.Source = &agentsv1.CreateEnvRequest_Value{Value: value.ValueString()}
+		return false
+	}
+	if !secretID.IsNull() && !secretID.IsUnknown() {
+		req.Source = &agentsv1.CreateEnvRequest_SecretId{SecretId: secretID.ValueString()}
+		return false
+	}
+	resp.Diagnostics.AddError("Missing env value", op+" requires value or secret_id")
+	return true
+}
+
+func envTargetState(env *agentsv1.Env) (types.String, types.String, types.String) {
+	agentID := types.StringNull()
+	mcpID := types.StringNull()
+	hookID := types.StringNull()
+	switch target := env.GetTarget().(type) {
+	case *agentsv1.Env_AgentId:
+		agentID = types.StringValue(target.AgentId)
+	case *agentsv1.Env_McpId:
+		mcpID = types.StringValue(target.McpId)
+	case *agentsv1.Env_HookId:
+		hookID = types.StringValue(target.HookId)
+	}
+	return agentID, mcpID, hookID
+}
+
+func envSourceState(env *agentsv1.Env, fallback types.String) (types.String, types.String) {
+	value := types.StringNull()
+	secretID := types.StringNull()
+	switch source := env.GetSource().(type) {
+	case *agentsv1.Env_Value:
+		value = preserveSensitiveString(fallback, source.Value)
+	case *agentsv1.Env_SecretId:
+		secretID = types.StringValue(source.SecretId)
+	}
+	return value, secretID
 }

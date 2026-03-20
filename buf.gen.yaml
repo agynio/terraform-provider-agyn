@@ -1,0 +1,28 @@
+version: v2
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/agynio/terraform-provider-agyn/gen
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: gen
+    opt: paths=source_relative
+  - remote: buf.build/connectrpc/go
+    out: gen
+    opt:
+      - paths=source_relative
+      - simple
+inputs:
+  - module: buf.build/agynio/api
+    paths:
+      - agynio/api/agent_state/v1
+      - agynio/api/agents/v1
+      - agynio/api/chat/v1
+      - agynio/api/files/v1
+      - agynio/api/gateway/v1
+      - agynio/api/llm/v1
+      - agynio/api/notifications/v1
+      - agynio/api/secrets/v1
+      - agynio/api/threads/v1
+      - agynio/api/token_counting/v1

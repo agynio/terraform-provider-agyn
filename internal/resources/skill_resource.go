@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type skillResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &skillResource{}
@@ -69,9 +69,9 @@ func (r *skillResource) Configure(_ context.Context, req resource.ConfigureReque
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -89,11 +89,11 @@ func (r *skillResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	input := teamapi.SkillCreate{
-		AgentID:     plan.AgentID.ValueString(),
+	input := &agentsv1.CreateSkillRequest{
+		AgentId:     plan.AgentID.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Body:        plan.Body.ValueString(),
-		Description: stringPointer(plan.Description),
+		Description: stringValue(plan.Description),
 	}
 
 	skill, err := r.client.CreateSkill(ctx, input)
@@ -103,8 +103,8 @@ func (r *skillResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	updatedState := skillModel{
-		ID:          types.StringValue(skill.ID),
-		AgentID:     types.StringValue(skill.AgentID),
+		ID:          types.StringValue(skill.Meta.Id),
+		AgentID:     types.StringValue(skill.AgentId),
 		Name:        types.StringValue(skill.Name),
 		Body:        types.StringValue(skill.Body),
 		Description: optionalString(skill.Description),
@@ -127,8 +127,7 @@ func (r *skillResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	skill, err := r.client.GetSkill(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -136,7 +135,7 @@ func (r *skillResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	state.AgentID = types.StringValue(skill.AgentID)
+	state.AgentID = types.StringValue(skill.AgentId)
 	state.Name = types.StringValue(skill.Name)
 	state.Body = types.StringValue(skill.Body)
 	state.Description = optionalString(skill.Description)
@@ -158,21 +157,22 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	input := teamapi.SkillUpdate{
-		Name:        stringPointer(plan.Name),
-		Body:        stringPointer(plan.Body),
+	input := &agentsv1.UpdateSkillRequest{
+		Id:          plan.ID.ValueString(),
+		Name:        updateStringPointer(plan.Name, state.Name),
+		Body:        updateStringPointer(plan.Body, state.Body),
 		Description: updateStringPointer(plan.Description, state.Description),
 	}
 
-	skill, err := r.client.UpdateSkill(ctx, plan.ID.ValueString(), input)
+	skill, err := r.client.UpdateSkill(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update skill", err.Error())
 		return
 	}
 
 	updatedState := skillModel{
-		ID:          types.StringValue(skill.ID),
-		AgentID:     types.StringValue(skill.AgentID),
+		ID:          types.StringValue(skill.Meta.Id),
+		AgentID:     types.StringValue(skill.AgentId),
 		Name:        types.StringValue(skill.Name),
 		Body:        types.StringValue(skill.Body),
 		Description: optionalString(skill.Description),
@@ -194,8 +194,7 @@ func (r *skillResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if err := r.client.DeleteSkill(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete skill", err.Error())

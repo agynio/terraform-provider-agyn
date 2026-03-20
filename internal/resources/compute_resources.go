@@ -1,7 +1,7 @@
 package resources
 
 import (
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -34,28 +34,28 @@ func computeResourcesSchemaAttributes() map[string]schema.Attribute {
 	}
 }
 
-func computeResourcesFromModel(model *computeResourcesModel) *teamapi.ComputeResources {
+func computeResourcesFromModel(model *computeResourcesModel) *agentsv1.ComputeResources {
 	if model == nil {
 		return nil
 	}
-	resources := teamapi.ComputeResources{
-		RequestsCPU:    stringPointer(model.RequestsCPU),
-		RequestsMemory: stringPointer(model.RequestsMemory),
-		LimitsCPU:      stringPointer(model.LimitsCPU),
-		LimitsMemory:   stringPointer(model.LimitsMemory),
+	resources := &agentsv1.ComputeResources{
+		RequestsCpu:    stringValue(model.RequestsCPU),
+		RequestsMemory: stringValue(model.RequestsMemory),
+		LimitsCpu:      stringValue(model.LimitsCPU),
+		LimitsMemory:   stringValue(model.LimitsMemory),
 	}
-	if resources.RequestsCPU == nil && resources.RequestsMemory == nil && resources.LimitsCPU == nil && resources.LimitsMemory == nil {
+	if resources.RequestsCpu == "" && resources.RequestsMemory == "" && resources.LimitsCpu == "" && resources.LimitsMemory == "" {
 		return nil
 	}
-	return &resources
+	return resources
 }
 
-func updateComputeResources(plan *computeResourcesModel, prior *computeResourcesModel) *teamapi.ComputeResources {
+func updateComputeResources(plan *computeResourcesModel, prior *computeResourcesModel) *agentsv1.ComputeResources {
 	if plan == nil {
 		if prior == nil {
 			return nil
 		}
-		return &teamapi.ComputeResources{}
+		return &agentsv1.ComputeResources{}
 	}
 
 	priorModel := computeResourcesModel{
@@ -68,29 +68,42 @@ func updateComputeResources(plan *computeResourcesModel, prior *computeResources
 		priorModel = *prior
 	}
 
-	resources := teamapi.ComputeResources{
-		RequestsCPU:    updateStringPointer(plan.RequestsCPU, priorModel.RequestsCPU),
-		RequestsMemory: updateStringPointer(plan.RequestsMemory, priorModel.RequestsMemory),
-		LimitsCPU:      updateStringPointer(plan.LimitsCPU, priorModel.LimitsCPU),
-		LimitsMemory:   updateStringPointer(plan.LimitsMemory, priorModel.LimitsMemory),
+	resources := &agentsv1.ComputeResources{
+		RequestsCpu:    updateStringValue(plan.RequestsCPU, priorModel.RequestsCPU),
+		RequestsMemory: updateStringValue(plan.RequestsMemory, priorModel.RequestsMemory),
+		LimitsCpu:      updateStringValue(plan.LimitsCPU, priorModel.LimitsCPU),
+		LimitsMemory:   updateStringValue(plan.LimitsMemory, priorModel.LimitsMemory),
 	}
-	if resources.RequestsCPU == nil && resources.RequestsMemory == nil && resources.LimitsCPU == nil && resources.LimitsMemory == nil {
+	if resources.RequestsCpu == "" && resources.RequestsMemory == "" && resources.LimitsCpu == "" && resources.LimitsMemory == "" {
 		if prior != nil {
-			return &teamapi.ComputeResources{}
+			return &agentsv1.ComputeResources{}
 		}
 		return nil
 	}
-	return &resources
+	return resources
 }
 
-func computeResourcesToModel(resources *teamapi.ComputeResources) *computeResourcesModel {
+func computeResourcesToModel(resources *agentsv1.ComputeResources) *computeResourcesModel {
 	if resources == nil {
 		return nil
 	}
 	return &computeResourcesModel{
-		RequestsCPU:    optionalString(resources.RequestsCPU),
+		RequestsCPU:    optionalString(resources.RequestsCpu),
 		RequestsMemory: optionalString(resources.RequestsMemory),
-		LimitsCPU:      optionalString(resources.LimitsCPU),
+		LimitsCPU:      optionalString(resources.LimitsCpu),
 		LimitsMemory:   optionalString(resources.LimitsMemory),
 	}
+}
+
+func updateStringValue(plan types.String, prior types.String) string {
+	if plan.IsUnknown() {
+		if prior.IsNull() || prior.IsUnknown() {
+			return ""
+		}
+		return prior.ValueString()
+	}
+	if plan.IsNull() {
+		return ""
+	}
+	return plan.ValueString()
 }

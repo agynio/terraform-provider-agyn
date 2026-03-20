@@ -1,6 +1,0 @@
-# Spec: ../../api/dist/team-v1.yaml
-package: teamclient
-generate:
-  models: true
-  client: true
-output: internal/teamclient/client.gen.go

@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -11,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type hookResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &hookResource{}
@@ -80,9 +80,9 @@ func (r *hookResource) Configure(_ context.Context, req resource.ConfigureReques
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -100,12 +100,12 @@ func (r *hookResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	input := teamapi.HookCreate{
-		AgentID:     plan.AgentID.ValueString(),
+	input := &agentsv1.CreateHookRequest{
+		AgentId:     plan.AgentID.ValueString(),
 		Event:       plan.Event.ValueString(),
 		Function:    plan.Function.ValueString(),
 		Image:       plan.Image.ValueString(),
-		Description: stringPointer(plan.Description),
+		Description: stringValue(plan.Description),
 		Resources:   computeResourcesFromModel(plan.Resources),
 	}
 
@@ -116,8 +116,8 @@ func (r *hookResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	updatedState := hookModel{
-		ID:          types.StringValue(hook.ID),
-		AgentID:     types.StringValue(hook.AgentID),
+		ID:          types.StringValue(hook.Meta.Id),
+		AgentID:     types.StringValue(hook.AgentId),
 		Event:       types.StringValue(hook.Event),
 		Function:    types.StringValue(hook.Function),
 		Image:       types.StringValue(hook.Image),
@@ -142,8 +142,7 @@ func (r *hookResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	hook, err := r.client.GetHook(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -151,7 +150,7 @@ func (r *hookResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	state.AgentID = types.StringValue(hook.AgentID)
+	state.AgentID = types.StringValue(hook.AgentId)
 	state.Event = types.StringValue(hook.Event)
 	state.Function = types.StringValue(hook.Function)
 	state.Image = types.StringValue(hook.Image)
@@ -175,23 +174,24 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	input := teamapi.HookUpdate{
-		Event:       stringPointer(plan.Event),
-		Function:    stringPointer(plan.Function),
-		Image:       stringPointer(plan.Image),
+	input := &agentsv1.UpdateHookRequest{
+		Id:          plan.ID.ValueString(),
+		Event:       updateStringPointer(plan.Event, state.Event),
+		Function:    updateStringPointer(plan.Function, state.Function),
+		Image:       updateStringPointer(plan.Image, state.Image),
 		Description: updateStringPointer(plan.Description, state.Description),
 		Resources:   updateComputeResources(plan.Resources, state.Resources),
 	}
 
-	hook, err := r.client.UpdateHook(ctx, plan.ID.ValueString(), input)
+	hook, err := r.client.UpdateHook(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update hook", err.Error())
 		return
 	}
 
 	updatedState := hookModel{
-		ID:          types.StringValue(hook.ID),
-		AgentID:     types.StringValue(hook.AgentID),
+		ID:          types.StringValue(hook.Meta.Id),
+		AgentID:     types.StringValue(hook.AgentId),
 		Event:       types.StringValue(hook.Event),
 		Function:    types.StringValue(hook.Function),
 		Image:       types.StringValue(hook.Image),
@@ -215,8 +215,7 @@ func (r *hookResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	if err := r.client.DeleteHook(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
-		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
+		if agentapi.IsNotFound(err) {
 			return
 		}
 		resp.Diagnostics.AddError("Unable to delete hook", err.Error())
