@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type volumeAttachmentResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &volumeAttachmentResource{}
@@ -85,9 +85,9 @@ func (r *volumeAttachmentResource) Configure(_ context.Context, req resource.Con
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -105,7 +105,7 @@ func (r *volumeAttachmentResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	input := teamapi.VolumeAttachmentCreate{
+	input := agentapi.VolumeAttachmentCreate{
 		VolumeID: plan.VolumeID.ValueString(),
 		AgentID:  stringPointer(plan.AgentID),
 		McpID:    stringPointer(plan.McpID),
@@ -143,7 +143,7 @@ func (r *volumeAttachmentResource) Read(ctx context.Context, req resource.ReadRe
 
 	attachment, err := r.client.GetVolumeAttachment(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -185,7 +185,7 @@ func (r *volumeAttachmentResource) Delete(ctx context.Context, req resource.Dele
 	}
 
 	if err := r.client.DeleteVolumeAttachment(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

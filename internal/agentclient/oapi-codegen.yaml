@@ -1,0 +1,6 @@
+# Spec: ../../api/dist/agents-v1.yaml
+package: agentclient
+generate:
+  models: true
+  client: true
+output: internal/agentclient/client.gen.go

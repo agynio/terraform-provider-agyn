@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type envResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &envResource{}
@@ -108,9 +108,9 @@ func (r *envResource) Configure(_ context.Context, req resource.ConfigureRequest
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -128,7 +128,7 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	input := teamapi.EnvCreate{
+	input := agentapi.EnvCreate{
 		Name:        plan.Name.ValueString(),
 		Description: stringPointer(plan.Description),
 		AgentID:     stringPointer(plan.AgentID),
@@ -172,7 +172,7 @@ func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	env, err := r.client.GetEnv(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -206,7 +206,7 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	input := teamapi.EnvUpdate{
+	input := agentapi.EnvUpdate{
 		Name:        stringPointer(plan.Name),
 		Description: updateStringPointer(plan.Description, state.Description),
 		Value:       updateStringPointer(plan.Value, state.Value),
@@ -246,7 +246,7 @@ func (r *envResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	if err := r.client.DeleteEnv(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

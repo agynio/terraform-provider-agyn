@@ -1,4 +1,4 @@
-package teamapi
+package agentapi
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamclient"
+	"github.com/agynio/terraform-provider-agyn/internal/agentclient"
 )
 
 func TestNewClientRequiresBaseURL(t *testing.T) {
@@ -30,9 +30,9 @@ func TestNewClientUsesProvidedHTTPClient(t *testing.T) {
 		t.Fatalf("unexpected error creating client: %v", err)
 	}
 
-	underlying, ok := client.raw.ClientInterface.(*teamclient.Client)
+	underlying, ok := client.raw.ClientInterface.(*agentclient.Client)
 	if !ok {
-		t.Fatalf("expected underlying client type %T", &teamclient.Client{})
+		t.Fatalf("expected underlying client type %T", &agentclient.Client{})
 	}
 
 	if underlying.Client != customClient {

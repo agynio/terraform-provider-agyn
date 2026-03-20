@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type volumeResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &volumeResource{}
@@ -68,9 +68,9 @@ func (r *volumeResource) Configure(_ context.Context, req resource.ConfigureRequ
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -88,7 +88,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	input := teamapi.VolumeCreate{
+	input := agentapi.VolumeCreate{
 		Persistent:  plan.Persistent.ValueBool(),
 		MountPath:   plan.MountPath.ValueString(),
 		Size:        stringPointer(plan.Size),
@@ -126,7 +126,7 @@ func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	volume, err := r.client.GetVolume(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -157,7 +157,7 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	input := teamapi.VolumeUpdate{
+	input := agentapi.VolumeUpdate{
 		Persistent:  boolPointer(plan.Persistent),
 		MountPath:   stringPointer(plan.MountPath),
 		Size:        updateStringPointer(plan.Size, state.Size),
@@ -194,7 +194,7 @@ func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	if err := r.client.DeleteVolume(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

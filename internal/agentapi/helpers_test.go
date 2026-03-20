@@ -1,4 +1,4 @@
-package teamapi
+package agentapi
 
 import (
 	"encoding/json"

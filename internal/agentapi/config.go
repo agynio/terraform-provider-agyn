@@ -1,4 +1,4 @@
-package teamapi
+package agentapi
 
 type ComputeResources struct {
 	RequestsCPU    *string `json:"requestsCpu,omitempty"`

@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 	"github.com/agynio/terraform-provider-agyn/internal/resources"
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
 )
 
 type agynProvider struct {
@@ -22,7 +22,7 @@ type agynProvider struct {
 	commit  string
 }
 
-const teamAPIPath = "/team/v1"
+const agentAPIPath = "/agents/v1"
 
 func New(version, commit string) func() provider.Provider {
 	return func() provider.Provider { return &agynProvider{version: version, commit: commit} }
@@ -35,8 +35,8 @@ func (p *agynProvider) Metadata(_ context.Context, _ provider.MetadataRequest, r
 
 func (p *agynProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Provider for Agyn Team API via Gateway.",
-		MarkdownDescription: "Provider for Agyn Team API via Gateway.",
+		Description:         "Provider for Agyn Agents API via Gateway.",
+		MarkdownDescription: "Provider for Agyn Agents API via Gateway.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Required:            true,
@@ -61,9 +61,9 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	}
 
 	httpClient := &http.Client{Timeout: 30 * time.Second}
-	apiURL := buildTeamAPIURL(data.APIURL.ValueString())
+	apiURL := buildAgentAPIURL(data.APIURL.ValueString())
 
-	client, err := teamapi.NewClient(teamapi.Config{
+	client, err := agentapi.NewClient(agentapi.Config{
 		BaseURL:    apiURL,
 		HTTPClient: httpClient,
 	})
@@ -76,8 +76,8 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	resp.ResourceData = client
 }
 
-func buildTeamAPIURL(baseURL string) string {
-	return strings.TrimSuffix(baseURL, "/") + teamAPIPath + "/"
+func buildAgentAPIURL(baseURL string) string {
+	return strings.TrimSuffix(baseURL, "/") + agentAPIPath + "/"
 }
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {

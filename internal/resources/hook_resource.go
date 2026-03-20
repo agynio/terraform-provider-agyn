@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type hookResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &hookResource{}
@@ -80,9 +80,9 @@ func (r *hookResource) Configure(_ context.Context, req resource.ConfigureReques
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -100,7 +100,7 @@ func (r *hookResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	input := teamapi.HookCreate{
+	input := agentapi.HookCreate{
 		AgentID:     plan.AgentID.ValueString(),
 		Event:       plan.Event.ValueString(),
 		Function:    plan.Function.ValueString(),
@@ -142,7 +142,7 @@ func (r *hookResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	hook, err := r.client.GetHook(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -175,7 +175,7 @@ func (r *hookResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	input := teamapi.HookUpdate{
+	input := agentapi.HookUpdate{
 		Event:       stringPointer(plan.Event),
 		Function:    stringPointer(plan.Function),
 		Image:       stringPointer(plan.Image),
@@ -215,7 +215,7 @@ func (r *hookResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	if err := r.client.DeleteHook(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

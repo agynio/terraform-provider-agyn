@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type skillResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &skillResource{}
@@ -69,9 +69,9 @@ func (r *skillResource) Configure(_ context.Context, req resource.ConfigureReque
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -89,7 +89,7 @@ func (r *skillResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	input := teamapi.SkillCreate{
+	input := agentapi.SkillCreate{
 		AgentID:     plan.AgentID.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Body:        plan.Body.ValueString(),
@@ -127,7 +127,7 @@ func (r *skillResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	skill, err := r.client.GetSkill(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -158,7 +158,7 @@ func (r *skillResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	input := teamapi.SkillUpdate{
+	input := agentapi.SkillUpdate{
 		Name:        stringPointer(plan.Name),
 		Body:        stringPointer(plan.Body),
 		Description: updateStringPointer(plan.Description, state.Description),
@@ -194,7 +194,7 @@ func (r *skillResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if err := r.client.DeleteSkill(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

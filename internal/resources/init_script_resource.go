@@ -13,11 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type initScriptResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &initScriptResource{}
@@ -89,9 +89,9 @@ func (r *initScriptResource) Configure(_ context.Context, req resource.Configure
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -109,7 +109,7 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	input := teamapi.InitScriptCreate{
+	input := agentapi.InitScriptCreate{
 		Script:      plan.Script.ValueString(),
 		Description: stringPointer(plan.Description),
 		AgentID:     stringPointer(plan.AgentID),
@@ -149,7 +149,7 @@ func (r *initScriptResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	script, err := r.client.GetInitScript(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -181,7 +181,7 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	input := teamapi.InitScriptUpdate{
+	input := agentapi.InitScriptUpdate{
 		Script:      stringPointer(plan.Script),
 		Description: updateStringPointer(plan.Description, state.Description),
 	}
@@ -217,7 +217,7 @@ func (r *initScriptResource) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	if err := r.client.DeleteInitScript(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

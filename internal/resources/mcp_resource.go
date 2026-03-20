@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 )
 
 type mcpResource struct {
-	client *teamapi.Client
+	client *agentapi.Client
 }
 
 var _ resource.Resource = &mcpResource{}
@@ -75,9 +75,9 @@ func (r *mcpResource) Configure(_ context.Context, req resource.ConfigureRequest
 	if req.ProviderData == nil {
 		return
 	}
-	client, ok := req.ProviderData.(*teamapi.Client)
+	client, ok := req.ProviderData.(*agentapi.Client)
 	if !ok {
-		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *teamapi.Client")
+		resp.Diagnostics.AddError("Unexpected Resource Configure Type", "Expected *agentapi.Client")
 		return
 	}
 	r.client = client
@@ -95,7 +95,7 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	input := teamapi.McpCreate{
+	input := agentapi.McpCreate{
 		AgentID:     plan.AgentID.ValueString(),
 		Image:       plan.Image.ValueString(),
 		Command:     plan.Command.ValueString(),
@@ -135,7 +135,7 @@ func (r *mcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 
 	mcp, err := r.client.GetMcp(ctx, state.ID.ValueString())
 	if err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			resp.State.RemoveResource(ctx)
 			return
@@ -167,7 +167,7 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	input := teamapi.McpUpdate{
+	input := agentapi.McpUpdate{
 		Image:       stringPointer(plan.Image),
 		Command:     stringPointer(plan.Command),
 		Description: updateStringPointer(plan.Description, state.Description),
@@ -205,7 +205,7 @@ func (r *mcpResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	if err := r.client.DeleteMcp(ctx, state.ID.ValueString()); err != nil {
-		var apiErr *teamapi.APIError
+		var apiErr *agentapi.APIError
 		if errors.As(err, &apiErr) && apiErr.Status == httpStatusNotFound {
 			return
 		}

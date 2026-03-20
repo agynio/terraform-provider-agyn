@@ -1,7 +1,7 @@
 package resources
 
 import (
-	"github.com/agynio/terraform-provider-agyn/internal/teamapi"
+	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -34,11 +34,11 @@ func computeResourcesSchemaAttributes() map[string]schema.Attribute {
 	}
 }
 
-func computeResourcesFromModel(model *computeResourcesModel) *teamapi.ComputeResources {
+func computeResourcesFromModel(model *computeResourcesModel) *agentapi.ComputeResources {
 	if model == nil {
 		return nil
 	}
-	resources := teamapi.ComputeResources{
+	resources := agentapi.ComputeResources{
 		RequestsCPU:    stringPointer(model.RequestsCPU),
 		RequestsMemory: stringPointer(model.RequestsMemory),
 		LimitsCPU:      stringPointer(model.LimitsCPU),
@@ -50,12 +50,12 @@ func computeResourcesFromModel(model *computeResourcesModel) *teamapi.ComputeRes
 	return &resources
 }
 
-func updateComputeResources(plan *computeResourcesModel, prior *computeResourcesModel) *teamapi.ComputeResources {
+func updateComputeResources(plan *computeResourcesModel, prior *computeResourcesModel) *agentapi.ComputeResources {
 	if plan == nil {
 		if prior == nil {
 			return nil
 		}
-		return &teamapi.ComputeResources{}
+		return &agentapi.ComputeResources{}
 	}
 
 	priorModel := computeResourcesModel{
@@ -68,7 +68,7 @@ func updateComputeResources(plan *computeResourcesModel, prior *computeResources
 		priorModel = *prior
 	}
 
-	resources := teamapi.ComputeResources{
+	resources := agentapi.ComputeResources{
 		RequestsCPU:    updateStringPointer(plan.RequestsCPU, priorModel.RequestsCPU),
 		RequestsMemory: updateStringPointer(plan.RequestsMemory, priorModel.RequestsMemory),
 		LimitsCPU:      updateStringPointer(plan.LimitsCPU, priorModel.LimitsCPU),
@@ -76,14 +76,14 @@ func updateComputeResources(plan *computeResourcesModel, prior *computeResources
 	}
 	if resources.RequestsCPU == nil && resources.RequestsMemory == nil && resources.LimitsCPU == nil && resources.LimitsMemory == nil {
 		if prior != nil {
-			return &teamapi.ComputeResources{}
+			return &agentapi.ComputeResources{}
 		}
 		return nil
 	}
 	return &resources
 }
 
-func computeResourcesToModel(resources *teamapi.ComputeResources) *computeResourcesModel {
+func computeResourcesToModel(resources *agentapi.ComputeResources) *computeResourcesModel {
 	if resources == nil {
 		return nil
 	}

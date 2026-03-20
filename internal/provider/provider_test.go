@@ -28,7 +28,7 @@ var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 	"agyn": providerserver.NewProtocol6WithError(New("test", "test")()),
 }
 
-func TestBuildTeamAPIURL(t *testing.T) {
+func TestBuildAgentAPIURL(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -39,39 +39,39 @@ func TestBuildTeamAPIURL(t *testing.T) {
 		{
 			name:    "no trailing slash",
 			baseURL: "https://gateway.example.com",
-			want:    "https://gateway.example.com" + teamAPIPath + "/",
+			want:    "https://gateway.example.com" + agentAPIPath + "/",
 		},
 		{
 			name:    "trailing slash",
 			baseURL: "https://gateway.example.com/",
-			want:    "https://gateway.example.com" + teamAPIPath + "/",
+			want:    "https://gateway.example.com" + agentAPIPath + "/",
 		},
 		{
 			name:    "already includes path",
-			baseURL: "https://gateway.example.com" + teamAPIPath,
-			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath + "/",
+			baseURL: "https://gateway.example.com" + agentAPIPath,
+			want:    "https://gateway.example.com" + agentAPIPath + agentAPIPath + "/",
 		},
 		{
 			name:    "path with trailing slash",
-			baseURL: "https://gateway.example.com" + teamAPIPath + "/",
-			want:    "https://gateway.example.com" + teamAPIPath + teamAPIPath + "/",
+			baseURL: "https://gateway.example.com" + agentAPIPath + "/",
+			want:    "https://gateway.example.com" + agentAPIPath + agentAPIPath + "/",
 		},
 	}
 
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			if got := buildTeamAPIURL(test.baseURL); got != test.want {
-				t.Fatalf("buildTeamAPIURL(%q) = %q, want %q", test.baseURL, got, test.want)
+			if got := buildAgentAPIURL(test.baseURL); got != test.want {
+				t.Fatalf("buildAgentAPIURL(%q) = %q, want %q", test.baseURL, got, test.want)
 			}
 		})
 	}
 }
 
-func TestBuildTeamAPIURLResolvesOperationPaths(t *testing.T) {
+func TestBuildAgentAPIURLResolvesOperationPaths(t *testing.T) {
 	t.Parallel()
 
-	baseURL := buildTeamAPIURL("https://gateway.example.com")
+	baseURL := buildAgentAPIURL("https://gateway.example.com")
 
 	serverURL, err := url.Parse(baseURL)
 	if err != nil {
@@ -86,17 +86,17 @@ func TestBuildTeamAPIURLResolvesOperationPaths(t *testing.T) {
 		{
 			name:          "agents",
 			operationPath: "/agents",
-			want:          "https://gateway.example.com" + teamAPIPath + "/agents",
+			want:          "https://gateway.example.com" + agentAPIPath + "/agents",
 		},
 		{
 			name:          "volumes",
 			operationPath: "/volumes",
-			want:          "https://gateway.example.com" + teamAPIPath + "/volumes",
+			want:          "https://gateway.example.com" + agentAPIPath + "/volumes",
 		},
 		{
 			name:          "envs",
 			operationPath: "/envs",
-			want:          "https://gateway.example.com" + teamAPIPath + "/envs",
+			want:          "https://gateway.example.com" + agentAPIPath + "/envs",
 		},
 	}
 
