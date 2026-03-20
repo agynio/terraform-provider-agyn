@@ -30,8 +30,8 @@ func (p *agynProvider) Metadata(_ context.Context, _ provider.MetadataRequest, r
 
 func (p *agynProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Provider for Agyn Team API via Gateway.",
-		MarkdownDescription: "Provider for Agyn Team API via Gateway.",
+		Description:         "Provider for Agyn Agents API via Gateway.",
+		MarkdownDescription: "Provider for Agyn Agents API via Gateway.",
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				Required:            true,

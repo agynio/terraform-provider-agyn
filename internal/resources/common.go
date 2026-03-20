@@ -12,14 +12,6 @@ func stringValue(v types.String) string {
 	return v.ValueString()
 }
 
-func stringPointer(v types.String) *string {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-	value := v.ValueString()
-	return proto.String(value)
-}
-
 func updateStringPointer(plan types.String, prior types.String) *string {
 	if plan.IsUnknown() {
 		return nil

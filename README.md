@@ -1,6 +1,6 @@
 # Terraform Provider agyn
 
-Terraform provider for Agyn Team API via the Gateway. Initial resources:
+Terraform provider for Agyn Agents API via the Gateway. Initial resources:
 - agyn_agent
 - agyn_tool
 - agyn_mcp_server

@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	gatewayv1connect "github.com/agynio/terraform-provider-agyn/gen/agynio/api/gateway/v1/gatewayv1connect"
+	"github.com/agynio/terraform-provider-agyn/gen/agynio/api/gateway/v1/gatewayv1connect"
 )
 
 const defaultTimeout = 30 * time.Second

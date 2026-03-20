@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -309,6 +310,8 @@ func envTargetState(env *agentsv1.Env) (types.String, types.String, types.String
 		mcpID = types.StringValue(target.McpId)
 	case *agentsv1.Env_HookId:
 		hookID = types.StringValue(target.HookId)
+	default:
+		panic(fmt.Sprintf("unexpected env target type: %T", target))
 	}
 	return agentID, mcpID, hookID
 }
@@ -321,6 +324,8 @@ func envSourceState(env *agentsv1.Env, fallback types.String) (types.String, typ
 		value = preserveSensitiveString(fallback, source.Value)
 	case *agentsv1.Env_SecretId:
 		secretID = types.StringValue(source.SecretId)
+	default:
+		panic(fmt.Sprintf("unexpected env source type: %T", source))
 	}
 	return value, secretID
 }

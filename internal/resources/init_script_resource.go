@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -260,6 +261,8 @@ func initScriptTargetState(script *agentsv1.InitScript) (types.String, types.Str
 		mcpID = types.StringValue(target.McpId)
 	case *agentsv1.InitScript_HookId:
 		hookID = types.StringValue(target.HookId)
+	default:
+		panic(fmt.Sprintf("unexpected init script target type: %T", target))
 	}
 	return agentID, mcpID, hookID
 }

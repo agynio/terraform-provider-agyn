@@ -6,21 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func TestStringPointer(t *testing.T) {
-	pointer := stringPointer(types.StringValue("value"))
-	if pointer == nil || *pointer != "value" {
-		t.Fatalf("expected pointer with value, got %v", pointer)
-	}
-
-	if ptr := stringPointer(types.StringNull()); ptr != nil {
-		t.Fatalf("expected nil pointer for null string")
-	}
-
-	if ptr := stringPointer(types.StringUnknown()); ptr != nil {
-		t.Fatalf("expected nil pointer for unknown string")
-	}
-}
-
 func TestBoolPointer(t *testing.T) {
 	pointer := boolPointer(types.BoolValue(true))
 	if pointer == nil || *pointer != true {

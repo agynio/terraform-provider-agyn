@@ -1,3 +1,4 @@
 syntax = "proto3";
 
+// Placeholder file to keep the buf module non-empty.
 package agynio.terraform.placeholder.v1;

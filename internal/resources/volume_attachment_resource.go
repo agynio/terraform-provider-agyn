@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -224,6 +225,8 @@ func volumeAttachmentTargetState(attachment *agentsv1.VolumeAttachment) (types.S
 		mcpID = types.StringValue(target.McpId)
 	case *agentsv1.VolumeAttachment_HookId:
 		hookID = types.StringValue(target.HookId)
+	default:
+		panic(fmt.Sprintf("unexpected volume attachment target type: %T", target))
 	}
 	return agentID, mcpID, hookID
 }
