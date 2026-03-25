@@ -1,5 +1,6 @@
 package provider
 
 type Config struct {
-	APIURL string
+	APIURL   string
+	APIToken string
 }

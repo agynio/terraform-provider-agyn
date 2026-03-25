@@ -13,11 +13,13 @@ const defaultTimeout = 30 * time.Second
 
 type Config struct {
 	BaseURL    string
+	APIToken   string
 	HTTPClient *http.Client
 }
 
 type Client struct {
-	gateway gatewayv1connect.AgentsGatewayClient
+	gateway     gatewayv1connect.AgentsGatewayClient
+	appsGateway gatewayv1connect.AppsGatewayClient
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -31,7 +33,34 @@ func NewClient(cfg Config) (*Client, error) {
 	httpClient := cfg.HTTPClient
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: defaultTimeout}
+	} else {
+		clone := *httpClient
+		httpClient = &clone
 	}
 
-	return &Client{gateway: gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL)}, nil
+	if cfg.APIToken != "" {
+		baseTransport := httpClient.Transport
+		if baseTransport == nil {
+			baseTransport = http.DefaultTransport
+		}
+		httpClient.Transport = &authTransport{base: baseTransport, token: cfg.APIToken}
+	}
+
+	return &Client{
+		gateway:     gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL),
+		appsGateway: gatewayv1connect.NewAppsGatewayClient(httpClient, cfg.BaseURL),
+	}, nil
+}
+
+type authTransport struct {
+	base  http.RoundTripper
+	token string
+}
+
+func (t *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = req.Clone(req.Context())
+	if t.token != "" {
+		req.Header.Set("Authorization", "Bearer "+t.token)
+	}
+	return t.base.RoundTrip(req)
 }
