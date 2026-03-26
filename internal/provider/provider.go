@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -37,13 +38,19 @@ func (p *agynProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp 
 				Required:            true,
 				MarkdownDescription: "Base URL for the Gateway (e.g., https://gateway.example.com).",
 			},
+			"api_token": schema.StringAttribute{
+				Optional:            true,
+				Sensitive:           true,
+				MarkdownDescription: "Bearer token for Gateway authentication. Required for app management operations. Can also be set via the `AGYN_API_TOKEN` environment variable.",
+			},
 		},
 	}
 }
 
 func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var data struct {
-		APIURL types.String `tfsdk:"api_url"`
+		APIURL   types.String `tfsdk:"api_url"`
+		APIToken types.String `tfsdk:"api_token"`
 	}
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -55,8 +62,16 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 		return
 	}
 
+	apiToken := ""
+	if !data.APIToken.IsNull() && !data.APIToken.IsUnknown() && data.APIToken.ValueString() != "" {
+		apiToken = data.APIToken.ValueString()
+	} else if envToken := os.Getenv("AGYN_API_TOKEN"); envToken != "" {
+		apiToken = envToken
+	}
+
 	client, err := agentapi.NewClient(agentapi.Config{
-		BaseURL: data.APIURL.ValueString(),
+		BaseURL:  data.APIURL.ValueString(),
+		APIToken: apiToken,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to configure client", err.Error())
@@ -69,6 +84,7 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		resources.NewAppResource,
 		resources.NewAgentResource,
 		resources.NewVolumeResource,
 		resources.NewVolumeAttachmentResource,
