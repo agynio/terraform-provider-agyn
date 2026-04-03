@@ -18,8 +18,9 @@ type Config struct {
 }
 
 type Client struct {
-	gateway     gatewayv1connect.AgentsGatewayClient
-	appsGateway gatewayv1connect.AppsGatewayClient
+	gateway        gatewayv1connect.AgentsGatewayClient
+	appsGateway    gatewayv1connect.AppsGatewayClient
+	runnersGateway gatewayv1connect.RunnersGatewayClient
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -47,8 +48,9 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	return &Client{
-		gateway:     gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL),
-		appsGateway: gatewayv1connect.NewAppsGatewayClient(httpClient, cfg.BaseURL),
+		gateway:        gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL),
+		appsGateway:    gatewayv1connect.NewAppsGatewayClient(httpClient, cfg.BaseURL),
+		runnersGateway: gatewayv1connect.NewRunnersGatewayClient(httpClient, cfg.BaseURL),
 	}, nil
 }
 
