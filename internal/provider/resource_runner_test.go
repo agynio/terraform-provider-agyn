@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func TestAccAgynRunner_basic(t *testing.T) {
@@ -63,6 +64,38 @@ func TestAccAgynRunner_update(t *testing.T) {
 	})
 }
 
+func TestAccAgynRunner_organizationIDRequiresReplace(t *testing.T) {
+	name := acctest.RandomWithPrefix("tf-acc-runner")
+	organizationID := os.Getenv("AGYN_ORGANIZATION_ID")
+	updatedOrganizationID := organizationID + "-updated"
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccRunnerOrgPreCheck(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgynRunnerConfigWithOrganizationID(name, organizationID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("agyn_runner.test", "name", name),
+					resource.TestCheckResourceAttr("agyn_runner.test", "organization_id", organizationID),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "identity_id"),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "service_token"),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "id"),
+				),
+			},
+			{
+				Config: testAccAgynRunnerConfigWithOrganizationID(name, updatedOrganizationID),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("agyn_runner.test", plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func TestAccAgynRunner_import(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-runner")
 	resource.Test(t, resource.TestCase{
@@ -89,6 +122,13 @@ func testAccRunnerPreCheck(t *testing.T) {
 	}
 }
 
+func testAccRunnerOrgPreCheck(t *testing.T) {
+	testAccRunnerPreCheck(t)
+	if os.Getenv("AGYN_ORGANIZATION_ID") == "" {
+		t.Skip("AGYN_ORGANIZATION_ID must be set for runner organization tests")
+	}
+}
+
 func testAccAgynRunnerConfig(name string) string {
 	return fmt.Sprintf(`
 %s
@@ -111,4 +151,15 @@ resource "agyn_runner" "test" {
 	  }
 }
 `, testAccProviderConfig(), name, environment, team)
+}
+
+func testAccAgynRunnerConfigWithOrganizationID(name, organizationID string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "agyn_runner" "test" {
+	  name            = %q
+	  organization_id = %q
+}
+`, testAccProviderConfig(), name, organizationID)
 }

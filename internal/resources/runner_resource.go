@@ -121,7 +121,7 @@ func (r *runnerResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	updatedState, diags := runnerToState(result.Runner, optionalString(result.ServiceToken))
+	updatedState, diags := runnerToState(result.Runner, plan.Labels, optionalString(result.ServiceToken))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,7 +152,7 @@ func (r *runnerResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	updatedState, diags := runnerToState(runner, preserveSensitiveString(state.ServiceToken, ""))
+	updatedState, diags := runnerToState(runner, state.Labels, preserveSensitiveString(state.ServiceToken, ""))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -193,7 +193,7 @@ func (r *runnerResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	updatedState, diags := runnerToState(runner, preserveSensitiveString(state.ServiceToken, ""))
+	updatedState, diags := runnerToState(runner, plan.Labels, preserveSensitiveString(state.ServiceToken, ""))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,8 +227,8 @@ func (r *runnerResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func runnerToState(runner *runnersv1.Runner, serviceToken types.String) (runnerModel, diag.Diagnostics) {
-	labels, diags := runnerLabelsToState(runner.Labels)
+func runnerToState(runner *runnersv1.Runner, priorLabels types.Map, serviceToken types.String) (runnerModel, diag.Diagnostics) {
+	labels, diags := runnerLabelsToState(runner.Labels, priorLabels)
 	return runnerModel{
 		ID:             types.StringValue(runner.Meta.Id),
 		Name:           types.StringValue(runner.Name),
@@ -239,9 +239,12 @@ func runnerToState(runner *runnersv1.Runner, serviceToken types.String) (runnerM
 	}, diags
 }
 
-func runnerLabelsToState(labels map[string]string) (types.Map, diag.Diagnostics) {
+func runnerLabelsToState(labels map[string]string, prior types.Map) (types.Map, diag.Diagnostics) {
 	if len(labels) == 0 {
-		return types.MapNull(types.StringType), nil
+		if prior.IsNull() || prior.IsUnknown() {
+			return types.MapNull(types.StringType), nil
+		}
+		return types.MapValue(types.StringType, map[string]attr.Value{})
 	}
 	values := make(map[string]attr.Value, len(labels))
 	for key, value := range labels {
