@@ -67,10 +67,10 @@ func TestAccAgynRunner_update(t *testing.T) {
 func TestAccAgynRunner_organizationIDRequiresReplace(t *testing.T) {
 	name := acctest.RandomWithPrefix("tf-acc-runner")
 	organizationID := os.Getenv("AGYN_ORGANIZATION_ID")
-	updatedOrganizationID := organizationID + "-updated"
+	updatedOrganizationID := os.Getenv("AGYN_ORGANIZATION_ID_ALT")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		PreCheck:                 func() { testAccRunnerOrgPreCheck(t) },
+		PreCheck:                 func() { testAccRunnerOrgReplacePreCheck(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgynRunnerConfigWithOrganizationID(name, organizationID),
@@ -85,12 +85,17 @@ func TestAccAgynRunner_organizationIDRequiresReplace(t *testing.T) {
 			{
 				Config: testAccAgynRunnerConfigWithOrganizationID(name, updatedOrganizationID),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPreRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("agyn_runner.test", plancheck.ResourceActionReplace),
 					},
 				},
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("agyn_runner.test", "name", name),
+					resource.TestCheckResourceAttr("agyn_runner.test", "organization_id", updatedOrganizationID),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "identity_id"),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "service_token"),
+					resource.TestCheckResourceAttrSet("agyn_runner.test", "id"),
+				),
 			},
 		},
 	})
@@ -126,6 +131,13 @@ func testAccRunnerOrgPreCheck(t *testing.T) {
 	testAccRunnerPreCheck(t)
 	if os.Getenv("AGYN_ORGANIZATION_ID") == "" {
 		t.Skip("AGYN_ORGANIZATION_ID must be set for runner organization tests")
+	}
+}
+
+func testAccRunnerOrgReplacePreCheck(t *testing.T) {
+	testAccRunnerOrgPreCheck(t)
+	if os.Getenv("AGYN_ORGANIZATION_ID_ALT") == "" {
+		t.Skip("AGYN_ORGANIZATION_ID_ALT must be set for runner organization replace tests")
 	}
 }
 
