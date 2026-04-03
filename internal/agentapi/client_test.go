@@ -35,6 +35,9 @@ func TestNewClientUsesProvidedHTTPClient(t *testing.T) {
 	if client.appsGateway == nil {
 		t.Fatalf("expected apps gateway client to be initialized")
 	}
+	if client.runnersGateway == nil {
+		t.Fatalf("expected runners gateway client to be initialized")
+	}
 }
 
 func TestAuthTransportAddsAuthorizationHeader(t *testing.T) {
