@@ -85,12 +85,10 @@ func TestAccAgynRunner_organizationIDRequiresReplace(t *testing.T) {
 			{
 				Config: testAccAgynRunnerConfigWithOrganizationID(name, updatedOrganizationID),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPreRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("agyn_runner.test", plancheck.ResourceActionReplace),
 					},
 				},
-				ExpectNonEmptyPlan: true,
-				PlanOnly:           true,
 			},
 		},
 	})
