@@ -18,10 +18,11 @@ type Config struct {
 }
 
 type Client struct {
-	gateway        gatewayv1connect.AgentsGatewayClient
-	appsGateway    gatewayv1connect.AppsGatewayClient
-	runnersGateway gatewayv1connect.RunnersGatewayClient
-	secretsGateway gatewayv1connect.SecretsGatewayClient
+	gateway              gatewayv1connect.AgentsGatewayClient
+	appsGateway          gatewayv1connect.AppsGatewayClient
+	runnersGateway       gatewayv1connect.RunnersGatewayClient
+	secretsGateway       gatewayv1connect.SecretsGatewayClient
+	organizationsGateway gatewayv1connect.OrganizationsGatewayClient
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -49,10 +50,11 @@ func NewClient(cfg Config) (*Client, error) {
 	}
 
 	return &Client{
-		gateway:        gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL),
-		appsGateway:    gatewayv1connect.NewAppsGatewayClient(httpClient, cfg.BaseURL),
-		runnersGateway: gatewayv1connect.NewRunnersGatewayClient(httpClient, cfg.BaseURL),
-		secretsGateway: gatewayv1connect.NewSecretsGatewayClient(httpClient, cfg.BaseURL),
+		gateway:              gatewayv1connect.NewAgentsGatewayClient(httpClient, cfg.BaseURL),
+		appsGateway:          gatewayv1connect.NewAppsGatewayClient(httpClient, cfg.BaseURL),
+		runnersGateway:       gatewayv1connect.NewRunnersGatewayClient(httpClient, cfg.BaseURL),
+		secretsGateway:       gatewayv1connect.NewSecretsGatewayClient(httpClient, cfg.BaseURL),
+		organizationsGateway: gatewayv1connect.NewOrganizationsGatewayClient(httpClient, cfg.BaseURL),
 	}, nil
 }
 
