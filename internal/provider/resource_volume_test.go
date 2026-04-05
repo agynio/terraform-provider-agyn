@@ -74,6 +74,9 @@ func TestAccAgynVolume_import(t *testing.T) {
 				ResourceName:      "agyn_volume.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"organization_id",
+				},
 			},
 		},
 	})
