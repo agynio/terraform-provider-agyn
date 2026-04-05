@@ -7,18 +7,18 @@ import (
 	appsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/apps/v1"
 )
 
-type RegisterAppResult struct {
+type CreateAppResult struct {
 	App          *appsv1.App
 	ServiceToken string
 }
 
-func (c *Client) RegisterApp(ctx context.Context, req *appsv1.RegisterAppRequest) (*RegisterAppResult, error) {
-	return withConflictRetry(ctx, "register app", func() (*RegisterAppResult, error) {
-		resp, err := c.appsGateway.RegisterApp(ctx, req)
+func (c *Client) CreateApp(ctx context.Context, req *appsv1.CreateAppRequest) (*CreateAppResult, error) {
+	return withConflictRetry(ctx, "create app", func() (*CreateAppResult, error) {
+		resp, err := c.appsGateway.CreateApp(ctx, req)
 		if err != nil {
-			return nil, fmt.Errorf("register app: %w", err)
+			return nil, fmt.Errorf("create app: %w", err)
 		}
-		return &RegisterAppResult{App: resp.App, ServiceToken: resp.ServiceToken}, nil
+		return &CreateAppResult{App: resp.App, ServiceToken: resp.ServiceToken}, nil
 	})
 }
 

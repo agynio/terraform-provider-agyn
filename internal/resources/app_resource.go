@@ -105,16 +105,16 @@ func (r *appResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	input := &appsv1.RegisterAppRequest{
+	input := &appsv1.CreateAppRequest{
 		Slug:        plan.Slug.ValueString(),
 		Name:        plan.Name.ValueString(),
 		Description: stringValue(plan.Description),
 		Icon:        stringValue(plan.Icon),
 	}
 
-	result, err := r.client.RegisterApp(ctx, input)
+	result, err := r.client.CreateApp(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError("Unable to register app", err.Error())
+		resp.Diagnostics.AddError("Unable to create app", err.Error())
 		return
 	}
 
