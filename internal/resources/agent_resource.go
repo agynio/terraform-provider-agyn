@@ -23,14 +23,15 @@ var _ resource.Resource = &agentResource{}
 var _ resource.ResourceWithImportState = &agentResource{}
 
 type agentModel struct {
-	ID            types.String           `tfsdk:"id"`
-	Name          types.String           `tfsdk:"name"`
-	Role          types.String           `tfsdk:"role"`
-	Model         types.String           `tfsdk:"model"`
-	Image         types.String           `tfsdk:"image"`
-	Description   types.String           `tfsdk:"description"`
-	Configuration types.String           `tfsdk:"configuration"`
-	Resources     *computeResourcesModel `tfsdk:"resources"`
+	ID             types.String           `tfsdk:"id"`
+	OrganizationID types.String           `tfsdk:"organization_id"`
+	Name           types.String           `tfsdk:"name"`
+	Role           types.String           `tfsdk:"role"`
+	Model          types.String           `tfsdk:"model"`
+	Image          types.String           `tfsdk:"image"`
+	Description    types.String           `tfsdk:"description"`
+	Configuration  types.String           `tfsdk:"configuration"`
+	Resources      *computeResourcesModel `tfsdk:"resources"`
 }
 
 func NewAgentResource() resource.Resource { return &agentResource{} }
@@ -47,6 +48,11 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				MarkdownDescription: "UUID identifier of the agent.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Organization identifier for the agent.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -114,13 +120,14 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	input := &agentsv1.CreateAgentRequest{
-		Name:          plan.Name.ValueString(),
-		Role:          plan.Role.ValueString(),
-		Model:         plan.Model.ValueString(),
-		Image:         plan.Image.ValueString(),
-		Description:   stringValue(plan.Description),
-		Configuration: stringValue(plan.Configuration),
-		Resources:     computeResourcesFromModel(plan.Resources),
+		OrganizationId: plan.OrganizationID.ValueString(),
+		Name:           plan.Name.ValueString(),
+		Role:           plan.Role.ValueString(),
+		Model:          plan.Model.ValueString(),
+		Image:          plan.Image.ValueString(),
+		Description:    stringValue(plan.Description),
+		Configuration:  stringValue(plan.Configuration),
+		Resources:      computeResourcesFromModel(plan.Resources),
 	}
 
 	agent, err := r.client.CreateAgent(ctx, input)
@@ -136,14 +143,15 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:            types.StringValue(agent.Meta.Id),
-		Name:          types.StringValue(agent.Name),
-		Role:          types.StringValue(agent.Role),
-		Model:         types.StringValue(agent.Model),
-		Image:         types.StringValue(agent.Image),
-		Description:   optionalString(agent.Description),
-		Configuration: configuration,
-		Resources:     computeResourcesToModel(agent.Resources),
+		ID:             types.StringValue(agent.Meta.Id),
+		OrganizationID: types.StringValue(agent.OrganizationId),
+		Name:           types.StringValue(agent.Name),
+		Role:           types.StringValue(agent.Role),
+		Model:          types.StringValue(agent.Model),
+		Image:          types.StringValue(agent.Image),
+		Description:    optionalString(agent.Description),
+		Configuration:  configuration,
+		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -181,6 +189,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Role = types.StringValue(agent.Role)
 	state.Model = types.StringValue(agent.Model)
 	state.Image = types.StringValue(agent.Image)
+	state.OrganizationID = types.StringValue(agent.OrganizationId)
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
 	state.Resources = computeResourcesToModel(agent.Resources)
@@ -233,14 +242,15 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:            types.StringValue(agent.Meta.Id),
-		Name:          types.StringValue(agent.Name),
-		Role:          types.StringValue(agent.Role),
-		Model:         types.StringValue(agent.Model),
-		Image:         types.StringValue(agent.Image),
-		Description:   optionalString(agent.Description),
-		Configuration: configuration,
-		Resources:     computeResourcesToModel(agent.Resources),
+		ID:             types.StringValue(agent.Meta.Id),
+		OrganizationID: types.StringValue(agent.OrganizationId),
+		Name:           types.StringValue(agent.Name),
+		Role:           types.StringValue(agent.Role),
+		Model:          types.StringValue(agent.Model),
+		Image:          types.StringValue(agent.Image),
+		Description:    optionalString(agent.Description),
+		Configuration:  configuration,
+		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
