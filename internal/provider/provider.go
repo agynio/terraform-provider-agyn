@@ -85,6 +85,8 @@ func (p *agynProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		resources.NewAppResource,
+		resources.NewAppInstallationResource,
+		resources.NewOrganizationResource,
 		resources.NewRunnerResource,
 		resources.NewAgentResource,
 		resources.NewVolumeResource,
