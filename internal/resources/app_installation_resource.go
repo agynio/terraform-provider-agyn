@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -64,6 +65,7 @@ func (r *appInstallationResource) Schema(_ context.Context, _ resource.SchemaReq
 			},
 			"configuration": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "JSON configuration for the installation.",
 				Default:             stringdefault.StaticString("{}"),
 			},
@@ -114,12 +116,17 @@ func (r *appInstallationResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	configurationJSON, err := protoStructToJSONString(installation.Configuration)
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to marshal configuration", err.Error())
+		return
+	}
 	state := appInstallationModel{
 		ID:             types.StringValue(installation.Meta.Id),
 		AppID:          types.StringValue(installation.AppId),
 		OrganizationID: types.StringValue(installation.OrganizationId),
 		Slug:           types.StringValue(installation.Slug),
-		Configuration:  types.StringValue(protoStructToJSONString(installation.Configuration)),
+		Configuration:  types.StringValue(configurationJSON),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -147,11 +154,17 @@ func (r *appInstallationResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	configurationJSON, err := protoStructToJSONString(installation.Configuration)
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to marshal configuration", err.Error())
+		return
+	}
+
 	state.ID = types.StringValue(installation.Meta.Id)
 	state.AppID = types.StringValue(installation.AppId)
 	state.OrganizationID = types.StringValue(installation.OrganizationId)
 	state.Slug = types.StringValue(installation.Slug)
-	state.Configuration = types.StringValue(protoStructToJSONString(installation.Configuration))
+	state.Configuration = types.StringValue(configurationJSON)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -171,10 +184,19 @@ func (r *appInstallationResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	slugChanged := plan.Slug.ValueString() != state.Slug.ValueString()
-	configChanged := plan.Configuration.ValueString() != state.Configuration.ValueString()
+	configChanged := false
+	if !plan.Configuration.IsUnknown() && !plan.Configuration.IsNull() {
+		if state.Configuration.IsUnknown() || state.Configuration.IsNull() {
+			configChanged = true
+		} else {
+			configChanged = !jsonSemanticallyEqual(plan.Configuration.ValueString(), state.Configuration.ValueString())
+		}
+	}
 	if !slugChanged && !configChanged {
 		state.Slug = plan.Slug
-		state.Configuration = plan.Configuration
+		if !plan.Configuration.IsUnknown() {
+			state.Configuration = plan.Configuration
+		}
 		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
@@ -198,12 +220,17 @@ func (r *appInstallationResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	configurationJSON, err := protoStructToJSONString(installation.Configuration)
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to marshal configuration", err.Error())
+		return
+	}
 	updatedState := appInstallationModel{
 		ID:             types.StringValue(installation.Meta.Id),
 		AppID:          types.StringValue(installation.AppId),
 		OrganizationID: types.StringValue(installation.OrganizationId),
 		Slug:           types.StringValue(installation.Slug),
-		Configuration:  types.StringValue(protoStructToJSONString(installation.Configuration)),
+		Configuration:  types.StringValue(configurationJSON),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -242,10 +269,13 @@ func jsonStringToProtoStruct(s string) (*structpb.Struct, error) {
 	return st, nil
 }
 
-func protoStructToJSONString(s *structpb.Struct) string {
+func protoStructToJSONString(s *structpb.Struct) (string, error) {
 	if s == nil {
-		return "{}"
+		return "{}", nil
 	}
-	b, _ := protojson.Marshal(s)
-	return string(b)
+	b, err := protojson.Marshal(s)
+	if err != nil {
+		return "", fmt.Errorf("marshal configuration: %w", err)
+	}
+	return string(b), nil
 }
