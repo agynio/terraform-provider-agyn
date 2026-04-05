@@ -119,7 +119,7 @@ func (r *imagePullSecretResource) Create(ctx context.Context, req resource.Creat
 		Registry:    plan.Registry.ValueString(),
 		Username:    plan.Username.ValueString(),
 	}
-	if setImagePullSecretCreateSource(input, plan.Password, plan.RemoteSecretProviderID, plan.RemoteSecretReference, "create image pull secret", resp) {
+	if setImagePullSecretCreateSource(input, plan.Password, plan.RemoteSecretProviderID, plan.RemoteSecretReference, resp) {
 		return
 	}
 
@@ -196,7 +196,7 @@ func (r *imagePullSecretResource) Update(ctx context.Context, req resource.Updat
 		Registry:    updateStringPointer(plan.Registry, state.Registry),
 		Username:    updateStringPointer(plan.Username, state.Username),
 	}
-	if setImagePullSecretUpdateSource(input, plan.Password, plan.RemoteSecretProviderID, plan.RemoteSecretReference, "update image pull secret", resp) {
+	if setImagePullSecretUpdateSource(input, plan.Password, plan.RemoteSecretProviderID, plan.RemoteSecretReference, resp) {
 		return
 	}
 
@@ -245,7 +245,7 @@ func (r *imagePullSecretResource) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func setImagePullSecretCreateSource(req *secretsv1.CreateImagePullSecretRequest, password types.String, remoteProviderID types.String, remoteReference types.String, op string, resp *resource.CreateResponse) bool {
+func setImagePullSecretCreateSource(req *secretsv1.CreateImagePullSecretRequest, password types.String, remoteProviderID types.String, remoteReference types.String, resp *resource.CreateResponse) bool {
 	if !password.IsNull() && !password.IsUnknown() {
 		req.Source = &secretsv1.CreateImagePullSecretRequest_Value{Value: password.ValueString()}
 		return false
@@ -259,11 +259,11 @@ func setImagePullSecretCreateSource(req *secretsv1.CreateImagePullSecretRequest,
 		}
 		return false
 	}
-	resp.Diagnostics.AddError("Missing image pull secret source", op+" requires password or remote_secret_provider_id")
+	resp.Diagnostics.AddError("Missing image pull secret source", "create image pull secret requires password or remote_secret_provider_id")
 	return true
 }
 
-func setImagePullSecretUpdateSource(req *secretsv1.UpdateImagePullSecretRequest, password types.String, remoteProviderID types.String, remoteReference types.String, op string, resp *resource.UpdateResponse) bool {
+func setImagePullSecretUpdateSource(req *secretsv1.UpdateImagePullSecretRequest, password types.String, remoteProviderID types.String, remoteReference types.String, resp *resource.UpdateResponse) bool {
 	if !password.IsNull() && !password.IsUnknown() {
 		req.Source = &secretsv1.UpdateImagePullSecretRequest_Value{Value: password.ValueString()}
 		return false
@@ -277,7 +277,7 @@ func setImagePullSecretUpdateSource(req *secretsv1.UpdateImagePullSecretRequest,
 		}
 		return false
 	}
-	resp.Diagnostics.AddError("Missing image pull secret source", op+" requires password or remote_secret_provider_id")
+	resp.Diagnostics.AddError("Missing image pull secret source", "update image pull secret requires password or remote_secret_provider_id")
 	return true
 }
 
