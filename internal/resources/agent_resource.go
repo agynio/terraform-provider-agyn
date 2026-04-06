@@ -29,6 +29,7 @@ type agentModel struct {
 	Role           types.String           `tfsdk:"role"`
 	Model          types.String           `tfsdk:"model"`
 	Image          types.String           `tfsdk:"image"`
+	InitImage      types.String           `tfsdk:"init_image"`
 	Description    types.String           `tfsdk:"description"`
 	Configuration  types.String           `tfsdk:"configuration"`
 	Resources      *computeResourcesModel `tfsdk:"resources"`
@@ -69,6 +70,10 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"image": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Container image.",
+			},
+			"init_image": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Init container image.",
 			},
 			"description": schema.StringAttribute{
 				Optional:            true,
@@ -125,6 +130,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Role:           plan.Role.ValueString(),
 		Model:          plan.Model.ValueString(),
 		Image:          plan.Image.ValueString(),
+		InitImage:      plan.InitImage.ValueString(),
 		Description:    stringValue(plan.Description),
 		Configuration:  stringValue(plan.Configuration),
 		Resources:      computeResourcesFromModel(plan.Resources),
@@ -149,6 +155,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Role:           types.StringValue(agent.Role),
 		Model:          types.StringValue(agent.Model),
 		Image:          types.StringValue(agent.Image),
+		InitImage:      types.StringValue(agent.InitImage),
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
 		Resources:      computeResourcesToModel(agent.Resources),
@@ -189,6 +196,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Role = types.StringValue(agent.Role)
 	state.Model = types.StringValue(agent.Model)
 	state.Image = types.StringValue(agent.Image)
+	state.InitImage = types.StringValue(agent.InitImage)
 	state.OrganizationID = types.StringValue(agent.OrganizationId)
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
@@ -224,6 +232,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Role:          updateStringPointer(plan.Role, state.Role),
 		Model:         updateStringPointer(plan.Model, state.Model),
 		Image:         updateStringPointer(plan.Image, state.Image),
+		InitImage:     updateStringPointer(plan.InitImage, state.InitImage),
 		Description:   updateStringPointer(plan.Description, state.Description),
 		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
 		Resources:     updateComputeResources(plan.Resources, state.Resources),
@@ -248,6 +257,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Role:           types.StringValue(agent.Role),
 		Model:          types.StringValue(agent.Model),
 		Image:          types.StringValue(agent.Image),
+		InitImage:      types.StringValue(agent.InitImage),
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
 		Resources:      computeResourcesToModel(agent.Resources),
