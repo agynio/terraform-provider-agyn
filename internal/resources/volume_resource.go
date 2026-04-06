@@ -22,11 +22,12 @@ var _ resource.Resource = &volumeResource{}
 var _ resource.ResourceWithImportState = &volumeResource{}
 
 type volumeModel struct {
-	ID          types.String `tfsdk:"id"`
-	Persistent  types.Bool   `tfsdk:"persistent"`
-	MountPath   types.String `tfsdk:"mount_path"`
-	Size        types.String `tfsdk:"size"`
-	Description types.String `tfsdk:"description"`
+	ID             types.String `tfsdk:"id"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	Persistent     types.Bool   `tfsdk:"persistent"`
+	MountPath      types.String `tfsdk:"mount_path"`
+	Size           types.String `tfsdk:"size"`
+	Description    types.String `tfsdk:"description"`
 }
 
 func NewVolumeResource() resource.Resource { return &volumeResource{} }
@@ -43,6 +44,14 @@ func (r *volumeResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Computed:            true,
 				MarkdownDescription: "UUID identifier of the volume.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Organization identifier for the volume.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"persistent": schema.BoolAttribute{
 				Required:            true,
@@ -89,10 +98,11 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	input := &agentsv1.CreateVolumeRequest{
-		Persistent:  plan.Persistent.ValueBool(),
-		MountPath:   plan.MountPath.ValueString(),
-		Size:        stringValue(plan.Size),
-		Description: stringValue(plan.Description),
+		OrganizationId: plan.OrganizationID.ValueString(),
+		Persistent:     plan.Persistent.ValueBool(),
+		MountPath:      plan.MountPath.ValueString(),
+		Size:           stringValue(plan.Size),
+		Description:    stringValue(plan.Description),
 	}
 
 	volume, err := r.client.CreateVolume(ctx, input)
@@ -102,11 +112,12 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	updatedState := volumeModel{
-		ID:          types.StringValue(volume.Meta.Id),
-		Persistent:  types.BoolValue(volume.Persistent),
-		MountPath:   types.StringValue(volume.MountPath),
-		Size:        optionalString(volume.Size),
-		Description: optionalString(volume.Description),
+		ID:             types.StringValue(volume.Meta.Id),
+		OrganizationID: plan.OrganizationID,
+		Persistent:     types.BoolValue(volume.Persistent),
+		MountPath:      types.StringValue(volume.MountPath),
+		Size:           optionalString(volume.Size),
+		Description:    optionalString(volume.Description),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -171,11 +182,12 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	updatedState := volumeModel{
-		ID:          types.StringValue(volume.Meta.Id),
-		Persistent:  types.BoolValue(volume.Persistent),
-		MountPath:   types.StringValue(volume.MountPath),
-		Size:        optionalString(volume.Size),
-		Description: optionalString(volume.Description),
+		ID:             types.StringValue(volume.Meta.Id),
+		OrganizationID: state.OrganizationID,
+		Persistent:     types.BoolValue(volume.Persistent),
+		MountPath:      types.StringValue(volume.MountPath),
+		Size:           optionalString(volume.Size),
+		Description:    optionalString(volume.Description),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
