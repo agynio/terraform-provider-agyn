@@ -87,6 +87,9 @@ func computeResourcesToModel(resources *agentsv1.ComputeResources) *computeResou
 	if resources == nil {
 		return nil
 	}
+	if resources.RequestsCpu == "" && resources.RequestsMemory == "" && resources.LimitsCpu == "" && resources.LimitsMemory == "" {
+		return nil
+	}
 	return &computeResourcesModel{
 		RequestsCPU:    optionalString(resources.RequestsCpu),
 		RequestsMemory: optionalString(resources.RequestsMemory),
