@@ -26,6 +26,7 @@ var _ resource.ResourceWithImportState = &imagePullSecretResource{}
 
 type imagePullSecretModel struct {
 	ID                     types.String `tfsdk:"id"`
+	OrganizationID         types.String `tfsdk:"organization_id"`
 	Description            types.String `tfsdk:"description"`
 	Registry               types.String `tfsdk:"registry"`
 	Username               types.String `tfsdk:"username"`
@@ -55,6 +56,14 @@ func (r *imagePullSecretResource) Schema(_ context.Context, _ resource.SchemaReq
 				Computed:            true,
 				MarkdownDescription: "UUID identifier of the image pull secret.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			"organization_id": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Organization identifier for the image pull secret.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional:            true,
@@ -115,9 +124,10 @@ func (r *imagePullSecretResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	input := &secretsv1.CreateImagePullSecretRequest{
-		Description: stringValue(plan.Description),
-		Registry:    plan.Registry.ValueString(),
-		Username:    plan.Username.ValueString(),
+		OrganizationId: plan.OrganizationID.ValueString(),
+		Description:    stringValue(plan.Description),
+		Registry:       plan.Registry.ValueString(),
+		Username:       plan.Username.ValueString(),
 	}
 	if setImagePullSecretCreateSource(input, plan.Password, plan.RemoteSecretProviderID, plan.RemoteSecretReference, resp) {
 		return
@@ -132,6 +142,7 @@ func (r *imagePullSecretResource) Create(ctx context.Context, req resource.Creat
 	password, remoteProviderID, remoteReference := imagePullSecretSourceState(secret, plan.Password)
 	updatedState := imagePullSecretModel{
 		ID:                     types.StringValue(secret.Meta.Id),
+		OrganizationID:         plan.OrganizationID,
 		Description:            optionalString(secret.Description),
 		Registry:               types.StringValue(secret.Registry),
 		Username:               types.StringValue(secret.Username),
@@ -209,6 +220,7 @@ func (r *imagePullSecretResource) Update(ctx context.Context, req resource.Updat
 	password, remoteProviderID, remoteReference := imagePullSecretSourceState(secret, plan.Password)
 	updatedState := imagePullSecretModel{
 		ID:                     types.StringValue(secret.Meta.Id),
+		OrganizationID:         state.OrganizationID,
 		Description:            optionalString(secret.Description),
 		Registry:               types.StringValue(secret.Registry),
 		Username:               types.StringValue(secret.Username),
