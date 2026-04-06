@@ -2,7 +2,6 @@ package resources
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -308,7 +307,8 @@ func imagePullSecretSourceState(secret *secretsv1.ImagePullSecret, fallback type
 		remoteProviderID = types.StringValue(source.Remote.ValueProviderId)
 		remoteReference = optionalString(source.Remote.ValueReference)
 	default:
-		panic(fmt.Sprintf("unexpected image pull secret source type: %T", source))
+		// API does not echo sensitive source back; preserve plan value
+		password = fallback
 	}
 
 	return password, remoteProviderID, remoteReference
