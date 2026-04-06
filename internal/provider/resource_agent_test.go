@@ -23,7 +23,7 @@ func TestAccAgynAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", resourceName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -48,7 +48,7 @@ func TestAccAgynAgent_update(t *testing.T) {
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", resourceName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -61,7 +61,7 @@ func TestAccAgynAgent_update(t *testing.T) {
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", updatedName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent updated"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role updated"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -130,7 +130,7 @@ resource "agyn_agent" "test" {
 	  image       = %q
 	  init_image  = %q
 }
-`, testAccProviderConfig(), organizationName, title, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_IMAGE"))
+`, testAccProviderConfig(), organizationName, title, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"))
 }
 
 func testAccAgynAgentInvalidConfig(organizationName string) string {
@@ -150,5 +150,5 @@ resource "agyn_agent" "test" {
 	  init_image    = %q
 	  configuration = "{invalid"
 }
-`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_IMAGE"))
+`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"))
 }

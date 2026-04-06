@@ -15,5 +15,5 @@ resource "agyn_agent" "test" {
 	  image       = %q
 	  init_image  = %q
 }
-`, name, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_IMAGE"))
+`, name, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"))
 }
