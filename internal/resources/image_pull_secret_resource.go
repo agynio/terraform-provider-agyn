@@ -307,6 +307,9 @@ func imagePullSecretSourceState(secret *secretsv1.ImagePullSecret, fallback type
 		}
 		remoteProviderID = types.StringValue(source.Remote.ValueProviderId)
 		remoteReference = optionalString(source.Remote.ValueReference)
+	case nil:
+		// API does not echo sensitive source back; preserve plan value
+		password = fallback
 	default:
 		panic(fmt.Sprintf("unexpected image pull secret source type: %T", source))
 	}
