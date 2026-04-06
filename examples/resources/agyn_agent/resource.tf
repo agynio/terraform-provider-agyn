@@ -6,4 +6,5 @@ resource "agyn_agent" "example" {
   model         = "gpt-4o"
   system_prompt = "Assist with workspace automation."
   when_busy     = "wait"
+  init_image    = "ghcr.io/agynio/agent-init-codex:v1.0.0"
 }
