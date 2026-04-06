@@ -24,6 +24,7 @@ var _ resource.ResourceWithImportState = &mcpResource{}
 type mcpModel struct {
 	ID          types.String           `tfsdk:"id"`
 	AgentID     types.String           `tfsdk:"agent_id"`
+	Name        types.String           `tfsdk:"name"`
 	Image       types.String           `tfsdk:"image"`
 	Command     types.String           `tfsdk:"command"`
 	Description types.String           `tfsdk:"description"`
@@ -48,6 +49,11 @@ func (r *mcpResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"agent_id": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Agent identifier.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+			},
+			"name": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "MCP name.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
 			"image": schema.StringAttribute{
@@ -97,6 +103,7 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	input := &agentsv1.CreateMcpRequest{
 		AgentId:     plan.AgentID.ValueString(),
+		Name:        plan.Name.ValueString(),
 		Image:       plan.Image.ValueString(),
 		Command:     plan.Command.ValueString(),
 		Description: stringValue(plan.Description),
@@ -112,6 +119,7 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 	updatedState := mcpModel{
 		ID:          types.StringValue(mcp.Meta.Id),
 		AgentID:     types.StringValue(mcp.AgentId),
+		Name:        types.StringValue(mcp.Name),
 		Image:       types.StringValue(mcp.Image),
 		Command:     types.StringValue(mcp.Command),
 		Description: optionalString(mcp.Description),
@@ -144,6 +152,7 @@ func (r *mcpResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	}
 
 	state.AgentID = types.StringValue(mcp.AgentId)
+	state.Name = types.StringValue(mcp.Name)
 	state.Image = types.StringValue(mcp.Image)
 	state.Command = types.StringValue(mcp.Command)
 	state.Description = optionalString(mcp.Description)
@@ -183,6 +192,7 @@ func (r *mcpResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	updatedState := mcpModel{
 		ID:          types.StringValue(mcp.Meta.Id),
 		AgentID:     types.StringValue(mcp.AgentId),
+		Name:        types.StringValue(mcp.Name),
 		Image:       types.StringValue(mcp.Image),
 		Command:     types.StringValue(mcp.Command),
 		Description: optionalString(mcp.Description),
