@@ -136,7 +136,14 @@ func (r *modelResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	provider, err := r.client.GetLLMProvider(ctx, model.LlmProviderId)
+	if err != nil {
+		resp.Diagnostics.AddError("Unable to read model provider", err.Error())
+		return
+	}
+
 	state.ID = types.StringValue(model.Meta.Id)
+	state.OrganizationID = types.StringValue(provider.OrganizationId)
 	state.Name = types.StringValue(model.Name)
 	state.LLMProviderID = types.StringValue(model.LlmProviderId)
 	state.RemoteName = types.StringValue(model.RemoteName)
@@ -159,10 +166,9 @@ func (r *modelResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	input := &llmv1.UpdateModelRequest{
-		Id:            plan.ID.ValueString(),
-		Name:          updateStringPointer(plan.Name, state.Name),
-		LlmProviderId: updateStringPointer(plan.LLMProviderID, state.LLMProviderID),
-		RemoteName:    updateStringPointer(plan.RemoteName, state.RemoteName),
+		Id:         plan.ID.ValueString(),
+		Name:       updateStringPointer(plan.Name, state.Name),
+		RemoteName: updateStringPointer(plan.RemoteName, state.RemoteName),
 	}
 
 	model, err := r.client.UpdateModel(ctx, input)
