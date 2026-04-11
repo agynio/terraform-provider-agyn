@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,6 +29,7 @@ type llmProviderModel struct {
 	ID             types.String `tfsdk:"id"`
 	OrganizationID types.String `tfsdk:"organization_id"`
 	Endpoint       types.String `tfsdk:"endpoint"`
+	Protocol       types.String `tfsdk:"protocol"`
 	AuthMethod     types.String `tfsdk:"auth_method"`
 	Token          types.String `tfsdk:"token"`
 }
@@ -56,10 +58,17 @@ func (r *llmProviderResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Required:            true,
 				MarkdownDescription: "Provider base URL.",
 			},
+			"protocol": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "LLM provider protocol.",
+				Default:             stringdefault.StaticString("responses"),
+				Validators:          []validator.String{stringvalidator.OneOf("responses", "anthropic_messages")},
+			},
 			"auth_method": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Authentication method for the provider.",
-				Validators:          []validator.String{stringvalidator.OneOf("bearer")},
+				Validators:          []validator.String{stringvalidator.OneOf("bearer", "x_api_key")},
 			},
 			"token": schema.StringAttribute{
 				Required:            true,
@@ -96,6 +105,7 @@ func (r *llmProviderResource) Create(ctx context.Context, req resource.CreateReq
 
 	input := &llmv1.CreateLLMProviderRequest{
 		Endpoint:       plan.Endpoint.ValueString(),
+		Protocol:       toProtoProtocol(plan.Protocol.ValueString()),
 		AuthMethod:     toProtoAuthMethod(plan.AuthMethod.ValueString()),
 		Token:          plan.Token.ValueString(),
 		OrganizationId: plan.OrganizationID.ValueString(),
@@ -111,6 +121,7 @@ func (r *llmProviderResource) Create(ctx context.Context, req resource.CreateReq
 		ID:             types.StringValue(provider.Meta.Id),
 		OrganizationID: types.StringValue(provider.OrganizationId),
 		Endpoint:       types.StringValue(provider.Endpoint),
+		Protocol:       types.StringValue(fromProtoProtocol(provider.Protocol)),
 		AuthMethod:     types.StringValue(fromProtoAuthMethod(provider.AuthMethod)),
 		Token:          types.StringValue(plan.Token.ValueString()),
 	}
@@ -143,6 +154,7 @@ func (r *llmProviderResource) Read(ctx context.Context, req resource.ReadRequest
 	state.ID = types.StringValue(provider.Meta.Id)
 	state.OrganizationID = types.StringValue(provider.OrganizationId)
 	state.Endpoint = types.StringValue(provider.Endpoint)
+	state.Protocol = types.StringValue(fromProtoProtocol(provider.Protocol))
 	state.AuthMethod = types.StringValue(fromProtoAuthMethod(provider.AuthMethod))
 	state.Token = preserveSensitiveString(state.Token, "")
 
@@ -166,6 +178,7 @@ func (r *llmProviderResource) Update(ctx context.Context, req resource.UpdateReq
 	input := &llmv1.UpdateLLMProviderRequest{
 		Id:         plan.ID.ValueString(),
 		Endpoint:   updateStringPointer(plan.Endpoint, state.Endpoint),
+		Protocol:   updateProtocolPointer(plan.Protocol, state.Protocol),
 		AuthMethod: updateAuthMethodPointer(plan.AuthMethod, state.AuthMethod),
 		Token:      updateStringPointer(plan.Token, state.Token),
 	}
@@ -180,6 +193,7 @@ func (r *llmProviderResource) Update(ctx context.Context, req resource.UpdateReq
 		ID:             types.StringValue(provider.Meta.Id),
 		OrganizationID: types.StringValue(provider.OrganizationId),
 		Endpoint:       types.StringValue(provider.Endpoint),
+		Protocol:       types.StringValue(fromProtoProtocol(provider.Protocol)),
 		AuthMethod:     types.StringValue(fromProtoAuthMethod(provider.AuthMethod)),
 		Token:          types.StringValue(plan.Token.ValueString()),
 	}
@@ -227,10 +241,38 @@ func updateAuthMethodPointer(plan types.String, prior types.String) *llmv1.AuthM
 	return &value
 }
 
+func updateProtocolPointer(plan types.String, prior types.String) *llmv1.Protocol {
+	if plan.IsUnknown() {
+		return nil
+	}
+	if plan.IsNull() {
+		if prior.IsNull() || prior.IsUnknown() {
+			return nil
+		}
+		value := llmv1.Protocol_PROTOCOL_UNSPECIFIED
+		return &value
+	}
+	value := toProtoProtocol(plan.ValueString())
+	return &value
+}
+
 func toProtoAuthMethod(v string) llmv1.AuthMethod {
 	switch v {
 	case "bearer":
 		return llmv1.AuthMethod_AUTH_METHOD_BEARER
+	case "x_api_key":
+		return llmv1.AuthMethod_AUTH_METHOD_X_API_KEY
+	default:
+		panic("unreachable: validated by schema")
+	}
+}
+
+func toProtoProtocol(v string) llmv1.Protocol {
+	switch v {
+	case "responses":
+		return llmv1.Protocol_PROTOCOL_RESPONSES
+	case "anthropic_messages":
+		return llmv1.Protocol_PROTOCOL_ANTHROPIC_MESSAGES
 	default:
 		panic("unreachable: validated by schema")
 	}
@@ -240,7 +282,20 @@ func fromProtoAuthMethod(v llmv1.AuthMethod) string {
 	switch v {
 	case llmv1.AuthMethod_AUTH_METHOD_BEARER:
 		return "bearer"
+	case llmv1.AuthMethod_AUTH_METHOD_X_API_KEY:
+		return "x_api_key"
 	default:
 		panic(fmt.Sprintf("unreachable: unexpected proto auth method %v", v))
+	}
+}
+
+func fromProtoProtocol(v llmv1.Protocol) string {
+	switch v {
+	case llmv1.Protocol_PROTOCOL_RESPONSES:
+		return "responses"
+	case llmv1.Protocol_PROTOCOL_ANTHROPIC_MESSAGES:
+		return "anthropic_messages"
+	default:
+		panic(fmt.Sprintf("unreachable: unexpected proto protocol %v", v))
 	}
 }
