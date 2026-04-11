@@ -11,3 +11,11 @@ resource "agyn_agent" "example" {
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
+
+resource "agyn_hook" "example" {
+  agent_id    = agyn_agent.example.id
+  event       = "conversation.start"
+  function    = "handle_start"
+  image       = "ghcr.io/agynio/agent-hook:v1.0.0"
+  description = "Example hook."
+}

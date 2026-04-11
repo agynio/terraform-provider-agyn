@@ -23,3 +23,7 @@ provider "agyn" {
 ### Required
 
 - `api_url` (String) Base URL for the Gateway (e.g., https://gateway.example.com).
+
+### Optional
+
+- `api_token` (String, Sensitive) Bearer token for Gateway authentication. Required for app management operations. Can also be set via the `AGYN_API_TOKEN` environment variable.

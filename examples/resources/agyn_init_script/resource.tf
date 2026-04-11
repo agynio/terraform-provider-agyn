@@ -11,3 +11,11 @@ resource "agyn_agent" "example" {
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
+
+resource "agyn_init_script" "example" {
+  agent_id    = agyn_agent.example.id
+  description = "Initialize agent workspace."
+  script      = <<-EOT
+    echo "Preparing agent workspace"
+  EOT
+}

@@ -11,3 +11,11 @@ resource "agyn_agent" "example" {
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
+
+resource "agyn_mcp" "example" {
+  agent_id    = agyn_agent.example.id
+  name        = "example-mcp"
+  image       = "ghcr.io/agynio/mcp-server:v1.0.0"
+  command     = "mcp-server --port 8080"
+  description = "Example MCP service."
+}

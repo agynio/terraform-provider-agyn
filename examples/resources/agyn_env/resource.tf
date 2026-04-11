@@ -11,3 +11,10 @@ resource "agyn_agent" "example" {
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
+
+resource "agyn_env" "example" {
+  name        = "LOG_LEVEL"
+  description = "Example environment variable."
+  agent_id    = agyn_agent.example.id
+  value       = "info"
+}
