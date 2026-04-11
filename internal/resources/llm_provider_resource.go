@@ -61,7 +61,7 @@ func (r *llmProviderResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"protocol": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "LLM provider protocol.",
+				MarkdownDescription: "Wire protocol the provider speaks. Must be \"responses\" or \"anthropic_messages\". Defaults to \"responses\".",
 				Default:             stringdefault.StaticString("responses"),
 				Validators:          []validator.String{stringvalidator.OneOf("responses", "anthropic_messages")},
 			},
