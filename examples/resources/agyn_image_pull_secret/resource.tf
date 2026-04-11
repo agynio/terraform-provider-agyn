@@ -4,8 +4,8 @@ resource "agyn_organization" "example" {
 
 resource "agyn_image_pull_secret" "example" {
   organization_id = agyn_organization.example.id
-  description = "Example image pull secret."
-  registry    = "registry.example.com"
-  username    = "registry-user"
-  password    = "registry-password"
+  description     = "Example image pull secret."
+  registry        = "registry.example.com"
+  username        = "registry-user"
+  password        = "registry-password"
 }

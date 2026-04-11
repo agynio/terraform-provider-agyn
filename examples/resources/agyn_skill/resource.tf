@@ -11,3 +11,10 @@ resource "agyn_agent" "example" {
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
+
+resource "agyn_skill" "example" {
+  agent_id    = agyn_agent.example.id
+  name        = "greeting"
+  body        = "Return a greeting for the provided name."
+  description = "Example skill."
+}

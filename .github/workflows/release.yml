@@ -24,6 +24,10 @@ jobs:
         run: |
           buf dep update
           buf generate
+      - name: Validate docs
+        run: |
+          cd tools
+          go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs validate --provider-dir .. -provider-name agyn
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5.3.0
