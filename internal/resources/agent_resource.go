@@ -88,6 +88,7 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"idle_timeout": schema.StringAttribute{
 				Optional:            true,
+				Computed:            true,
 				MarkdownDescription: "Go duration string for idle timeout (for example, \"30s\", \"5m\", \"1h\").",
 			},
 			"resources": schema.SingleNestedAttribute{
