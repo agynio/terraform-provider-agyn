@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"google.golang.org/protobuf/proto"
 
 	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
 	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
@@ -32,6 +33,7 @@ type agentModel struct {
 	InitImage      types.String           `tfsdk:"init_image"`
 	Description    types.String           `tfsdk:"description"`
 	Configuration  types.String           `tfsdk:"configuration"`
+	IdleTimeout    types.String           `tfsdk:"idle_timeout"`
 	Resources      *computeResourcesModel `tfsdk:"resources"`
 }
 
@@ -84,6 +86,10 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				MarkdownDescription: "JSON-encoded agent configuration.",
 			},
+			"idle_timeout": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Go duration string for idle timeout (for example, \"30s\", \"5m\", \"1h\").",
+			},
 			"resources": schema.SingleNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "Compute resource requests and limits.",
@@ -135,6 +141,9 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Configuration:  stringValue(plan.Configuration),
 		Resources:      computeResourcesFromModel(plan.Resources),
 	}
+	if !plan.IdleTimeout.IsNull() && !plan.IdleTimeout.IsUnknown() {
+		input.IdleTimeout = proto.String(plan.IdleTimeout.ValueString())
+	}
 
 	agent, err := r.client.CreateAgent(ctx, input)
 	if err != nil {
@@ -158,6 +167,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		InitImage:      types.StringValue(agent.InitImage),
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
+		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
@@ -200,6 +210,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.OrganizationID = types.StringValue(agent.OrganizationId)
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
+	state.IdleTimeout = optionalString(agent.GetIdleTimeout())
 	state.Resources = computeResourcesToModel(agent.Resources)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -235,6 +246,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		InitImage:     updateStringPointer(plan.InitImage, state.InitImage),
 		Description:   updateStringPointer(plan.Description, state.Description),
 		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
+		IdleTimeout:   updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
 		Resources:     updateComputeResources(plan.Resources, state.Resources),
 	}
 
@@ -260,6 +272,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		InitImage:      types.StringValue(agent.InitImage),
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
+		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 

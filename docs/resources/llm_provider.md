@@ -35,6 +35,10 @@ resource "agyn_llm_provider" "example" {
 - `organization_id` (String) Organization identifier for the LLM provider.
 - `token` (String, Sensitive) Bearer token for the provider.
 
+### Optional
+
+- `protocol` (String) Wire protocol the provider speaks. Must be "responses" or "anthropic_messages". Defaults to "responses".
+
 ### Read-Only
 
 - `id` (String) UUID identifier of the LLM provider.

@@ -44,6 +44,7 @@ resource "agyn_agent" "example" {
 
 - `configuration` (String) JSON-encoded agent configuration.
 - `description` (String) Human-readable description.
+- `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").
 - `resources` (Attributes) Compute resource requests and limits. (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only
