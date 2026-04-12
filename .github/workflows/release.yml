@@ -21,9 +21,7 @@ jobs:
         with:
           setup_only: true
       - name: Generate protobufs
-        run: |
-          buf dep update
-          buf generate
+        run: buf generate
       - name: Import GPG key
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v5.3.0
@@ -34,7 +32,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --rm-dist
+          args: release --clean
         env:
           GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
