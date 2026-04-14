@@ -5,6 +5,7 @@ resource "agyn_organization" "example" {
 resource "agyn_agent" "example" {
   organization_id = agyn_organization.example.id
   name            = "example-agent"
+  nickname        = "example-agent"
   role            = "assistant"
   model           = "gpt-4o"
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"

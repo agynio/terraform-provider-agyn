@@ -20,6 +20,7 @@ resource "agyn_organization" "example" {
 resource "agyn_agent" "example" {
   organization_id = agyn_organization.example.id
   name            = "example-agent"
+  nickname        = "example-agent"
   role            = "assistant"
   model           = "gpt-4o"
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
@@ -45,6 +46,7 @@ resource "agyn_agent" "example" {
 - `configuration` (String) JSON-encoded agent configuration.
 - `description` (String) Human-readable description.
 - `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").
+- `nickname` (String) Optional nickname for the agent.
 - `resources` (Attributes) Compute resource requests and limits. (see [below for nested schema](#nestedatt--resources))
 
 ### Read-Only
