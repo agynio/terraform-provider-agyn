@@ -3,12 +3,15 @@ package resources
 import (
 	"context"
 	"encoding/json"
+	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/proto"
 
@@ -27,6 +30,7 @@ type agentModel struct {
 	ID             types.String           `tfsdk:"id"`
 	OrganizationID types.String           `tfsdk:"organization_id"`
 	Name           types.String           `tfsdk:"name"`
+	Nickname       types.String           `tfsdk:"nickname"`
 	Role           types.String           `tfsdk:"role"`
 	Model          types.String           `tfsdk:"model"`
 	Image          types.String           `tfsdk:"image"`
@@ -37,6 +41,8 @@ type agentModel struct {
 	Resources      *computeResourcesModel `tfsdk:"resources"`
 }
 
+var agentNicknameRegex = regexp.MustCompile("^[a-z0-9_-]+$")
+
 func NewAgentResource() resource.Resource { return &agentResource{} }
 
 func (r *agentResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -44,6 +50,11 @@ func (r *agentResource) Metadata(_ context.Context, req resource.MetadataRequest
 }
 
 func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	nicknameValidators := []validator.String{
+		stringvalidator.LengthBetween(1, 32),
+		stringvalidator.RegexMatches(agentNicknameRegex, "must contain only lowercase letters, numbers, underscores, or hyphens"),
+	}
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an Agyn agent.",
 		Attributes: map[string]schema.Attribute{
@@ -60,6 +71,11 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"name": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "Agent name.",
+			},
+			"nickname": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Optional nickname for the agent.",
+				Validators:          nicknameValidators,
 			},
 			"role": schema.StringAttribute{
 				Required:            true,
@@ -134,6 +150,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	input := &agentsv1.CreateAgentRequest{
 		OrganizationId: plan.OrganizationID.ValueString(),
 		Name:           plan.Name.ValueString(),
+		Nickname:       stringValue(plan.Nickname),
 		Role:           plan.Role.ValueString(),
 		Model:          plan.Model.ValueString(),
 		Image:          plan.Image.ValueString(),
@@ -162,6 +179,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		ID:             types.StringValue(agent.Meta.Id),
 		OrganizationID: types.StringValue(agent.OrganizationId),
 		Name:           types.StringValue(agent.Name),
+		Nickname:       optionalString(agent.Nickname),
 		Role:           types.StringValue(agent.Role),
 		Model:          types.StringValue(agent.Model),
 		Image:          types.StringValue(agent.Image),
@@ -204,6 +222,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	state.Name = types.StringValue(agent.Name)
+	state.Nickname = optionalString(agent.Nickname)
 	state.Role = types.StringValue(agent.Role)
 	state.Model = types.StringValue(agent.Model)
 	state.Image = types.StringValue(agent.Image)
@@ -241,6 +260,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	input := &agentsv1.UpdateAgentRequest{
 		Id:            plan.ID.ValueString(),
 		Name:          updateStringPointer(plan.Name, state.Name),
+		Nickname:      updateStringPointer(plan.Nickname, state.Nickname),
 		Role:          updateStringPointer(plan.Role, state.Role),
 		Model:         updateStringPointer(plan.Model, state.Model),
 		Image:         updateStringPointer(plan.Image, state.Image),
@@ -267,6 +287,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		ID:             types.StringValue(agent.Meta.Id),
 		OrganizationID: types.StringValue(agent.OrganizationId),
 		Name:           types.StringValue(agent.Name),
+		Nickname:       optionalString(agent.Nickname),
 		Role:           types.StringValue(agent.Role),
 		Model:          types.StringValue(agent.Model),
 		Image:          types.StringValue(agent.Image),
