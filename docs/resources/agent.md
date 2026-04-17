@@ -25,6 +25,7 @@ resource "agyn_agent" "example" {
   model           = "gpt-4o"
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
+  capabilities    = ["docker"]
   description     = "Example agent managed by Terraform."
 }
 ```
@@ -43,6 +44,7 @@ resource "agyn_agent" "example" {
 
 ### Optional
 
+- `capabilities` (List of String) Capabilities supported by this agent.
 - `configuration` (String) JSON-encoded agent configuration.
 - `description` (String) Human-readable description.
 - `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").

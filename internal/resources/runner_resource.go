@@ -29,6 +29,7 @@ type runnerModel struct {
 	Name           types.String `tfsdk:"name"`
 	OrganizationID types.String `tfsdk:"organization_id"`
 	Labels         types.Map    `tfsdk:"labels"`
+	Capabilities   types.List   `tfsdk:"capabilities"`
 	IdentityID     types.String `tfsdk:"identity_id"`
 	ServiceToken   types.String `tfsdk:"service_token"`
 }
@@ -61,6 +62,11 @@ func (r *runnerResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Optional:            true,
 				ElementType:         types.StringType,
 				MarkdownDescription: "Runner labels.",
+			},
+			"capabilities": schema.ListAttribute{
+				Optional:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Capabilities supported by this runner.",
 			},
 			"identity_id": schema.StringAttribute{
 				Computed:            true,
@@ -107,9 +113,16 @@ func (r *runnerResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	capabilities, diags := stringListFromPlan(ctx, plan.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &runnersv1.RegisterRunnerRequest{
-		Name:   plan.Name.ValueString(),
-		Labels: labels,
+		Name:         plan.Name.ValueString(),
+		Labels:       labels,
+		Capabilities: capabilities,
 	}
 	if !plan.OrganizationID.IsNull() && !plan.OrganizationID.IsUnknown() {
 		input.OrganizationId = proto.String(plan.OrganizationID.ValueString())
@@ -121,7 +134,7 @@ func (r *runnerResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	updatedState, diags := runnerToState(result.Runner, plan.Labels, optionalString(result.ServiceToken))
+	updatedState, diags := runnerToState(ctx, result.Runner, plan.Labels, plan.Capabilities, optionalString(result.ServiceToken))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,7 +165,7 @@ func (r *runnerResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	updatedState, diags := runnerToState(runner, state.Labels, preserveSensitiveString(state.ServiceToken, ""))
+	updatedState, diags := runnerToState(ctx, runner, state.Labels, state.Capabilities, preserveSensitiveString(state.ServiceToken, ""))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -181,10 +194,17 @@ func (r *runnerResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	capabilities, diags := stringListFromPlan(ctx, plan.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &runnersv1.UpdateRunnerRequest{
-		Id:     plan.ID.ValueString(),
-		Name:   updateStringPointer(plan.Name, state.Name),
-		Labels: labels,
+		Id:           plan.ID.ValueString(),
+		Name:         updateStringPointer(plan.Name, state.Name),
+		Labels:       labels,
+		Capabilities: capabilities,
 	}
 
 	runner, err := r.client.UpdateRunner(ctx, input)
@@ -193,7 +213,7 @@ func (r *runnerResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	updatedState, diags := runnerToState(runner, plan.Labels, preserveSensitiveString(state.ServiceToken, ""))
+	updatedState, diags := runnerToState(ctx, runner, plan.Labels, plan.Capabilities, preserveSensitiveString(state.ServiceToken, ""))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -227,16 +247,27 @@ func (r *runnerResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func runnerToState(runner *runnersv1.Runner, priorLabels types.Map, serviceToken types.String) (runnerModel, diag.Diagnostics) {
+func runnerToState(
+	ctx context.Context,
+	runner *runnersv1.Runner,
+	priorLabels types.Map,
+	priorCapabilities types.List,
+	serviceToken types.String,
+) (runnerModel, diag.Diagnostics) {
 	labels, diags := runnerLabelsToState(runner.Labels, priorLabels)
+	if diags.HasError() {
+		return runnerModel{}, diags
+	}
+	capabilities, capDiags := stringListToState(ctx, runner.Capabilities, priorCapabilities)
 	return runnerModel{
 		ID:             types.StringValue(runner.Meta.Id),
 		Name:           types.StringValue(runner.Name),
 		OrganizationID: optionalString(runner.GetOrganizationId()),
 		Labels:         labels,
+		Capabilities:   capabilities,
 		IdentityID:     optionalString(runner.IdentityId),
 		ServiceToken:   serviceToken,
-	}, diags
+	}, append(diags, capDiags...)
 }
 
 func runnerLabelsToState(labels map[string]string, prior types.Map) (types.Map, diag.Diagnostics) {
