@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -159,14 +158,7 @@ func testAccAgynAgentConfig(organizationName, title, description, role string, n
 	if nickname != nil {
 		nicknameLine = fmt.Sprintf("\n\t\tnickname    = %q", *nickname)
 	}
-	capabilityLine := ""
-	if len(capabilities) > 0 {
-		quoted := make([]string, 0, len(capabilities))
-		for _, capability := range capabilities {
-			quoted = append(quoted, fmt.Sprintf("%q", capability))
-		}
-		capabilityLine = fmt.Sprintf("\n\t\tcapabilities = [%s]", strings.Join(quoted, ", "))
-	}
+	capabilityLine := formatCapabilitiesLine(capabilities, "\t\t")
 	return fmt.Sprintf(`
 %s
 
