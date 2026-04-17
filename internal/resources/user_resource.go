@@ -116,28 +116,13 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	updateReq := &usersv1.UpdateUserRequest{IdentityId: identityID}
-	needsUpdate := false
-	if input.Name != nil {
-		updateReq.Name = input.Name
-		needsUpdate = true
-	}
-	if input.PhotoUrl != nil {
-		updateReq.PhotoUrl = input.PhotoUrl
-		needsUpdate = true
-	}
-	if input.Nickname != nil {
-		updateReq.Nickname = input.Nickname
-		needsUpdate = true
-	}
 	if clusterRole := clusterRolePointerFromPlan(plan.ClusterRole); clusterRole != nil {
-		updateReq.ClusterRole = clusterRole
-		needsUpdate = true
-	}
-
-	if needsUpdate {
+		updateReq := &usersv1.UpdateUserRequest{
+			IdentityId:  identityID,
+			ClusterRole: clusterRole,
+		}
 		if _, err := r.client.UpdateUser(ctx, updateReq); err != nil {
-			resp.Diagnostics.AddError("Unable to update user", err.Error())
+			resp.Diagnostics.AddError("Unable to update user cluster role", err.Error())
 			return
 		}
 	}
