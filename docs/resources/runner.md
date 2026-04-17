@@ -20,7 +20,6 @@ resource "agyn_organization" "example" {
 resource "agyn_runner" "example" {
   name            = "example-runner"
   organization_id = agyn_organization.example.id
-  capabilities    = ["docker"]
   labels = {
     region = "us-east-1"
   }
