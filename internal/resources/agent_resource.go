@@ -38,6 +38,7 @@ type agentModel struct {
 	Description    types.String           `tfsdk:"description"`
 	Configuration  types.String           `tfsdk:"configuration"`
 	IdleTimeout    types.String           `tfsdk:"idle_timeout"`
+	Capabilities   types.List             `tfsdk:"capabilities"`
 	Resources      *computeResourcesModel `tfsdk:"resources"`
 }
 
@@ -107,6 +108,11 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				MarkdownDescription: "Go duration string for idle timeout (for example, \"30s\", \"5m\", \"1h\").",
 			},
+			"capabilities": schema.ListAttribute{
+				Optional:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Capabilities supported by this agent.",
+			},
 			"resources": schema.SingleNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "Compute resource requests and limits.",
@@ -147,6 +153,12 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
+	capabilities, diags := stringListFromPlan(ctx, plan.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &agentsv1.CreateAgentRequest{
 		OrganizationId: plan.OrganizationID.ValueString(),
 		Name:           plan.Name.ValueString(),
@@ -157,6 +169,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		InitImage:      plan.InitImage.ValueString(),
 		Description:    stringValue(plan.Description),
 		Configuration:  stringValue(plan.Configuration),
+		Capabilities:   capabilities,
 		Resources:      computeResourcesFromModel(plan.Resources),
 	}
 	if !plan.IdleTimeout.IsNull() && !plan.IdleTimeout.IsUnknown() {
@@ -175,6 +188,12 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
+	capabilitiesState, diags := stringListToState(ctx, agent.Capabilities, plan.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	updatedState := agentModel{
 		ID:             types.StringValue(agent.Meta.Id),
 		OrganizationID: types.StringValue(agent.OrganizationId),
@@ -187,6 +206,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
 		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
+		Capabilities:   capabilitiesState,
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
@@ -221,6 +241,12 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
+	capabilitiesState, diags := stringListToState(ctx, agent.Capabilities, state.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.Name = types.StringValue(agent.Name)
 	state.Nickname = optionalString(agent.Nickname)
 	state.Role = types.StringValue(agent.Role)
@@ -231,6 +257,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
 	state.IdleTimeout = optionalString(agent.GetIdleTimeout())
+	state.Capabilities = capabilitiesState
 	state.Resources = computeResourcesToModel(agent.Resources)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -257,6 +284,12 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
+	capabilities, diags := stringListFromPlan(ctx, plan.Capabilities)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &agentsv1.UpdateAgentRequest{
 		Id:            plan.ID.ValueString(),
 		Name:          updateStringPointer(plan.Name, state.Name),
@@ -268,6 +301,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Description:   updateStringPointer(plan.Description, state.Description),
 		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
 		IdleTimeout:   updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
+		Capabilities:  capabilities,
 		Resources:     updateComputeResources(plan.Resources, state.Resources),
 	}
 
@@ -278,6 +312,12 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	configuration, diags := normalizeJSONState(plan.Configuration, agent.Configuration)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	capabilitiesState, diags := stringListToState(ctx, agent.Capabilities, plan.Capabilities)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -295,6 +335,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Description:    optionalString(agent.Description),
 		Configuration:  configuration,
 		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
+		Capabilities:   capabilitiesState,
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 

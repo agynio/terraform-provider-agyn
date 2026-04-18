@@ -35,6 +35,7 @@ resource "agyn_runner" "example" {
 
 ### Optional
 
+- `capabilities` (List of String) Capabilities supported by this runner.
 - `labels` (Map of String) Runner labels.
 - `organization_id` (String) Organization identifier for the runner.
 

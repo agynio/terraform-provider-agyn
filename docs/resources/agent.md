@@ -43,6 +43,7 @@ resource "agyn_agent" "example" {
 
 ### Optional
 
+- `capabilities` (List of String) Capabilities supported by this agent.
 - `configuration` (String) JSON-encoded agent configuration.
 - `description` (String) Human-readable description.
 - `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").
