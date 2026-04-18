@@ -26,5 +26,7 @@ inputs:
       - agynio/api/gateway/v1/llm.proto
       - agynio/api/gateway/v1/organizations.proto
       - agynio/api/gateway/v1/runners.proto
+      - agynio/api/gateway/v1/users.proto
       - agynio/api/secrets/v1/secrets.proto
       - agynio/api/gateway/v1/secrets.proto
+      - agynio/api/users/v1/users.proto
