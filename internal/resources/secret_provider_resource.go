@@ -32,7 +32,7 @@ type secretProviderVaultModel struct {
 type secretProviderModel struct {
 	ID             types.String              `tfsdk:"id"`
 	OrganizationID types.String              `tfsdk:"organization_id"`
-	Title          types.String              `tfsdk:"title"`
+	Name           types.String              `tfsdk:"name"`
 	Description    types.String              `tfsdk:"description"`
 	Type           types.String              `tfsdk:"type"`
 	Vault          *secretProviderVaultModel `tfsdk:"vault"`
@@ -61,9 +61,9 @@ func (r *secretProviderResource) Schema(_ context.Context, _ resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"title": schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Secret provider title.",
+				MarkdownDescription: "Secret provider name.",
 			},
 			"description": schema.StringAttribute{
 				Optional:            true,
@@ -123,7 +123,7 @@ func (r *secretProviderResource) Create(ctx context.Context, req resource.Create
 	}
 
 	input := &secretsv1.CreateSecretProviderRequest{
-		Title:          plan.Title.ValueString(),
+		Title:          plan.Name.ValueString(),
 		Description:    stringValue(plan.Description),
 		Type:           toProtoSecretProviderType(plan.Type.ValueString()),
 		Config:         secretProviderConfigFromModel(plan.Vault),
@@ -139,7 +139,7 @@ func (r *secretProviderResource) Create(ctx context.Context, req resource.Create
 	updatedState := secretProviderModel{
 		ID:             types.StringValue(provider.Meta.Id),
 		OrganizationID: plan.OrganizationID,
-		Title:          types.StringValue(provider.Title),
+		Name:           types.StringValue(provider.Title),
 		Description:    optionalString(provider.Description),
 		Type:           types.StringValue(fromProtoSecretProviderType(provider.Type)),
 		Vault:          secretProviderVaultState(provider, plan.Vault.Token),
@@ -174,7 +174,7 @@ func (r *secretProviderResource) Read(ctx context.Context, req resource.ReadRequ
 	if state.Vault != nil {
 		fallbackToken = state.Vault.Token
 	}
-	state.Title = types.StringValue(provider.Title)
+	state.Name = types.StringValue(provider.Title)
 	state.Description = optionalString(provider.Description)
 	state.Type = types.StringValue(fromProtoSecretProviderType(provider.Type))
 	state.Vault = secretProviderVaultState(provider, fallbackToken)
@@ -202,7 +202,7 @@ func (r *secretProviderResource) Update(ctx context.Context, req resource.Update
 
 	input := &secretsv1.UpdateSecretProviderRequest{
 		Id:          plan.ID.ValueString(),
-		Title:       updateStringPointer(plan.Title, state.Title),
+		Title:       updateStringPointer(plan.Name, state.Name),
 		Description: updateStringPointer(plan.Description, state.Description),
 		Config:      secretProviderConfigFromModel(plan.Vault),
 	}
@@ -216,7 +216,7 @@ func (r *secretProviderResource) Update(ctx context.Context, req resource.Update
 	updatedState := secretProviderModel{
 		ID:             types.StringValue(provider.Meta.Id),
 		OrganizationID: state.OrganizationID,
-		Title:          types.StringValue(provider.Title),
+		Name:           types.StringValue(provider.Title),
 		Description:    optionalString(provider.Description),
 		Type:           types.StringValue(fromProtoSecretProviderType(provider.Type)),
 		Vault:          secretProviderVaultState(provider, plan.Vault.Token),

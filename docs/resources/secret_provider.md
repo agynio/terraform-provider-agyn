@@ -19,7 +19,7 @@ resource "agyn_organization" "example" {
 
 resource "agyn_secret_provider" "example" {
   organization_id = agyn_organization.example.id
-  title           = "example-vault"
+  name            = "example-vault"
   description     = "Example Vault-backed secret provider."
   type            = "vault"
   vault = {
@@ -34,8 +34,8 @@ resource "agyn_secret_provider" "example" {
 
 ### Required
 
+- `name` (String) Secret provider name.
 - `organization_id` (String) Organization identifier for the secret provider.
-- `title` (String) Secret provider title.
 - `type` (String) Secret provider type. Only "vault" is supported.
 - `vault` (Attributes) Vault configuration. (see [below for nested schema](#nestedatt--vault))
 

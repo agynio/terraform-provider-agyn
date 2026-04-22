@@ -19,14 +19,14 @@ resource "agyn_organization" "example" {
 
 resource "agyn_secret" "local" {
   organization_id = agyn_organization.example.id
-  title           = "example-local-secret"
+  name            = "example-local-secret"
   description     = "Local secret value."
   value           = "local-secret-value"
 }
 
 resource "agyn_secret_provider" "vault" {
   organization_id = agyn_organization.example.id
-  title           = "example-vault"
+  name            = "example-vault"
   description     = "Example Vault-backed secret provider."
   type            = "vault"
   vault = {
@@ -36,11 +36,11 @@ resource "agyn_secret_provider" "vault" {
 }
 
 resource "agyn_secret" "remote" {
-  organization_id    = agyn_organization.example.id
-  title              = "example-remote-secret"
-  description        = "Vault-backed secret reference."
-  secret_provider_id = agyn_secret_provider.vault.id
-  remote_name        = "secret/platform/keys/api_key"
+  organization_id           = agyn_organization.example.id
+  name                      = "example-remote-secret"
+  description               = "Vault-backed secret reference."
+  remote_secret_provider_id = agyn_secret_provider.vault.id
+  remote_name               = "secret/platform/keys/api_key"
 }
 ```
 
@@ -49,14 +49,14 @@ resource "agyn_secret" "remote" {
 
 ### Required
 
+- `name` (String) Secret name.
 - `organization_id` (String) Organization identifier for the secret.
-- `title` (String) Secret title.
 
 ### Optional
 
 - `description` (String) Human-readable description.
-- `remote_name` (String) Remote secret reference name.
-- `secret_provider_id` (String) Secret provider identifier for remote secrets.
+- `remote_name` (String) Remote secret reference name. Format: <mount>/<path>/<key>.
+- `remote_secret_provider_id` (String) Secret provider identifier for remote secrets.
 - `value` (String, Sensitive) Plain-text secret value.
 
 ### Read-Only

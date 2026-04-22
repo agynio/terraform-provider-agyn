@@ -4,7 +4,7 @@ resource "agyn_organization" "example" {
 
 resource "agyn_secret_provider" "example" {
   organization_id = agyn_organization.example.id
-  title           = "example-vault"
+  name            = "example-vault"
   description     = "Example Vault-backed secret provider."
   type            = "vault"
   vault = {

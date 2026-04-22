@@ -11,15 +11,15 @@ import (
 
 func TestAccAgynSecretProvider_basic(t *testing.T) {
 	organizationName := acctest.RandomWithPrefix("tf-acc-org")
-	providerTitle := acctest.RandomWithPrefix("tf-acc-secret-provider")
+	providerName := acctest.RandomWithPrefix("tf-acc-secret-provider")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccSecretProviderPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynSecretProviderConfig(organizationName, providerTitle, "Terraform acceptance secret provider"),
+				Config: testAccAgynSecretProviderConfig(organizationName, providerName, "Terraform acceptance secret provider"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("agyn_secret_provider.test", "title", providerTitle),
+					resource.TestCheckResourceAttr("agyn_secret_provider.test", "name", providerName),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "description", "Terraform acceptance secret provider"),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "type", "vault"),
 					resource.TestCheckResourceAttrSet("agyn_secret_provider.test", "vault.address"),
@@ -34,15 +34,15 @@ func TestAccAgynSecretProvider_basic(t *testing.T) {
 
 func TestAccAgynSecretProvider_update(t *testing.T) {
 	organizationName := acctest.RandomWithPrefix("tf-acc-org")
-	providerTitle := acctest.RandomWithPrefix("tf-acc-secret-provider")
+	providerName := acctest.RandomWithPrefix("tf-acc-secret-provider")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccSecretProviderPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynSecretProviderConfig(organizationName, providerTitle, "Terraform acceptance secret provider"),
+				Config: testAccAgynSecretProviderConfig(organizationName, providerName, "Terraform acceptance secret provider"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("agyn_secret_provider.test", "title", providerTitle),
+					resource.TestCheckResourceAttr("agyn_secret_provider.test", "name", providerName),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "description", "Terraform acceptance secret provider"),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "type", "vault"),
 					resource.TestCheckResourceAttrSet("agyn_secret_provider.test", "vault.address"),
@@ -52,9 +52,9 @@ func TestAccAgynSecretProvider_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAgynSecretProviderConfig(organizationName, providerTitle+"-updated", "Terraform acceptance secret provider updated"),
+				Config: testAccAgynSecretProviderConfig(organizationName, providerName+"-updated", "Terraform acceptance secret provider updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("agyn_secret_provider.test", "title", providerTitle+"-updated"),
+					resource.TestCheckResourceAttr("agyn_secret_provider.test", "name", providerName+"-updated"),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "description", "Terraform acceptance secret provider updated"),
 					resource.TestCheckResourceAttr("agyn_secret_provider.test", "type", "vault"),
 					resource.TestCheckResourceAttrSet("agyn_secret_provider.test", "vault.address"),
@@ -69,13 +69,13 @@ func TestAccAgynSecretProvider_update(t *testing.T) {
 
 func TestAccAgynSecretProvider_import(t *testing.T) {
 	organizationName := acctest.RandomWithPrefix("tf-acc-org")
-	providerTitle := acctest.RandomWithPrefix("tf-acc-secret-provider")
+	providerName := acctest.RandomWithPrefix("tf-acc-secret-provider")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccSecretProviderPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynSecretProviderConfig(organizationName, providerTitle, "Terraform acceptance secret provider"),
+				Config: testAccAgynSecretProviderConfig(organizationName, providerName, "Terraform acceptance secret provider"),
 			},
 			{
 				ResourceName:            "agyn_secret_provider.test",
@@ -97,7 +97,7 @@ func testAccSecretProviderPreCheck(t *testing.T) {
 	}
 }
 
-func testAccAgynSecretProviderConfig(organizationName, title, description string) string {
+func testAccAgynSecretProviderConfig(organizationName, name, description string) string {
 	return fmt.Sprintf(`
 %s
 
@@ -107,7 +107,7 @@ resource "agyn_organization" "test" {
 
 resource "agyn_secret_provider" "test" {
 	  organization_id = agyn_organization.test.id
-	  title           = %q
+	  name            = %q
 	  description     = %q
 	  type            = "vault"
 	  vault = {
@@ -115,5 +115,5 @@ resource "agyn_secret_provider" "test" {
 		  token   = %q
 	  }
 }
-`, testAccProviderConfig(), organizationName, title, description, os.Getenv("AGYN_VAULT_ADDRESS"), os.Getenv("AGYN_VAULT_TOKEN"))
+`, testAccProviderConfig(), organizationName, name, description, os.Getenv("AGYN_VAULT_ADDRESS"), os.Getenv("AGYN_VAULT_TOKEN"))
 }
