@@ -25,16 +25,16 @@ var _ resource.Resource = &secretResource{}
 var _ resource.ResourceWithImportState = &secretResource{}
 
 type secretModel struct {
-	ID                     types.String `tfsdk:"id"`
-	OrganizationID         types.String `tfsdk:"organization_id"`
-	Name                   types.String `tfsdk:"name"`
-	Description            types.String `tfsdk:"description"`
-	Value                  types.String `tfsdk:"value"`
-	RemoteSecretProviderID types.String `tfsdk:"remote_secret_provider_id"`
-	RemoteName             types.String `tfsdk:"remote_name"`
+	ID                 types.String `tfsdk:"id"`
+	OrganizationID     types.String `tfsdk:"organization_id"`
+	Name               types.String `tfsdk:"name"`
+	Description        types.String `tfsdk:"description"`
+	Value              types.String `tfsdk:"value"`
+	ProviderID         types.String `tfsdk:"provider_id"`
+	ProviderSecretName types.String `tfsdk:"provider_secret_name"`
 }
 
-var remoteSecretNameRegex = regexp.MustCompile("^[^/]+/.+/[^/]+$")
+var providerSecretNameRegex = regexp.MustCompile("^[^/]+/.+/[^/]+$")
 
 func NewSecretResource() resource.Resource { return &secretResource{} }
 
@@ -46,14 +46,14 @@ func (r *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 	sourceValidators := []validator.String{
 		stringvalidator.ExactlyOneOf(
 			path.MatchRoot("value"),
-			path.MatchRoot("remote_secret_provider_id"),
+			path.MatchRoot("provider_id"),
 		),
 	}
 	providerValidators := append([]validator.String{}, sourceValidators...)
-	providerValidators = append(providerValidators, stringvalidator.AlsoRequires(path.MatchRoot("remote_name")))
-	remoteNameValidators := []validator.String{
-		stringvalidator.AlsoRequires(path.MatchRoot("remote_secret_provider_id")),
-		stringvalidator.RegexMatches(remoteSecretNameRegex, "must be in the format <mount>/<path>/<key>"),
+	providerValidators = append(providerValidators, stringvalidator.AlsoRequires(path.MatchRoot("provider_secret_name")))
+	providerSecretNameValidators := []validator.String{
+		stringvalidator.AlsoRequires(path.MatchRoot("provider_id")),
+		stringvalidator.RegexMatches(providerSecretNameRegex, "must be in the format <mount>/<path>/<key>"),
 	}
 
 	resp.Schema = schema.Schema{
@@ -86,15 +86,15 @@ func (r *secretResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				MarkdownDescription: "Plain-text secret value.",
 				Validators:          sourceValidators,
 			},
-			"remote_secret_provider_id": schema.StringAttribute{
+			"provider_id": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Secret provider identifier for remote secrets.",
 				Validators:          providerValidators,
 			},
-			"remote_name": schema.StringAttribute{
+			"provider_secret_name": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Remote secret reference name. Format: <mount>/<path>/<key>.",
-				Validators:          remoteNameValidators,
+				Validators:          providerSecretNameValidators,
 			},
 		},
 	}
@@ -129,7 +129,7 @@ func (r *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		Description:    stringValue(plan.Description),
 		OrganizationId: plan.OrganizationID.ValueString(),
 	}
-	if setSecretCreateSource(input, plan.Value, plan.RemoteSecretProviderID, plan.RemoteName, resp) {
+	if setSecretCreateSource(input, plan.Value, plan.ProviderID, plan.ProviderSecretName, resp) {
 		return
 	}
 
@@ -139,15 +139,15 @@ func (r *secretResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	value, remoteProviderID, remoteName := secretSourceState(secret, plan.Value)
+	value, providerID, providerSecretName := secretSourceState(secret, plan.Value)
 	updatedState := secretModel{
-		ID:                     types.StringValue(secret.Meta.Id),
-		OrganizationID:         plan.OrganizationID,
-		Name:                   types.StringValue(secret.Title),
-		Description:            optionalString(secret.Description),
-		Value:                  value,
-		RemoteSecretProviderID: remoteProviderID,
-		RemoteName:             remoteName,
+		ID:                 types.StringValue(secret.Meta.Id),
+		OrganizationID:     plan.OrganizationID,
+		Name:               types.StringValue(secret.Title),
+		Description:        optionalString(secret.Description),
+		Value:              value,
+		ProviderID:         providerID,
+		ProviderSecretName: providerSecretName,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -175,12 +175,12 @@ func (r *secretResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	value, remoteProviderID, remoteName := secretSourceState(secret, state.Value)
+	value, providerID, providerSecretName := secretSourceState(secret, state.Value)
 	state.Name = types.StringValue(secret.Title)
 	state.Description = optionalString(secret.Description)
 	state.Value = value
-	state.RemoteSecretProviderID = remoteProviderID
-	state.RemoteName = remoteName
+	state.ProviderID = providerID
+	state.ProviderSecretName = providerSecretName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -203,8 +203,8 @@ func (r *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 		Id:               plan.ID.ValueString(),
 		Title:            updateStringPointer(plan.Name, state.Name),
 		Description:      updateStringPointer(plan.Description, state.Description),
-		SecretProviderId: updateStringPointer(plan.RemoteSecretProviderID, state.RemoteSecretProviderID),
-		RemoteName:       updateStringPointer(plan.RemoteName, state.RemoteName),
+		SecretProviderId: updateStringPointer(plan.ProviderID, state.ProviderID),
+		RemoteName:       updateStringPointer(plan.ProviderSecretName, state.ProviderSecretName),
 		Value:            updateStringPointer(plan.Value, state.Value),
 	}
 
@@ -214,15 +214,15 @@ func (r *secretResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	value, remoteProviderID, remoteName := secretSourceState(secret, plan.Value)
+	value, providerID, providerSecretName := secretSourceState(secret, plan.Value)
 	updatedState := secretModel{
-		ID:                     types.StringValue(secret.Meta.Id),
-		OrganizationID:         state.OrganizationID,
-		Name:                   types.StringValue(secret.Title),
-		Description:            optionalString(secret.Description),
-		Value:                  value,
-		RemoteSecretProviderID: remoteProviderID,
-		RemoteName:             remoteName,
+		ID:                 types.StringValue(secret.Meta.Id),
+		OrganizationID:     state.OrganizationID,
+		Name:               types.StringValue(secret.Title),
+		Description:        optionalString(secret.Description),
+		Value:              value,
+		ProviderID:         providerID,
+		ProviderSecretName: providerSecretName,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -253,38 +253,38 @@ func (r *secretResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func setSecretCreateSource(req *secretsv1.CreateSecretRequest, value types.String, remoteSecretProviderID types.String, remoteName types.String, resp *resource.CreateResponse) bool {
+func setSecretCreateSource(req *secretsv1.CreateSecretRequest, value types.String, providerID types.String, providerSecretName types.String, resp *resource.CreateResponse) bool {
 	if !value.IsNull() && !value.IsUnknown() {
 		req.Value = value.ValueString()
 		return false
 	}
-	if !remoteSecretProviderID.IsNull() && !remoteSecretProviderID.IsUnknown() {
-		if remoteName.IsNull() || remoteName.IsUnknown() {
-			resp.Diagnostics.AddError("Missing remote name", "remote_name must be set when remote_secret_provider_id is provided")
+	if !providerID.IsNull() && !providerID.IsUnknown() {
+		if providerSecretName.IsNull() || providerSecretName.IsUnknown() {
+			resp.Diagnostics.AddError("Missing provider secret name", "provider_secret_name must be set when provider_id is provided")
 			return true
 		}
-		req.SecretProviderId = remoteSecretProviderID.ValueString()
-		req.RemoteName = remoteName.ValueString()
+		req.SecretProviderId = providerID.ValueString()
+		req.RemoteName = providerSecretName.ValueString()
 		return false
 	}
-	resp.Diagnostics.AddError("Missing secret source", "create secret requires value or remote_secret_provider_id")
+	resp.Diagnostics.AddError("Missing secret source", "create secret requires value or provider_id")
 	return true
 }
 
 func secretSourceState(secret *secretsv1.Secret, fallback types.String) (types.String, types.String, types.String) {
 	value := types.StringNull()
-	remoteProviderID := types.StringNull()
-	remoteName := types.StringNull()
+	providerID := types.StringNull()
+	providerSecretName := types.StringNull()
 
 	if secret.SecretProviderId != "" || secret.RemoteName != "" {
 		if secret.SecretProviderId == "" {
 			panic("unexpected secret remote reference")
 		}
-		remoteProviderID = types.StringValue(secret.SecretProviderId)
-		remoteName = optionalString(secret.RemoteName)
-		return value, remoteProviderID, remoteName
+		providerID = types.StringValue(secret.SecretProviderId)
+		providerSecretName = optionalString(secret.RemoteName)
+		return value, providerID, providerSecretName
 	}
 
 	value = preserveSensitiveString(fallback, secret.Value)
-	return value, remoteProviderID, remoteName
+	return value, providerID, providerSecretName
 }

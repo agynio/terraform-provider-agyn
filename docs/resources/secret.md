@@ -36,11 +36,11 @@ resource "agyn_secret_provider" "vault" {
 }
 
 resource "agyn_secret" "remote" {
-  organization_id           = agyn_organization.example.id
-  name                      = "example-remote-secret"
-  description               = "Vault-backed secret reference."
-  remote_secret_provider_id = agyn_secret_provider.vault.id
-  remote_name               = "secret/platform/keys/api_key"
+  organization_id      = agyn_organization.example.id
+  name                 = "example-remote-secret"
+  description          = "Vault-backed secret reference."
+  provider_id          = agyn_secret_provider.vault.id
+  provider_secret_name = "secret/platform/keys/api_key"
 }
 ```
 
@@ -55,8 +55,8 @@ resource "agyn_secret" "remote" {
 ### Optional
 
 - `description` (String) Human-readable description.
-- `remote_name` (String) Remote secret reference name. Format: <mount>/<path>/<key>.
-- `remote_secret_provider_id` (String) Secret provider identifier for remote secrets.
+- `provider_id` (String) Secret provider identifier for remote secrets.
+- `provider_secret_name` (String) Remote secret reference name. Format: <mount>/<path>/<key>.
 - `value` (String, Sensitive) Plain-text secret value.
 
 ### Read-Only

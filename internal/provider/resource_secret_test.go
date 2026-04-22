@@ -51,10 +51,10 @@ func TestAccAgynSecret_remote(t *testing.T) {
 			{
 				Config: testAccAgynSecretRemoteConfig(organizationName, providerName, secretName, "Terraform acceptance remote secret", os.Getenv("AGYN_VAULT_REMOTE_NAME")),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair("agyn_secret.test", "remote_secret_provider_id", "agyn_secret_provider.test", "id"),
+					resource.TestCheckResourceAttrPair("agyn_secret.test", "provider_id", "agyn_secret_provider.test", "id"),
 					resource.TestCheckResourceAttr("agyn_secret.test", "name", secretName),
 					resource.TestCheckResourceAttr("agyn_secret.test", "description", "Terraform acceptance remote secret"),
-					resource.TestCheckResourceAttr("agyn_secret.test", "remote_name", os.Getenv("AGYN_VAULT_REMOTE_NAME")),
+					resource.TestCheckResourceAttr("agyn_secret.test", "provider_secret_name", os.Getenv("AGYN_VAULT_REMOTE_NAME")),
 					resource.TestCheckResourceAttrSet("agyn_secret.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_secret.test", "id"),
 				),
@@ -110,8 +110,8 @@ resource "agyn_secret" "test" {
 	  organization_id   = agyn_organization.test.id
 	  name              = %q
 	  description       = %q
-	  remote_secret_provider_id = agyn_secret_provider.test.id
-	  remote_name       = %q
+	  provider_id       = agyn_secret_provider.test.id
+	  provider_secret_name = %q
 }
 `, testAccProviderConfig(), organizationName, providerName, os.Getenv("AGYN_VAULT_ADDRESS"), os.Getenv("AGYN_VAULT_TOKEN"), secretName, description, remoteName)
 }
