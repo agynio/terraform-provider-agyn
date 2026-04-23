@@ -22,3 +22,33 @@ jobs:
         run: go build ./...
       - name: Unit tests
         run: go test ./...
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: Generate protobufs
+        run: |
+          buf dep update
+          buf generate
+      - name: Build provider binary
+        run: |
+          mkdir -p dist
+          go build -o dist/terraform-provider-agyn .
+      - name: Provision cluster
+        uses: agynio/bootstrap/.github/actions/provision@0382a86ed54c603a30cceb91e2fe4eba8c2fd924
+      - name: Run E2E tests
+        uses: agynio/e2e/.github/actions/run-tests@main
+        with:
+          service: gateway
+          provider-binary: dist/terraform-provider-agyn

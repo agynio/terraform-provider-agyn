@@ -1,8 +1,8 @@
-default: testacc
+default: test
 
-.PHONY: testacc
-testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+.PHONY: test
+test:
+	go test ./... -v $(TESTARGS) -timeout 120m
 
 .PHONY: generate
 generate:
