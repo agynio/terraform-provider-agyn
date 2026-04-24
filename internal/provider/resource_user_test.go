@@ -13,18 +13,18 @@ func TestAccAgynUser_basic(t *testing.T) {
 	oidcSubject := fmt.Sprintf("%s@example.com", acctest.RandomWithPrefix("tf-acc-user"))
 	name := "Terraform acceptance user"
 	photoURL := "https://example.com/user.png"
-	nickname := acctest.RandomWithPrefix("tf-acc-nickname")
+	username := acctest.RandomWithPrefix("tf-acc-username")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccUserPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, "none"),
+				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, username, "none"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_user.test", "oidc_subject", oidcSubject),
 					resource.TestCheckResourceAttr("agyn_user.test", "name", name),
 					resource.TestCheckResourceAttr("agyn_user.test", "photo_url", photoURL),
-					resource.TestCheckResourceAttr("agyn_user.test", "nickname", nickname),
+					resource.TestCheckResourceAttr("agyn_user.test", "username", username),
 					resource.TestCheckResourceAttr("agyn_user.test", "cluster_role", "none"),
 					resource.TestCheckResourceAttrSet("agyn_user.test", "identity_id"),
 				),
@@ -37,20 +37,20 @@ func TestAccAgynUser_update(t *testing.T) {
 	oidcSubject := fmt.Sprintf("%s@example.com", acctest.RandomWithPrefix("tf-acc-user"))
 	name := "Terraform acceptance user"
 	photoURL := "https://example.com/user.png"
-	nickname := acctest.RandomWithPrefix("tf-acc-nickname")
+	username := acctest.RandomWithPrefix("tf-acc-username")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccUserPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, "none"),
+				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, username, "none"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_user.test", "cluster_role", "none"),
 					resource.TestCheckResourceAttrSet("agyn_user.test", "identity_id"),
 				),
 			},
 			{
-				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, "admin"),
+				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, username, "admin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_user.test", "cluster_role", "admin"),
 					resource.TestCheckResourceAttrSet("agyn_user.test", "identity_id"),
@@ -64,13 +64,13 @@ func TestAccAgynUser_import(t *testing.T) {
 	oidcSubject := fmt.Sprintf("%s@example.com", acctest.RandomWithPrefix("tf-acc-user"))
 	name := "Terraform acceptance user"
 	photoURL := "https://example.com/user.png"
-	nickname := acctest.RandomWithPrefix("tf-acc-nickname")
+	username := acctest.RandomWithPrefix("tf-acc-username")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		PreCheck:                 func() { testAccUserPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, "admin"),
+				Config: testAccAgynUserConfig(oidcSubject, name, photoURL, username, "admin"),
 			},
 			{
 				ResourceName:      "agyn_user.test",
@@ -88,7 +88,7 @@ func testAccUserPreCheck(t *testing.T) {
 	}
 }
 
-func testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, clusterRole string) string {
+func testAccAgynUserConfig(oidcSubject, name, photoURL, username, clusterRole string) string {
 	nameLine := ""
 	if name != "" {
 		nameLine = fmt.Sprintf("\n\t  name         = %q", name)
@@ -97,9 +97,9 @@ func testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, clusterRole st
 	if photoURL != "" {
 		photoLine = fmt.Sprintf("\n\t  photo_url    = %q", photoURL)
 	}
-	nicknameLine := ""
-	if nickname != "" {
-		nicknameLine = fmt.Sprintf("\n\t  nickname     = %q", nickname)
+	usernameLine := ""
+	if username != "" {
+		usernameLine = fmt.Sprintf("\n\t  username     = %q", username)
 	}
 	clusterLine := ""
 	if clusterRole != "" {
@@ -112,5 +112,5 @@ func testAccAgynUserConfig(oidcSubject, name, photoURL, nickname, clusterRole st
 resource "agyn_user" "test" {
 	  oidc_subject = %q%s%s%s%s
 }
-`, testAccProviderConfig(), oidcSubject, nameLine, photoLine, nicknameLine, clusterLine)
+`, testAccProviderConfig(), oidcSubject, nameLine, photoLine, usernameLine, clusterLine)
 }

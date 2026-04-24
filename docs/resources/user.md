@@ -23,8 +23,8 @@ Manages an Agyn user.
 
 - `cluster_role` (String) Cluster role for the user (admin or none).
 - `name` (String) Display name for the user.
-- `nickname` (String) Nickname for the user.
 - `photo_url` (String) Photo URL for the user.
+- `username` (String) Cluster-wide username for the user.
 
 ### Read-Only
 
