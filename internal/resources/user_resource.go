@@ -29,6 +29,7 @@ type userModel struct {
 	OIDCSubject types.String `tfsdk:"oidc_subject"`
 	Name        types.String `tfsdk:"name"`
 	PhotoURL    types.String `tfsdk:"photo_url"`
+	Nickname    types.String `tfsdk:"nickname"`
 	Username    types.String `tfsdk:"username"`
 	ClusterRole types.String `tfsdk:"cluster_role"`
 }
@@ -60,6 +61,12 @@ func (r *userResource) Schema(_ context.Context, _ resource.SchemaRequest, resp 
 			"photo_url": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Photo URL for the user.",
+			},
+			"nickname": schema.StringAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "Deprecated: use username. When set without username, the value is used as the username.",
+				DeprecationMessage:  "Deprecated: use username instead. When set without username, the value is used as the username.",
 			},
 			"username": schema.StringAttribute{
 				Optional:            true,
@@ -104,6 +111,9 @@ func (r *userResource) Create(ctx context.Context, req resource.CreateRequest, r
 	input.Name = planStringPointer(plan.Name)
 	input.PhotoUrl = planStringPointer(plan.PhotoURL)
 	input.Username = planStringPointer(plan.Username)
+	if plan.Username.IsUnknown() {
+		input.Username = planStringPointer(plan.Nickname)
+	}
 
 	user, err := r.client.CreateUser(ctx, input)
 	if err != nil {
@@ -186,7 +196,12 @@ func (r *userResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		input.PhotoUrl = value
 		needsUpdate = true
 	}
-	if value := updateStringPointer(plan.Username, state.Username); value != nil {
+	if plan.Username.IsUnknown() {
+		if value := updateStringPointer(plan.Nickname, state.Username); value != nil {
+			input.Username = value
+			needsUpdate = true
+		}
+	} else if value := updateStringPointer(plan.Username, state.Username); value != nil {
 		input.Username = value
 		needsUpdate = true
 	}
@@ -246,12 +261,19 @@ func (r *userResource) readUser(ctx context.Context, identityID string) (userMod
 		return userModel{}, err
 	}
 
+	username := optionalString(user.GetUsername())
+	nickname := username
+	if username.IsNull() {
+		nickname = optionalString(user.GetNickname())
+	}
+
 	return userModel{
 		IdentityID:  types.StringValue(value),
 		OIDCSubject: types.StringValue(user.GetOidcSubject()),
 		Name:        optionalString(user.GetName()),
 		PhotoURL:    optionalString(user.GetPhotoUrl()),
-		Username:    optionalString(user.GetUsername()),
+		Nickname:    nickname,
+		Username:    username,
 		ClusterRole: types.StringValue(fromProtoClusterRole(clusterRole)),
 	}, nil
 }
