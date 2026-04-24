@@ -23,8 +23,9 @@ Manages an Agyn user.
 
 - `cluster_role` (String) Cluster role for the user (admin or none).
 - `name` (String) Display name for the user.
-- `nickname` (String) Nickname for the user.
+- `nickname` (String, Deprecated) Deprecated: use username. When set without username, the value is used as the username.
 - `photo_url` (String) Photo URL for the user.
+- `username` (String) Cluster-wide username for the user.
 
 ### Read-Only
 
