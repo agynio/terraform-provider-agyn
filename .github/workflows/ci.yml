@@ -50,5 +50,6 @@ jobs:
       - name: Run E2E tests
         uses: agynio/e2e/.github/actions/run-tests@main
         with:
-          service: gateway
+          tag: tf_provider_agyn
+          include_smoke: false
           provider-binary: dist/terraform-provider-agyn
