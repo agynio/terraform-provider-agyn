@@ -39,10 +39,38 @@ type agentModel struct {
 	Configuration  types.String           `tfsdk:"configuration"`
 	IdleTimeout    types.String           `tfsdk:"idle_timeout"`
 	Capabilities   types.List             `tfsdk:"capabilities"`
+	Availability   types.String           `tfsdk:"availability"`
 	Resources      *computeResourcesModel `tfsdk:"resources"`
 }
 
 var agentNicknameRegex = regexp.MustCompile("^[a-z0-9_-]+$")
+
+const (
+	agentAvailabilityInternal = "internal"
+	agentAvailabilityPrivate  = "private"
+)
+
+func agentAvailabilityToProto(v string) agentsv1.AgentAvailability {
+	switch v {
+	case agentAvailabilityInternal:
+		return agentsv1.AgentAvailability_AGENT_AVAILABILITY_INTERNAL
+	case agentAvailabilityPrivate:
+		return agentsv1.AgentAvailability_AGENT_AVAILABILITY_PRIVATE
+	default:
+		return agentsv1.AgentAvailability_AGENT_AVAILABILITY_UNSPECIFIED
+	}
+}
+
+func agentAvailabilityFromProto(v agentsv1.AgentAvailability) types.String {
+	switch v {
+	case agentsv1.AgentAvailability_AGENT_AVAILABILITY_INTERNAL:
+		return types.StringValue(agentAvailabilityInternal)
+	case agentsv1.AgentAvailability_AGENT_AVAILABILITY_PRIVATE:
+		return types.StringValue(agentAvailabilityPrivate)
+	default:
+		return types.StringNull()
+	}
+}
 
 func NewAgentResource() resource.Resource { return &agentResource{} }
 
@@ -113,6 +141,13 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				ElementType:         types.StringType,
 				MarkdownDescription: "Capabilities supported by this agent.",
 			},
+			"availability": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "Agent availability. One of `internal` or `private`.",
+				Validators: []validator.String{
+					stringvalidator.OneOf(agentAvailabilityInternal, agentAvailabilityPrivate),
+				},
+			},
 			"resources": schema.SingleNestedAttribute{
 				Optional:            true,
 				MarkdownDescription: "Compute resource requests and limits.",
@@ -170,6 +205,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Description:    stringValue(plan.Description),
 		Configuration:  stringValue(plan.Configuration),
 		Capabilities:   capabilities,
+		Availability:   agentAvailabilityToProto(plan.Availability.ValueString()),
 		Resources:      computeResourcesFromModel(plan.Resources),
 	}
 	if !plan.IdleTimeout.IsNull() && !plan.IdleTimeout.IsUnknown() {
@@ -207,6 +243,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Configuration:  configuration,
 		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
 		Capabilities:   capabilitiesState,
+		Availability:   agentAvailabilityFromProto(agent.Availability),
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
@@ -258,6 +295,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Configuration = configuration
 	state.IdleTimeout = optionalString(agent.GetIdleTimeout())
 	state.Capabilities = capabilitiesState
+	state.Availability = agentAvailabilityFromProto(agent.Availability)
 	state.Resources = computeResourcesToModel(agent.Resources)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -302,6 +340,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
 		IdleTimeout:   updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
 		Capabilities:  capabilities,
+		Availability:  updateAgentAvailability(plan.Availability, state.Availability),
 		Resources:     updateComputeResources(plan.Resources, state.Resources),
 	}
 
@@ -336,10 +375,22 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Configuration:  configuration,
 		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
 		Capabilities:   capabilitiesState,
+		Availability:   agentAvailabilityFromProto(agent.Availability),
 		Resources:      computeResourcesToModel(agent.Resources),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
+}
+
+func updateAgentAvailability(plan types.String, prior types.String) *agentsv1.AgentAvailability {
+	if plan.IsUnknown() || plan.IsNull() {
+		return nil
+	}
+	if !prior.IsNull() && !prior.IsUnknown() && plan.ValueString() == prior.ValueString() {
+		return nil
+	}
+	v := agentAvailabilityToProto(plan.ValueString())
+	return &v
 }
 
 func (r *agentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

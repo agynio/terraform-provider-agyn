@@ -26,6 +26,7 @@ resource "agyn_agent" "example" {
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
+  availability    = "private"
 }
 ```
 
@@ -34,6 +35,7 @@ resource "agyn_agent" "example" {
 
 ### Required
 
+- `availability` (String) Agent availability. One of `internal` or `private`.
 - `image` (String) Container image.
 - `init_image` (String) Init container image.
 - `model` (String) Model identifier.
