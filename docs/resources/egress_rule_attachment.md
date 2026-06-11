@@ -13,9 +13,32 @@ Attaches an Agyn egress rule to an agent.
 ## Example Usage
 
 ```terraform
-resource "agyn_egress_rule_attachment" "github" {
-  rule_id  = agyn_egress_rule.github.id
-  agent_id = agyn_agent.example.id
+resource "agyn_organization" "example" {
+  name = "example-org"
+}
+
+resource "agyn_agent" "example" {
+  organization_id = agyn_organization.example.id
+  name            = "example-agent"
+  nickname        = "example-agent"
+  role            = "assistant"
+  model           = "gpt-4o"
+  image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
+  init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
+  availability    = "private"
+}
+
+resource "agyn_egress_rule" "example" {
+  organization_id = agyn_organization.example.id
+  name            = "example-api"
+  domain_pattern  = "api.example.com"
+  action          = "allow"
+}
+
+resource "agyn_egress_rule_attachment" "example" {
+  organization_id = agyn_organization.example.id
+  rule_id         = agyn_egress_rule.example.id
+  agent_id        = agyn_agent.example.id
 }
 ```
 
@@ -24,9 +47,10 @@ resource "agyn_egress_rule_attachment" "github" {
 
 ### Required
 
-- `agent_id` (String)
-- `rule_id` (String)
+- `agent_id` (String) Agent identifier.
+- `organization_id` (String) Organization identifier used to look up the attachment.
+- `rule_id` (String) Egress rule identifier.
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) UUID identifier of the egress rule attachment.
