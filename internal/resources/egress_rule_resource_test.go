@@ -63,6 +63,40 @@ func TestEgressEffectFromModel(t *testing.T) {
 	}
 }
 
+func TestEgressHeaderFromModelRequiresExactlyOneCredential(t *testing.T) {
+	_, err := egressHeaderFromModel(egressHeaderModel{Name: types.StringValue("Authorization"), Value: types.StringNull(), SecretID: types.StringNull()})
+	if err == nil {
+		t.Fatalf("expected missing credential error")
+	}
+	_, err = egressHeaderFromModel(egressHeaderModel{Name: types.StringValue("Authorization"), Value: types.StringValue("literal"), SecretID: types.StringValue("secret-id")})
+	if err == nil {
+		t.Fatalf("expected conflicting credential error")
+	}
+}
+
+func TestEgressEffectFromModelRejectsDuplicateHeaders(t *testing.T) {
+	_, err := egressEffectFromModel(egressRuleModel{Headers: []egressHeaderModel{
+		{Name: types.StringValue("Authorization"), Value: types.StringValue("one"), SecretID: types.StringNull()},
+		{Name: types.StringValue(" authorization "), Value: types.StringValue("two"), SecretID: types.StringNull()},
+	}})
+	if err == nil {
+		t.Fatalf("expected duplicate header error")
+	}
+}
+
+func TestEgressHeadersStatePreservesLiteralValuesByHeaderKey(t *testing.T) {
+	state := egressHeadersState([]*egressv1.EgressRuleHeader{
+		{Name: "X-Second", Credential: &egressv1.EgressRuleHeader_Value{}},
+		{Name: "X-First", Scheme: egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BEARER, Credential: &egressv1.EgressRuleHeader_Value{}},
+	}, []egressHeaderModel{
+		{Name: types.StringValue("X-First"), Scheme: types.StringValue("bearer"), Value: types.StringValue("first"), SecretID: types.StringNull()},
+		{Name: types.StringValue("X-Second"), Scheme: types.StringNull(), Value: types.StringValue("second"), SecretID: types.StringNull()},
+	})
+	if state[0].Value.ValueString() != "second" || state[1].Value.ValueString() != "first" {
+		t.Fatalf("unexpected preserved values: %#v", state)
+	}
+}
+
 func TestEgressActionFromStringRejectsInvalidValue(t *testing.T) {
 	if _, err := egressActionFromString("block"); err == nil {
 		t.Fatalf("expected invalid action error")

@@ -54,6 +54,10 @@ func (r *egressRuleResource) Metadata(_ context.Context, req resource.MetadataRe
 }
 
 func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+	headerCredentialPaths := []path.Expression{
+		path.MatchRelative().AtParent().AtName("value"),
+		path.MatchRelative().AtParent().AtName("secret_id"),
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an Agyn egress rule.",
 		Attributes: map[string]schema.Attribute{
@@ -71,10 +75,16 @@ func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"header": schema.ListNestedBlock{
 				MarkdownDescription: "Header to inject for matching requests.",
 				NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-					"name":      schema.StringAttribute{Required: true, MarkdownDescription: "Header name."},
-					"scheme":    schema.StringAttribute{Optional: true, MarkdownDescription: "Credential scheme. One of `bearer` or `basic`.", Validators: []validator.String{stringvalidator.OneOf("bearer", "basic")}},
-					"value":     schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "Literal header value.", Validators: []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("value"), path.MatchRelative().AtParent().AtName("secret_id"))}},
-					"secret_id": schema.StringAttribute{Optional: true, MarkdownDescription: "Secret identifier containing the header value.", Validators: []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("value"), path.MatchRelative().AtParent().AtName("secret_id"))}},
+					"name":   schema.StringAttribute{Required: true, MarkdownDescription: "Header name."},
+					"scheme": schema.StringAttribute{Optional: true, MarkdownDescription: "Credential scheme. One of `bearer` or `basic`.", Validators: []validator.String{stringvalidator.OneOf("bearer", "basic")}},
+					"value": schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "Literal header value.", Validators: []validator.String{
+						stringvalidator.AtLeastOneOf(headerCredentialPaths...),
+						stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("secret_id")),
+					}},
+					"secret_id": schema.StringAttribute{Optional: true, MarkdownDescription: "Secret identifier containing the header value.", Validators: []validator.String{
+						stringvalidator.AtLeastOneOf(headerCredentialPaths...),
+						stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("value")),
+					}},
 				}},
 			},
 		},
@@ -223,11 +233,17 @@ func egressEffectFromModel(model egressRuleModel) (*egressv1.EgressRuleEffect, e
 		return nil, err
 	}
 	effect := &egressv1.EgressRuleEffect{Action: action.Enum()}
+	seenHeaders := make(map[string]struct{}, len(model.Headers))
 	for _, headerModel := range model.Headers {
 		header, err := egressHeaderFromModel(headerModel)
 		if err != nil {
 			return nil, err
 		}
+		headerKey := egressHeaderNameKey(header.GetName())
+		if _, ok := seenHeaders[headerKey]; ok {
+			return nil, fmt.Errorf("duplicate header name %s", header.GetName())
+		}
+		seenHeaders[headerKey] = struct{}{}
 		effect.Inject = append(effect.Inject, header)
 	}
 	return effect, nil
@@ -240,11 +256,16 @@ func egressHeaderFromModel(model egressHeaderModel) (*egressv1.EgressRuleHeader,
 		return nil, err
 	}
 	header.Scheme = scheme
-	if !model.Value.IsNull() && !model.Value.IsUnknown() {
+	hasValue := !model.Value.IsNull() && !model.Value.IsUnknown()
+	hasSecretID := !model.SecretID.IsNull() && !model.SecretID.IsUnknown()
+	if hasValue && hasSecretID {
+		return nil, fmt.Errorf("header %s requires exactly one of value or secret_id", model.Name.ValueString())
+	}
+	if hasValue {
 		header.Credential = &egressv1.EgressRuleHeader_Value{Value: model.Value.ValueString()}
 		return header, nil
 	}
-	if !model.SecretID.IsNull() && !model.SecretID.IsUnknown() {
+	if hasSecretID {
 		header.Credential = &egressv1.EgressRuleHeader_SecretId{SecretId: model.SecretID.ValueString()}
 		return header, nil
 	}
@@ -265,17 +286,33 @@ func egressRuleState(rule *egressv1.EgressRule, prior egressRuleModel) egressRul
 }
 
 func egressHeadersState(headers []*egressv1.EgressRuleHeader, prior []egressHeaderModel) []egressHeaderModel {
+	priorValues := make(map[string]types.String, len(prior))
+	for _, header := range prior {
+		if header.Value.IsNull() || header.Value.IsUnknown() {
+			continue
+		}
+		priorValues[egressHeaderStateKey(header.Name.ValueString(), stringValue(header.Scheme))] = header.Value
+	}
 	state := make([]egressHeaderModel, 0, len(headers))
-	for i, header := range headers {
-		entry := egressHeaderModel{Name: types.StringValue(header.GetName()), Scheme: optionalString(egressSchemeToString(header.GetScheme())), Value: types.StringNull(), SecretID: types.StringNull()}
+	for _, header := range headers {
+		scheme := egressSchemeToString(header.GetScheme())
+		entry := egressHeaderModel{Name: types.StringValue(header.GetName()), Scheme: optionalString(scheme), Value: types.StringNull(), SecretID: types.StringNull()}
 		if header.GetSecretId() != "" {
 			entry.SecretID = types.StringValue(header.GetSecretId())
-		} else if i < len(prior) {
-			entry.Value = prior[i].Value
+		} else if priorValue, ok := priorValues[egressHeaderStateKey(header.GetName(), scheme)]; ok {
+			entry.Value = priorValue
 		}
 		state = append(state, entry)
 	}
 	return state
+}
+
+func egressHeaderStateKey(name string, scheme string) string {
+	return egressHeaderNameKey(name) + "|" + strings.ToLower(strings.TrimSpace(scheme))
+}
+
+func egressHeaderNameKey(name string) string {
+	return strings.ToLower(strings.TrimSpace(name))
 }
 
 func egressActionFromString(value string) (egressv1.EgressRuleAction, error) {
