@@ -468,7 +468,7 @@ func (v egressMethodsListValue) ListSemanticEquals(ctx context.Context, other ba
 	if diagnostics.HasError() {
 		return false, diagnostics
 	}
-	return egressMethodListsEqualFold(v.ListValue, otherList), nil
+	return egressMethodListsEqualFold(otherList, v.ListValue), nil
 }
 
 func egressMethodListsEqualFold(left basetypes.ListValue, right basetypes.ListValue) bool {

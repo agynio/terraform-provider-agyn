@@ -129,7 +129,7 @@ func TestEgressMethodsListSemanticEquals(t *testing.T) {
 	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")}))
 	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
 
-	equal, diagnostics := state.ListSemanticEquals(context.Background(), prior)
+	equal, diagnostics := prior.ListSemanticEquals(context.Background(), state)
 	if diagnostics.HasError() {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -142,7 +142,7 @@ func TestEgressMethodsListSemanticEqualsRejectsDifferentMethods(t *testing.T) {
 	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("post")}))
 	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
 
-	equal, diagnostics := state.ListSemanticEquals(context.Background(), prior)
+	equal, diagnostics := prior.ListSemanticEquals(context.Background(), state)
 	if diagnostics.HasError() {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
