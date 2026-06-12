@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
 	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
@@ -30,16 +33,16 @@ var _ resource.Resource = &egressRuleResource{}
 var _ resource.ResourceWithImportState = &egressRuleResource{}
 
 type egressRuleModel struct {
-	ID             types.String        `tfsdk:"id"`
-	OrganizationID types.String        `tfsdk:"organization_id"`
-	Name           types.String        `tfsdk:"name"`
-	Description    types.String        `tfsdk:"description"`
-	DomainPattern  types.String        `tfsdk:"domain_pattern"`
-	Ports          []types.Int32       `tfsdk:"ports"`
-	Methods        []types.String      `tfsdk:"methods"`
-	PathPattern    types.String        `tfsdk:"path_pattern"`
-	Action         types.String        `tfsdk:"action"`
-	Headers        []egressHeaderModel `tfsdk:"header"`
+	ID             types.String           `tfsdk:"id"`
+	OrganizationID types.String           `tfsdk:"organization_id"`
+	Name           types.String           `tfsdk:"name"`
+	Description    types.String           `tfsdk:"description"`
+	DomainPattern  types.String           `tfsdk:"domain_pattern"`
+	Ports          types.List             `tfsdk:"ports"`
+	Methods        egressMethodsListValue `tfsdk:"methods"`
+	PathPattern    types.String           `tfsdk:"path_pattern"`
+	Action         types.String           `tfsdk:"action"`
+	Headers        []egressHeaderModel    `tfsdk:"header"`
 }
 
 type egressHeaderModel struct {
@@ -69,7 +72,7 @@ func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"description":     schema.StringAttribute{Optional: true, MarkdownDescription: "Human-readable description."},
 			"domain_pattern":  schema.StringAttribute{Required: true, MarkdownDescription: "Destination host pattern, for example `api.example.com` or `*.example.com`."},
 			"ports":           schema.ListAttribute{Optional: true, Computed: true, ElementType: types.Int32Type, MarkdownDescription: "Destination ports to intercept. Empty uses platform defaults.", Validators: []validator.List{listvalidator.ValueInt32sAre(int32validator.Between(1, 65535))}, PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()}},
-			"methods":         schema.ListAttribute{Optional: true, Computed: true, ElementType: types.StringType, MarkdownDescription: "HTTP methods to match. Empty matches all methods.", PlanModifiers: []planmodifier.List{normalizeEgressMethodsPlan(), listplanmodifier.UseStateForUnknown()}},
+			"methods":         schema.ListAttribute{Optional: true, Computed: true, CustomType: newEgressMethodsListType(), ElementType: types.StringType, MarkdownDescription: "HTTP methods to match. Empty matches all methods.", PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()}},
 			"path_pattern":    schema.StringAttribute{Optional: true, MarkdownDescription: "Request path glob. Empty matches all paths."},
 			"action":          schema.StringAttribute{Optional: true, Computed: true, MarkdownDescription: "Rule action. One of `allow` or `deny`.", Validators: []validator.String{stringvalidator.OneOf("allow", "deny")}},
 		},
@@ -212,58 +215,50 @@ func createEgressRuleRequest(plan egressRuleModel) (*egressv1.CreateEgressRuleRe
 	return &egressv1.CreateEgressRuleRequest{OrganizationId: plan.OrganizationID.ValueString(), Name: plan.Name.ValueString(), Description: stringValue(plan.Description), Matcher: matcher, Effect: effect}, nil
 }
 
-type normalizeEgressMethodsPlanModifier struct{}
-
-func normalizeEgressMethodsPlan() planmodifier.List {
-	return normalizeEgressMethodsPlanModifier{}
+func egressMatcherFromModel(model egressRuleModel) (*egressv1.EgressRuleMatcher, error) {
+	methods, err := egressMethodsFromModel(model.Methods)
+	if err != nil {
+		return nil, err
+	}
+	ports, err := egressPortsFromModel(model.Ports)
+	if err != nil {
+		return nil, err
+	}
+	return &egressv1.EgressRuleMatcher{DomainPattern: model.DomainPattern.ValueString(), Ports: ports, Methods: methods, PathPattern: stringValue(model.PathPattern)}, nil
 }
 
-func (m normalizeEgressMethodsPlanModifier) Description(context.Context) string {
-	return "Normalizes configured egress rule methods to uppercase."
-}
-
-func (m normalizeEgressMethodsPlanModifier) MarkdownDescription(context.Context) string {
-	return "Normalizes configured egress rule methods to uppercase."
-}
-
-func (m normalizeEgressMethodsPlanModifier) PlanModifyList(_ context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
+func egressMethodsFromModel(methodsValue egressMethodsListValue) ([]string, error) {
+	if methodsValue.IsNull() || methodsValue.IsUnknown() {
+		return nil, nil
 	}
 
-	elements := req.ConfigValue.Elements()
-	normalized := make([]attr.Value, 0, len(elements))
+	elements := methodsValue.Elements()
+	methods := make([]string, 0, len(elements))
 	for _, element := range elements {
 		method, ok := element.(types.String)
-		if !ok || method.IsNull() || method.IsUnknown() {
-			return
-		}
-		normalized = append(normalized, types.StringValue(strings.ToUpper(strings.TrimSpace(method.ValueString()))))
-	}
-
-	value, diagnostics := types.ListValue(types.StringType, normalized)
-	resp.Diagnostics.Append(diagnostics...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.PlanValue = value
-}
-
-func egressMatcherFromModel(model egressRuleModel) (*egressv1.EgressRuleMatcher, error) {
-	methods := make([]string, 0, len(model.Methods))
-	for _, method := range model.Methods {
-		if method.IsNull() || method.IsUnknown() || strings.TrimSpace(method.ValueString()) == "" {
+		if !ok || method.IsNull() || method.IsUnknown() || strings.TrimSpace(method.ValueString()) == "" {
 			return nil, fmt.Errorf("methods cannot contain empty values")
 		}
 		methods = append(methods, strings.ToUpper(strings.TrimSpace(method.ValueString())))
 	}
-	ports := make([]int32, 0, len(model.Ports))
-	for _, port := range model.Ports {
-		if !port.IsNull() && !port.IsUnknown() {
-			ports = append(ports, port.ValueInt32())
-		}
+	return methods, nil
+}
+
+func egressPortsFromModel(portsValue types.List) ([]int32, error) {
+	if portsValue.IsNull() || portsValue.IsUnknown() {
+		return nil, nil
 	}
-	return &egressv1.EgressRuleMatcher{DomainPattern: model.DomainPattern.ValueString(), Ports: ports, Methods: methods, PathPattern: stringValue(model.PathPattern)}, nil
+
+	elements := portsValue.Elements()
+	ports := make([]int32, 0, len(elements))
+	for _, element := range elements {
+		port, ok := element.(types.Int32)
+		if !ok || port.IsNull() || port.IsUnknown() {
+			return nil, fmt.Errorf("ports cannot contain empty values")
+		}
+		ports = append(ports, port.ValueInt32())
+	}
+	return ports, nil
 }
 
 func egressEffectFromModel(model egressRuleModel) (*egressv1.EgressRuleEffect, error) {
@@ -313,15 +308,23 @@ func egressHeaderFromModel(model egressHeaderModel) (*egressv1.EgressRuleHeader,
 
 func egressRuleState(rule *egressv1.EgressRule, prior egressRuleModel) egressRuleModel {
 	matcher := rule.GetMatcher()
-	ports := make([]types.Int32, 0, len(matcher.GetPorts()))
-	for _, port := range matcher.GetPorts() {
-		ports = append(ports, types.Int32Value(port))
+	return egressRuleModel{ID: types.StringValue(rule.GetMeta().GetId()), OrganizationID: types.StringValue(rule.GetOrganizationId()), Name: types.StringValue(rule.GetName()), Description: optionalString(rule.GetDescription()), DomainPattern: types.StringValue(matcher.GetDomainPattern()), Ports: egressPortsState(matcher.GetPorts()), Methods: egressMethodsState(matcher.GetMethods()), PathPattern: optionalString(matcher.GetPathPattern()), Action: types.StringValue(egressActionToString(rule.GetEffect().GetAction())), Headers: egressHeadersState(rule.GetEffect().GetInject(), prior.Headers)}
+}
+
+func egressPortsState(ports []int32) types.List {
+	elements := make([]attr.Value, 0, len(ports))
+	for _, port := range ports {
+		elements = append(elements, types.Int32Value(port))
 	}
-	methods := make([]types.String, 0, len(matcher.GetMethods()))
-	for _, method := range matcher.GetMethods() {
-		methods = append(methods, types.StringValue(method))
+	return types.ListValueMust(types.Int32Type, elements)
+}
+
+func egressMethodsState(methods []string) egressMethodsListValue {
+	elements := make([]attr.Value, 0, len(methods))
+	for _, method := range methods {
+		elements = append(elements, types.StringValue(method))
 	}
-	return egressRuleModel{ID: types.StringValue(rule.GetMeta().GetId()), OrganizationID: types.StringValue(rule.GetOrganizationId()), Name: types.StringValue(rule.GetName()), Description: optionalString(rule.GetDescription()), DomainPattern: types.StringValue(matcher.GetDomainPattern()), Ports: ports, Methods: methods, PathPattern: optionalString(matcher.GetPathPattern()), Action: types.StringValue(egressActionToString(rule.GetEffect().GetAction())), Headers: egressHeadersState(rule.GetEffect().GetInject(), prior.Headers)}
+	return newEgressMethodsListValue(types.ListValueMust(types.StringType, elements))
 }
 
 func egressHeadersState(headers []*egressv1.EgressRuleHeader, prior []egressHeaderModel) []egressHeaderModel {
@@ -405,3 +408,89 @@ func egressSchemeToString(scheme egressv1.HeaderAuthScheme) string {
 }
 
 func stringPtr(value string) *string { return &value }
+
+type egressMethodsListType struct {
+	basetypes.ListType
+}
+
+func newEgressMethodsListType() egressMethodsListType {
+	return egressMethodsListType{ListType: basetypes.ListType{ElemType: types.StringType}}
+}
+
+func (t egressMethodsListType) Equal(other attr.Type) bool {
+	otherType, ok := other.(egressMethodsListType)
+	return ok && t.ListType.Equal(otherType.ListType)
+}
+
+func (t egressMethodsListType) String() string {
+	return "egressMethodsListType"
+}
+
+func (t egressMethodsListType) ValueFromList(_ context.Context, value basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
+	return newEgressMethodsListValue(value), nil
+}
+
+func (t egressMethodsListType) ValueFromTerraform(ctx context.Context, value tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.ListType.ValueFromTerraform(ctx, value)
+	if err != nil {
+		return nil, err
+	}
+	listValue, ok := attrValue.(basetypes.ListValue)
+	if !ok {
+		return nil, fmt.Errorf("unexpected egress methods value type %T", attrValue)
+	}
+	return newEgressMethodsListValue(listValue), nil
+}
+
+func (t egressMethodsListType) ValueType(context.Context) attr.Value {
+	return newEgressMethodsListValue(types.ListNull(types.StringType))
+}
+
+type egressMethodsListValue struct {
+	basetypes.ListValue
+}
+
+func newEgressMethodsListValue(value basetypes.ListValue) egressMethodsListValue {
+	return egressMethodsListValue{ListValue: value}
+}
+
+func (v egressMethodsListValue) Equal(other attr.Value) bool {
+	otherValue, ok := other.(egressMethodsListValue)
+	return ok && v.ListValue.Equal(otherValue.ListValue)
+}
+
+func (v egressMethodsListValue) Type(context.Context) attr.Type {
+	return newEgressMethodsListType()
+}
+
+func (v egressMethodsListValue) ListSemanticEquals(ctx context.Context, other basetypes.ListValuable) (bool, diag.Diagnostics) {
+	otherList, diagnostics := other.ToListValue(ctx)
+	if diagnostics.HasError() {
+		return false, diagnostics
+	}
+	return egressMethodListsEqualFold(v.ListValue, otherList), nil
+}
+
+func egressMethodListsEqualFold(left basetypes.ListValue, right basetypes.ListValue) bool {
+	if left.IsNull() || left.IsUnknown() || right.IsNull() || right.IsUnknown() {
+		return false
+	}
+
+	leftElements := left.Elements()
+	rightElements := right.Elements()
+	if len(leftElements) != len(rightElements) {
+		return false
+	}
+
+	for index := range leftElements {
+		leftMethod, leftOK := leftElements[index].(types.String)
+		rightMethod, rightOK := rightElements[index].(types.String)
+		if !leftOK || !rightOK || leftMethod.IsNull() || leftMethod.IsUnknown() || rightMethod.IsNull() || rightMethod.IsUnknown() {
+			return false
+		}
+		if !strings.EqualFold(strings.TrimSpace(leftMethod.ValueString()), strings.TrimSpace(rightMethod.ValueString())) {
+			return false
+		}
+	}
+	return true
+}

@@ -5,17 +5,19 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
 )
 
 func TestEgressMatcherFromModel(t *testing.T) {
+	ports := types.ListValueMust(types.Int32Type, []attr.Value{types.Int32Value(443)})
+	methods := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")}))
+
 	matcher, err := egressMatcherFromModel(egressRuleModel{
 		DomainPattern: types.StringValue("api.example.com"),
-		Ports:         []types.Int32{types.Int32Value(443)},
-		Methods:       []types.String{types.StringValue("get")},
+		Ports:         ports,
+		Methods:       methods,
 		PathPattern:   types.StringValue("/v1/*"),
 	})
 	if err != nil {
@@ -32,6 +34,23 @@ func TestEgressMatcherFromModel(t *testing.T) {
 	}
 	if matcher.GetPathPattern() != "/v1/*" {
 		t.Fatalf("unexpected path pattern %q", matcher.GetPathPattern())
+	}
+}
+
+func TestEgressMatcherFromModelIgnoresUnknownDefaultLists(t *testing.T) {
+	matcher, err := egressMatcherFromModel(egressRuleModel{
+		DomainPattern: types.StringValue("api.example.com"),
+		Ports:         types.ListUnknown(types.Int32Type),
+		Methods:       newEgressMethodsListValue(types.ListUnknown(types.StringType)),
+	})
+	if err != nil {
+		t.Fatalf("unexpected matcher error: %v", err)
+	}
+	if len(matcher.GetPorts()) != 0 {
+		t.Fatalf("unexpected ports %#v", matcher.GetPorts())
+	}
+	if len(matcher.GetMethods()) != 0 {
+		t.Fatalf("unexpected methods %#v", matcher.GetMethods())
 	}
 }
 
@@ -106,24 +125,28 @@ func TestEgressActionFromStringRejectsInvalidValue(t *testing.T) {
 	}
 }
 
-func TestNormalizeEgressMethodsPlanModifier(t *testing.T) {
-	config := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")})
-	resp := &planmodifier.ListResponse{}
+func TestEgressMethodsListSemanticEquals(t *testing.T) {
+	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")}))
+	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
 
-	normalizeEgressMethodsPlan().PlanModifyList(context.Background(), planmodifier.ListRequest{ConfigValue: config}, resp)
-	if resp.Diagnostics.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	equal, diagnostics := state.ListSemanticEquals(context.Background(), prior)
+	if diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
+	if !equal {
+		t.Fatalf("expected method lists to be semantically equal")
+	}
+}
 
-	elements := resp.PlanValue.Elements()
-	if len(elements) != 1 {
-		t.Fatalf("unexpected normalized methods %#v", elements)
+func TestEgressMethodsListSemanticEqualsRejectsDifferentMethods(t *testing.T) {
+	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("post")}))
+	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
+
+	equal, diagnostics := state.ListSemanticEquals(context.Background(), prior)
+	if diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
-	method, ok := elements[0].(types.String)
-	if !ok {
-		t.Fatalf("unexpected normalized method type %T", elements[0])
-	}
-	if method.ValueString() != "GET" {
-		t.Fatalf("unexpected normalized method %q", method.ValueString())
+	if equal {
+		t.Fatalf("expected method lists to differ")
 	}
 }
