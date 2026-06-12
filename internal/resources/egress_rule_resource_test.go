@@ -1,8 +1,11 @@
 package resources
 
 import (
+	"context"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
@@ -100,5 +103,27 @@ func TestEgressHeadersStatePreservesLiteralValuesByHeaderKey(t *testing.T) {
 func TestEgressActionFromStringRejectsInvalidValue(t *testing.T) {
 	if _, err := egressActionFromString("block"); err == nil {
 		t.Fatalf("expected invalid action error")
+	}
+}
+
+func TestNormalizeEgressMethodsPlanModifier(t *testing.T) {
+	config := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")})
+	resp := &planmodifier.ListResponse{}
+
+	normalizeEgressMethodsPlan().PlanModifyList(context.Background(), planmodifier.ListRequest{ConfigValue: config}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	elements := resp.PlanValue.Elements()
+	if len(elements) != 1 {
+		t.Fatalf("unexpected normalized methods %#v", elements)
+	}
+	method, ok := elements[0].(types.String)
+	if !ok {
+		t.Fatalf("unexpected normalized method type %T", elements[0])
+	}
+	if method.ValueString() != "GET" {
+		t.Fatalf("unexpected normalized method %q", method.ValueString())
 	}
 }

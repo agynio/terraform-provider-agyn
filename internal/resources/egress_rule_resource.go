@@ -8,9 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -66,8 +68,8 @@ func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"name":            schema.StringAttribute{Required: true, MarkdownDescription: "Rule name."},
 			"description":     schema.StringAttribute{Optional: true, MarkdownDescription: "Human-readable description."},
 			"domain_pattern":  schema.StringAttribute{Required: true, MarkdownDescription: "Destination host pattern, for example `api.example.com` or `*.example.com`."},
-			"ports":           schema.ListAttribute{Optional: true, ElementType: types.Int32Type, MarkdownDescription: "Destination ports to intercept. Empty uses platform defaults.", Validators: []validator.List{listvalidator.ValueInt32sAre(int32validator.Between(1, 65535))}},
-			"methods":         schema.ListAttribute{Optional: true, ElementType: types.StringType, MarkdownDescription: "HTTP methods to match. Empty matches all methods."},
+			"ports":           schema.ListAttribute{Optional: true, Computed: true, ElementType: types.Int32Type, MarkdownDescription: "Destination ports to intercept. Empty uses platform defaults.", Validators: []validator.List{listvalidator.ValueInt32sAre(int32validator.Between(1, 65535))}, PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()}},
+			"methods":         schema.ListAttribute{Optional: true, Computed: true, ElementType: types.StringType, MarkdownDescription: "HTTP methods to match. Empty matches all methods.", PlanModifiers: []planmodifier.List{normalizeEgressMethodsPlan(), listplanmodifier.UseStateForUnknown()}},
 			"path_pattern":    schema.StringAttribute{Optional: true, MarkdownDescription: "Request path glob. Empty matches all paths."},
 			"action":          schema.StringAttribute{Optional: true, Computed: true, MarkdownDescription: "Rule action. One of `allow` or `deny`.", Validators: []validator.String{stringvalidator.OneOf("allow", "deny")}},
 		},
@@ -208,6 +210,43 @@ func createEgressRuleRequest(plan egressRuleModel) (*egressv1.CreateEgressRuleRe
 		return nil, err
 	}
 	return &egressv1.CreateEgressRuleRequest{OrganizationId: plan.OrganizationID.ValueString(), Name: plan.Name.ValueString(), Description: stringValue(plan.Description), Matcher: matcher, Effect: effect}, nil
+}
+
+type normalizeEgressMethodsPlanModifier struct{}
+
+func normalizeEgressMethodsPlan() planmodifier.List {
+	return normalizeEgressMethodsPlanModifier{}
+}
+
+func (m normalizeEgressMethodsPlanModifier) Description(context.Context) string {
+	return "Normalizes configured egress rule methods to uppercase."
+}
+
+func (m normalizeEgressMethodsPlanModifier) MarkdownDescription(context.Context) string {
+	return "Normalizes configured egress rule methods to uppercase."
+}
+
+func (m normalizeEgressMethodsPlanModifier) PlanModifyList(_ context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	elements := req.ConfigValue.Elements()
+	normalized := make([]attr.Value, 0, len(elements))
+	for _, element := range elements {
+		method, ok := element.(types.String)
+		if !ok || method.IsNull() || method.IsUnknown() {
+			return
+		}
+		normalized = append(normalized, types.StringValue(strings.ToUpper(strings.TrimSpace(method.ValueString()))))
+	}
+
+	value, diagnostics := types.ListValue(types.StringType, normalized)
+	resp.Diagnostics.Append(diagnostics...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.PlanValue = value
 }
 
 func egressMatcherFromModel(model egressRuleModel) (*egressv1.EgressRuleMatcher, error) {
