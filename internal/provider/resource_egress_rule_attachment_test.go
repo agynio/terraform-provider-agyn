@@ -52,6 +52,7 @@ resource "agyn_egress_rule" "test" {
 	  organization_id = agyn_organization.test.id
 	  name            = %q
 	  domain_pattern  = "api.example.com"
+	  ports           = [443]
 	  action          = "allow"
 }
 
