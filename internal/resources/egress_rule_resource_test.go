@@ -106,6 +106,18 @@ func TestEgressEffectFromModelRejectsDuplicateHeaders(t *testing.T) {
 	}
 }
 
+func TestEgressMethodsStateNormalizesMethods(t *testing.T) {
+	state := egressMethodsState([]string{"get", " post "})
+
+	elements := state.Elements()
+	if len(elements) != 2 {
+		t.Fatalf("unexpected method count %d", len(elements))
+	}
+	if elements[0].(types.String).ValueString() != "GET" || elements[1].(types.String).ValueString() != "POST" {
+		t.Fatalf("unexpected normalized methods %#v", elements)
+	}
+}
+
 func TestEgressHeadersStatePreservesLiteralValuesByHeaderKey(t *testing.T) {
 	state := egressHeadersState([]*egressv1.EgressRuleHeader{
 		{Name: "X-Second", Credential: &egressv1.EgressRuleHeader_Value{}},

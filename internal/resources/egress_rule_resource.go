@@ -322,7 +322,7 @@ func egressPortsState(ports []int32) types.List {
 func egressMethodsState(methods []string) egressMethodsListValue {
 	elements := make([]attr.Value, 0, len(methods))
 	for _, method := range methods {
-		elements = append(elements, types.StringValue(method))
+		elements = append(elements, types.StringValue(strings.ToUpper(strings.TrimSpace(method))))
 	}
 	return newEgressMethodsListValue(types.ListValueMust(types.StringType, elements))
 }
