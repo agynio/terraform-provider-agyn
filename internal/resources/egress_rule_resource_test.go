@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
@@ -103,6 +104,25 @@ func TestEgressEffectFromModelRejectsDuplicateHeaders(t *testing.T) {
 	}})
 	if err == nil {
 		t.Fatalf("expected duplicate header error")
+	}
+}
+
+func TestNormalizeEgressMethodsPlanModifier(t *testing.T) {
+	modifier := normalizeEgressMethodsPlanModifier{}
+	config := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get"), types.StringValue(" post ")})
+	resp := &planmodifier.ListResponse{}
+
+	modifier.PlanModifyList(context.Background(), planmodifier.ListRequest{ConfigValue: config, PlanValue: config}, resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+
+	elements := resp.PlanValue.Elements()
+	if len(elements) != 2 {
+		t.Fatalf("unexpected method count %d", len(elements))
+	}
+	if elements[0].(types.String).ValueString() != "GET" || elements[1].(types.String).ValueString() != "POST" {
+		t.Fatalf("unexpected normalized methods %#v", elements)
 	}
 }
 
