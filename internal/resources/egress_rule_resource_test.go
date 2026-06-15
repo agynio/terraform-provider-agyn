@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
@@ -13,7 +12,7 @@ import (
 
 func TestEgressMatcherFromModel(t *testing.T) {
 	ports := types.ListValueMust(types.Int32Type, []attr.Value{types.Int32Value(443)})
-	methods := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")}))
+	methods := newEgressMethodsListValue(types.ListValueMust(egressMethodStringType{}, []attr.Value{egressMethodStringValue{StringValue: types.StringValue("get")}}))
 
 	matcher, err := egressMatcherFromModel(egressRuleModel{
 		DomainPattern: types.StringValue("api.example.com"),
@@ -42,7 +41,7 @@ func TestEgressMatcherFromModelIgnoresUnknownDefaultLists(t *testing.T) {
 	matcher, err := egressMatcherFromModel(egressRuleModel{
 		DomainPattern: types.StringValue("api.example.com"),
 		Ports:         types.ListUnknown(types.Int32Type),
-		Methods:       newEgressMethodsListValue(types.ListUnknown(types.StringType)),
+		Methods:       newEgressMethodsListValue(types.ListUnknown(egressMethodStringType{})),
 	})
 	if err != nil {
 		t.Fatalf("unexpected matcher error: %v", err)
@@ -107,25 +106,6 @@ func TestEgressEffectFromModelRejectsDuplicateHeaders(t *testing.T) {
 	}
 }
 
-func TestNormalizeEgressMethodsPlanModifier(t *testing.T) {
-	modifier := normalizeEgressMethodsPlanModifier{}
-	config := types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get"), types.StringValue(" post ")})
-	resp := &planmodifier.ListResponse{}
-
-	modifier.PlanModifyList(context.Background(), planmodifier.ListRequest{ConfigValue: config, PlanValue: config}, resp)
-	if resp.Diagnostics.HasError() {
-		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
-	}
-
-	elements := resp.PlanValue.Elements()
-	if len(elements) != 2 {
-		t.Fatalf("unexpected method count %d", len(elements))
-	}
-	if elements[0].(types.String).ValueString() != "GET" || elements[1].(types.String).ValueString() != "POST" {
-		t.Fatalf("unexpected normalized methods %#v", elements)
-	}
-}
-
 func TestEgressMethodsStateNormalizesMethods(t *testing.T) {
 	state := egressMethodsState([]string{"get", " post "})
 
@@ -133,7 +113,7 @@ func TestEgressMethodsStateNormalizesMethods(t *testing.T) {
 	if len(elements) != 2 {
 		t.Fatalf("unexpected method count %d", len(elements))
 	}
-	if elements[0].(types.String).ValueString() != "GET" || elements[1].(types.String).ValueString() != "POST" {
+	if elements[0].(egressMethodStringValue).ValueString() != "GET" || elements[1].(egressMethodStringValue).ValueString() != "POST" {
 		t.Fatalf("unexpected normalized methods %#v", elements)
 	}
 }
@@ -158,8 +138,8 @@ func TestEgressActionFromStringRejectsInvalidValue(t *testing.T) {
 }
 
 func TestEgressMethodsListSemanticEquals(t *testing.T) {
-	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("get")}))
-	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
+	prior := newEgressMethodsListValue(types.ListValueMust(egressMethodStringType{}, []attr.Value{egressMethodStringValue{StringValue: types.StringValue("get")}}))
+	state := newEgressMethodsListValue(types.ListValueMust(egressMethodStringType{}, []attr.Value{egressMethodStringValue{StringValue: types.StringValue("GET")}}))
 
 	equal, diagnostics := prior.ListSemanticEquals(context.Background(), state)
 	if diagnostics.HasError() {
@@ -171,8 +151,8 @@ func TestEgressMethodsListSemanticEquals(t *testing.T) {
 }
 
 func TestEgressMethodsListSemanticEqualsRejectsDifferentMethods(t *testing.T) {
-	prior := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("post")}))
-	state := newEgressMethodsListValue(types.ListValueMust(types.StringType, []attr.Value{types.StringValue("GET")}))
+	prior := newEgressMethodsListValue(types.ListValueMust(egressMethodStringType{}, []attr.Value{egressMethodStringValue{StringValue: types.StringValue("post")}}))
+	state := newEgressMethodsListValue(types.ListValueMust(egressMethodStringType{}, []attr.Value{egressMethodStringValue{StringValue: types.StringValue("GET")}}))
 
 	equal, diagnostics := prior.ListSemanticEquals(context.Background(), state)
 	if diagnostics.HasError() {

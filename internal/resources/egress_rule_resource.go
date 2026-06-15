@@ -72,7 +72,7 @@ func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"description":     schema.StringAttribute{Optional: true, MarkdownDescription: "Human-readable description."},
 			"domain_pattern":  schema.StringAttribute{Required: true, MarkdownDescription: "Destination host pattern, for example `api.example.com` or `*.example.com`."},
 			"ports":           schema.ListAttribute{Optional: true, Computed: true, ElementType: types.Int32Type, MarkdownDescription: "Destination ports to intercept. Empty uses platform defaults.", Validators: []validator.List{listvalidator.ValueInt32sAre(int32validator.Between(1, 65535))}, PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()}},
-			"methods":         schema.ListAttribute{Optional: true, Computed: true, CustomType: newEgressMethodsListType(), ElementType: types.StringType, MarkdownDescription: "HTTP methods to match. Empty matches all methods.", PlanModifiers: []planmodifier.List{normalizeEgressMethodsPlan()}},
+			"methods":         schema.ListAttribute{Optional: true, Computed: true, CustomType: newEgressMethodsListType(), ElementType: egressMethodStringType{}, MarkdownDescription: "HTTP methods to match. Empty matches all methods."},
 			"path_pattern":    schema.StringAttribute{Optional: true, MarkdownDescription: "Request path glob. Empty matches all paths."},
 			"action":          schema.StringAttribute{Optional: true, Computed: true, MarkdownDescription: "Rule action. One of `allow` or `deny`.", Validators: []validator.String{stringvalidator.OneOf("allow", "deny")}},
 		},
@@ -215,43 +215,6 @@ func createEgressRuleRequest(plan egressRuleModel) (*egressv1.CreateEgressRuleRe
 	return &egressv1.CreateEgressRuleRequest{OrganizationId: plan.OrganizationID.ValueString(), Name: plan.Name.ValueString(), Description: stringValue(plan.Description), Matcher: matcher, Effect: effect}, nil
 }
 
-type normalizeEgressMethodsPlanModifier struct{}
-
-func normalizeEgressMethodsPlan() planmodifier.List {
-	return normalizeEgressMethodsPlanModifier{}
-}
-
-func (m normalizeEgressMethodsPlanModifier) Description(context.Context) string {
-	return "Normalizes configured egress rule methods to uppercase."
-}
-
-func (m normalizeEgressMethodsPlanModifier) MarkdownDescription(context.Context) string {
-	return "Normalizes configured egress rule methods to uppercase."
-}
-
-func (m normalizeEgressMethodsPlanModifier) PlanModifyList(_ context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	elements := req.ConfigValue.Elements()
-	normalized := make([]attr.Value, 0, len(elements))
-	for _, element := range elements {
-		method, ok := element.(types.String)
-		if !ok || method.IsNull() || method.IsUnknown() {
-			return
-		}
-		normalized = append(normalized, types.StringValue(strings.ToUpper(strings.TrimSpace(method.ValueString()))))
-	}
-
-	value, diagnostics := types.ListValue(types.StringType, normalized)
-	resp.Diagnostics.Append(diagnostics...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	resp.PlanValue = value
-}
-
 func egressMatcherFromModel(model egressRuleModel) (*egressv1.EgressRuleMatcher, error) {
 	methods, err := egressMethodsFromModel(model.Methods)
 	if err != nil {
@@ -272,7 +235,7 @@ func egressMethodsFromModel(methodsValue egressMethodsListValue) ([]string, erro
 	elements := methodsValue.Elements()
 	methods := make([]string, 0, len(elements))
 	for _, element := range elements {
-		method, ok := element.(types.String)
+		method, ok := egressMethodElementString(element)
 		if !ok || method.IsNull() || method.IsUnknown() || strings.TrimSpace(method.ValueString()) == "" {
 			return nil, fmt.Errorf("methods cannot contain empty values")
 		}
@@ -359,9 +322,9 @@ func egressPortsState(ports []int32) types.List {
 func egressMethodsState(methods []string) egressMethodsListValue {
 	elements := make([]attr.Value, 0, len(methods))
 	for _, method := range methods {
-		elements = append(elements, types.StringValue(strings.ToUpper(strings.TrimSpace(method))))
+		elements = append(elements, egressMethodStringValue{StringValue: types.StringValue(strings.ToUpper(strings.TrimSpace(method)))})
 	}
-	return newEgressMethodsListValue(types.ListValueMust(types.StringType, elements))
+	return newEgressMethodsListValue(basetypes.NewListValueMust(egressMethodStringType{}, elements))
 }
 
 func egressHeadersState(headers []*egressv1.EgressRuleHeader, prior []egressHeaderModel) []egressHeaderModel {
@@ -451,7 +414,7 @@ type egressMethodsListType struct {
 }
 
 func newEgressMethodsListType() egressMethodsListType {
-	return egressMethodsListType{ListType: basetypes.ListType{ElemType: types.StringType}}
+	return egressMethodsListType{ListType: basetypes.ListType{ElemType: egressMethodStringType{}}}
 }
 
 func (t egressMethodsListType) Equal(other attr.Type) bool {
@@ -480,7 +443,64 @@ func (t egressMethodsListType) ValueFromTerraform(ctx context.Context, value tft
 }
 
 func (t egressMethodsListType) ValueType(context.Context) attr.Value {
-	return newEgressMethodsListValue(types.ListNull(types.StringType))
+	return newEgressMethodsListValue(basetypes.NewListNull(egressMethodStringType{}))
+}
+
+type egressMethodStringType struct {
+	basetypes.StringType
+}
+
+func (t egressMethodStringType) Equal(other attr.Type) bool {
+	_, ok := other.(egressMethodStringType)
+	return ok
+}
+
+func (t egressMethodStringType) String() string {
+	return "egressMethodStringType"
+}
+
+func (t egressMethodStringType) ValueFromString(_ context.Context, value basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
+	return egressMethodStringValue{StringValue: value}, nil
+}
+
+func (t egressMethodStringType) ValueFromTerraform(ctx context.Context, value tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, value)
+	if err != nil {
+		return nil, err
+	}
+	stringValue, ok := attrValue.(basetypes.StringValue)
+	if !ok {
+		return nil, fmt.Errorf("unexpected egress method value type %T", attrValue)
+	}
+	return egressMethodStringValue{StringValue: stringValue}, nil
+}
+
+func (t egressMethodStringType) ValueType(context.Context) attr.Value {
+	return egressMethodStringValue{}
+}
+
+type egressMethodStringValue struct {
+	basetypes.StringValue
+}
+
+func (v egressMethodStringValue) Equal(other attr.Value) bool {
+	otherValue, ok := other.(egressMethodStringValue)
+	return ok && v.StringValue.Equal(otherValue.StringValue)
+}
+
+func (v egressMethodStringValue) Type(context.Context) attr.Type {
+	return egressMethodStringType{}
+}
+
+func (v egressMethodStringValue) StringSemanticEquals(ctx context.Context, other basetypes.StringValuable) (bool, diag.Diagnostics) {
+	otherValue, diagnostics := other.ToStringValue(ctx)
+	if diagnostics.HasError() {
+		return false, diagnostics
+	}
+	if v.IsNull() || v.IsUnknown() || otherValue.IsNull() || otherValue.IsUnknown() {
+		return false, nil
+	}
+	return strings.EqualFold(strings.TrimSpace(v.ValueString()), strings.TrimSpace(otherValue.ValueString())), nil
 }
 
 type egressMethodsListValue struct {
@@ -520,8 +540,8 @@ func egressMethodListsEqualFold(left basetypes.ListValue, right basetypes.ListVa
 	}
 
 	for index := range leftElements {
-		leftMethod, leftOK := leftElements[index].(types.String)
-		rightMethod, rightOK := rightElements[index].(types.String)
+		leftMethod, leftOK := egressMethodElementString(leftElements[index])
+		rightMethod, rightOK := egressMethodElementString(rightElements[index])
 		if !leftOK || !rightOK || leftMethod.IsNull() || leftMethod.IsUnknown() || rightMethod.IsNull() || rightMethod.IsUnknown() {
 			return false
 		}
@@ -530,4 +550,15 @@ func egressMethodListsEqualFold(left basetypes.ListValue, right basetypes.ListVa
 		}
 	}
 	return true
+}
+
+func egressMethodElementString(value attr.Value) (basetypes.StringValue, bool) {
+	switch method := value.(type) {
+	case types.String:
+		return method, true
+	case egressMethodStringValue:
+		return method.StringValue, true
+	default:
+		return basetypes.StringValue{}, false
+	}
 }
