@@ -210,10 +210,14 @@ func egressRuleParts(plan egressRuleModel, addError func(string, string)) (*egre
 	methods := parseCSVStrings(stringValue(plan.Methods), strings.ToUpper)
 	inject := make([]*egressv1.EgressRuleHeader, 0, len(plan.Headers))
 	for _, header := range plan.Headers {
+		if headerHasLiteralValue(header) == headerHasSecretID(header) {
+			addError("Invalid injected header", "Each injected header requires exactly one of value or secret_id.")
+			return nil, nil, true
+		}
 		protoHeader := &egressv1.EgressRuleHeader{Name: header.Name.ValueString(), Scheme: headerScheme(header.Scheme.ValueString())}
-		if !header.Value.IsNull() && !header.Value.IsUnknown() {
+		if headerHasLiteralValue(header) {
 			protoHeader.Credential = &egressv1.EgressRuleHeader_Value{Value: header.Value.ValueString()}
-		} else if !header.SecretID.IsNull() && !header.SecretID.IsUnknown() {
+		} else {
 			protoHeader.Credential = &egressv1.EgressRuleHeader_SecretId{SecretId: header.SecretID.ValueString()}
 		}
 		inject = append(inject, protoHeader)
@@ -249,6 +253,14 @@ func egressRuleState(rule *egressv1.EgressRule, plan egressRuleModel) egressRule
 		}
 	}
 	return state
+}
+
+func headerHasLiteralValue(header egressHeaderModel) bool {
+	return !header.Value.IsNull() && !header.Value.IsUnknown()
+}
+
+func headerHasSecretID(header egressHeaderModel) bool {
+	return !header.SecretID.IsNull() && !header.SecretID.IsUnknown()
 }
 
 func parseCSVPorts(value string) ([]int32, error) {
