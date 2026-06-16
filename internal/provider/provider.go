@@ -103,6 +103,8 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 		resources.NewHookResource,
 		resources.NewEnvResource,
 		resources.NewInitScriptResource,
+		resources.NewEgressRuleResource,
+		resources.NewEgressRuleAttachmentResource,
 	}
 }
 

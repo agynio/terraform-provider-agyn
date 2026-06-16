@@ -25,6 +25,7 @@ type Client struct {
 	organizationsGateway gatewayv1connect.OrganizationsGatewayClient
 	llmGateway           gatewayv1connect.LLMGatewayClient
 	usersGateway         gatewayv1connect.UsersGatewayClient
+	egressGateway        gatewayv1connect.EgressRulesGatewayClient
 }
 
 func NewClient(cfg Config) (*Client, error) {
@@ -59,6 +60,7 @@ func NewClient(cfg Config) (*Client, error) {
 		organizationsGateway: gatewayv1connect.NewOrganizationsGatewayClient(httpClient, cfg.BaseURL),
 		llmGateway:           gatewayv1connect.NewLLMGatewayClient(httpClient, cfg.BaseURL),
 		usersGateway:         gatewayv1connect.NewUsersGatewayClient(httpClient, cfg.BaseURL),
+		egressGateway:        gatewayv1connect.NewEgressRulesGatewayClient(httpClient, cfg.BaseURL),
 	}, nil
 }
 
