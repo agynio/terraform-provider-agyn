@@ -92,8 +92,6 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 		resources.NewModelResource,
 		resources.NewRunnerResource,
 		resources.NewAgentResource,
-		resources.NewEgressRuleResource,
-		resources.NewEgressRuleAttachmentResource,
 		resources.NewVolumeResource,
 		resources.NewVolumeAttachmentResource,
 		resources.NewSecretProviderResource,
