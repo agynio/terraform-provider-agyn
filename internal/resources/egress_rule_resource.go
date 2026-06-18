@@ -3,18 +3,23 @@ package resources
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"google.golang.org/protobuf/proto"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 
 	egressv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/egress/v1"
 	"github.com/agynio/terraform-provider-agyn/internal/agentapi"
@@ -28,16 +33,16 @@ var _ resource.Resource = &egressRuleResource{}
 var _ resource.ResourceWithImportState = &egressRuleResource{}
 
 type egressRuleModel struct {
-	ID             types.String        `tfsdk:"id"`
-	OrganizationID types.String        `tfsdk:"organization_id"`
-	Name           types.String        `tfsdk:"name"`
-	Description    types.String        `tfsdk:"description"`
-	DomainPattern  types.String        `tfsdk:"domain_pattern"`
-	Ports          types.String        `tfsdk:"ports"`
-	Methods        types.String        `tfsdk:"methods"`
-	PathPattern    types.String        `tfsdk:"path_pattern"`
-	Action         types.String        `tfsdk:"action"`
-	Headers        []egressHeaderModel `tfsdk:"injected_header"`
+	ID             types.String           `tfsdk:"id"`
+	OrganizationID types.String           `tfsdk:"organization_id"`
+	Name           types.String           `tfsdk:"name"`
+	Description    types.String           `tfsdk:"description"`
+	DomainPattern  types.String           `tfsdk:"domain_pattern"`
+	Ports          types.List             `tfsdk:"ports"`
+	Methods        egressMethodsListValue `tfsdk:"methods"`
+	PathPattern    types.String           `tfsdk:"path_pattern"`
+	Action         types.String           `tfsdk:"action"`
+	Headers        []egressHeaderModel    `tfsdk:"header"`
 }
 
 type egressHeaderModel struct {
@@ -54,30 +59,37 @@ func (r *egressRuleResource) Metadata(_ context.Context, req resource.MetadataRe
 }
 
 func (r *egressRuleResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	credentialValidators := []validator.String{stringvalidator.ExactlyOneOf(path.MatchRelative().AtParent().AtName("value"), path.MatchRelative().AtParent().AtName("secret_id"))}
+	headerCredentialPaths := []path.Expression{
+		path.MatchRelative().AtParent().AtName("value"),
+		path.MatchRelative().AtParent().AtName("secret_id"),
+	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an Agyn egress rule.",
 		Attributes: map[string]schema.Attribute{
-			"id":              schema.StringAttribute{Computed: true, PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
-			"organization_id": schema.StringAttribute{Required: true, PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace(), stringplanmodifier.UseStateForUnknown()}},
-			"name":            schema.StringAttribute{Required: true},
-			"description":     schema.StringAttribute{Optional: true},
-			"domain_pattern":  schema.StringAttribute{Required: true},
-			"ports":           schema.StringAttribute{Optional: true, MarkdownDescription: "Comma-separated destination ports. Empty uses service defaults."},
-			"methods":         schema.StringAttribute{Optional: true, MarkdownDescription: "Comma-separated HTTP methods. Empty matches all methods."},
-			"path_pattern":    schema.StringAttribute{Optional: true},
-			"action": schema.StringAttribute{
-				Optional:   true,
-				Validators: []validator.String{stringvalidator.OneOf("allow", "deny")},
-			},
+			"id":              schema.StringAttribute{Computed: true, MarkdownDescription: "UUID identifier of the egress rule.", PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()}},
+			"organization_id": schema.StringAttribute{Required: true, MarkdownDescription: "Organization identifier for the egress rule.", PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace(), stringplanmodifier.UseStateForUnknown()}},
+			"name":            schema.StringAttribute{Required: true, MarkdownDescription: "Rule name."},
+			"description":     schema.StringAttribute{Optional: true, MarkdownDescription: "Human-readable description."},
+			"domain_pattern":  schema.StringAttribute{Required: true, MarkdownDescription: "Destination host pattern, for example `api.example.com` or `*.example.com`."},
+			"ports":           schema.ListAttribute{Optional: true, Computed: true, ElementType: types.Int32Type, MarkdownDescription: "Destination ports to intercept. Empty uses platform defaults.", Validators: []validator.List{listvalidator.ValueInt32sAre(int32validator.Between(1, 65535))}, PlanModifiers: []planmodifier.List{listplanmodifier.UseStateForUnknown()}},
+			"methods":         schema.ListAttribute{Optional: true, Computed: true, CustomType: newEgressMethodsListType(), ElementType: egressMethodStringType{}, MarkdownDescription: "HTTP methods to match. Empty matches all methods."},
+			"path_pattern":    schema.StringAttribute{Optional: true, MarkdownDescription: "Request path glob. Empty matches all paths."},
+			"action":          schema.StringAttribute{Optional: true, Computed: true, MarkdownDescription: "Rule action. One of `allow` or `deny`.", Validators: []validator.String{stringvalidator.OneOf("allow", "deny")}},
 		},
 		Blocks: map[string]schema.Block{
-			"injected_header": schema.ListNestedBlock{
+			"header": schema.ListNestedBlock{
+				MarkdownDescription: "Header to inject for matching requests.",
 				NestedObject: schema.NestedBlockObject{Attributes: map[string]schema.Attribute{
-					"name":      schema.StringAttribute{Required: true},
-					"scheme":    schema.StringAttribute{Optional: true, Validators: []validator.String{stringvalidator.OneOf("bearer", "basic")}},
-					"value":     schema.StringAttribute{Optional: true, Sensitive: true, Validators: credentialValidators},
-					"secret_id": schema.StringAttribute{Optional: true, Validators: credentialValidators},
+					"name":   schema.StringAttribute{Required: true, MarkdownDescription: "Header name."},
+					"scheme": schema.StringAttribute{Optional: true, MarkdownDescription: "Credential scheme. One of `bearer` or `basic`.", Validators: []validator.String{stringvalidator.OneOf("bearer", "basic")}},
+					"value": schema.StringAttribute{Optional: true, Sensitive: true, MarkdownDescription: "Literal header value.", Validators: []validator.String{
+						stringvalidator.AtLeastOneOf(headerCredentialPaths...),
+						stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("secret_id")),
+					}},
+					"secret_id": schema.StringAttribute{Optional: true, MarkdownDescription: "Secret identifier containing the header value.", Validators: []validator.String{
+						stringvalidator.AtLeastOneOf(headerCredentialPaths...),
+						stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("value")),
+					}},
 				}},
 			},
 		},
@@ -106,8 +118,9 @@ func (r *egressRuleResource) Create(ctx context.Context, req resource.CreateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input, stop := egressRuleCreateRequest(plan, resp)
-	if stop {
+	input, err := createEgressRuleRequest(plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid egress rule", err.Error())
 		return
 	}
 	rule, err := r.client.CreateEgressRule(ctx, input)
@@ -150,11 +163,17 @@ func (r *egressRuleResource) Update(ctx context.Context, req resource.UpdateRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input, stop := egressRuleUpdateRequest(plan, resp)
-	if stop {
+	matcher, err := egressMatcherFromModel(plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid egress matcher", err.Error())
 		return
 	}
-	rule, err := r.client.UpdateEgressRule(ctx, input)
+	effect, err := egressEffectFromModel(plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid egress effect", err.Error())
+		return
+	}
+	rule, err := r.client.UpdateEgressRule(ctx, &egressv1.UpdateEgressRuleRequest{Id: plan.ID.ValueString(), Name: stringPtr(plan.Name.ValueString()), Description: stringPtr(stringValue(plan.Description)), Matcher: matcher, Effect: effect})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update egress rule", err.Error())
 		return
@@ -172,7 +191,10 @@ func (r *egressRuleResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	if err := r.client.DeleteEgressRule(ctx, state.ID.ValueString()); err != nil && !agentapi.IsNotFound(err) {
+	if err := r.client.DeleteEgressRule(ctx, state.ID.ValueString()); err != nil {
+		if agentapi.IsNotFound(err) {
+			return
+		}
 		resp.Diagnostics.AddError("Unable to delete egress rule", err.Error())
 	}
 }
@@ -181,163 +203,362 @@ func (r *egressRuleResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func egressRuleCreateRequest(plan egressRuleModel, resp *resource.CreateResponse) (*egressv1.CreateEgressRuleRequest, bool) {
-	matcher, effect, stop := egressRuleParts(plan, resp.Diagnostics.AddError)
-	if stop {
-		return nil, true
-	}
-	return &egressv1.CreateEgressRuleRequest{OrganizationId: plan.OrganizationID.ValueString(), Name: plan.Name.ValueString(), Description: stringValue(plan.Description), Matcher: matcher, Effect: effect}, false
-}
-
-func egressRuleUpdateRequest(plan egressRuleModel, resp *resource.UpdateResponse) (*egressv1.UpdateEgressRuleRequest, bool) {
-	matcher, effect, stop := egressRuleParts(plan, resp.Diagnostics.AddError)
-	if stop {
-		return nil, true
-	}
-	return &egressv1.UpdateEgressRuleRequest{Id: plan.ID.ValueString(), Name: proto.String(plan.Name.ValueString()), Description: proto.String(stringValue(plan.Description)), Matcher: matcher, Effect: effect}, false
-}
-
-func egressRuleParts(plan egressRuleModel, addError func(string, string)) (*egressv1.EgressRuleMatcher, *egressv1.EgressRuleEffect, bool) {
-	if len(plan.Headers) == 0 && plan.Action.IsNull() {
-		addError("Invalid egress rule", "Egress rule requires an action or at least one injected header.")
-		return nil, nil, true
-	}
-	ports, err := parseCSVPorts(stringValue(plan.Ports))
+func createEgressRuleRequest(plan egressRuleModel) (*egressv1.CreateEgressRuleRequest, error) {
+	matcher, err := egressMatcherFromModel(plan)
 	if err != nil {
-		addError("Invalid ports", err.Error())
-		return nil, nil, true
+		return nil, err
 	}
-	methods := parseCSVStrings(stringValue(plan.Methods), strings.ToUpper)
-	inject := make([]*egressv1.EgressRuleHeader, 0, len(plan.Headers))
-	for _, header := range plan.Headers {
-		if headerHasLiteralValue(header) == headerHasSecretID(header) {
-			addError("Invalid injected header", "Each injected header requires exactly one of value or secret_id.")
-			return nil, nil, true
-		}
-		protoHeader := &egressv1.EgressRuleHeader{Name: header.Name.ValueString(), Scheme: headerScheme(header.Scheme.ValueString())}
-		if headerHasLiteralValue(header) {
-			protoHeader.Credential = &egressv1.EgressRuleHeader_Value{Value: header.Value.ValueString()}
-		} else {
-			protoHeader.Credential = &egressv1.EgressRuleHeader_SecretId{SecretId: header.SecretID.ValueString()}
-		}
-		inject = append(inject, protoHeader)
+	effect, err := egressEffectFromModel(plan)
+	if err != nil {
+		return nil, err
 	}
-	effect := &egressv1.EgressRuleEffect{Inject: inject}
-	if !plan.Action.IsNull() && !plan.Action.IsUnknown() {
-		action := egressAction(plan.Action.ValueString())
-		effect.Action = &action
-	}
-	return &egressv1.EgressRuleMatcher{DomainPattern: plan.DomainPattern.ValueString(), Ports: ports, Methods: methods, PathPattern: stringValue(plan.PathPattern)}, effect, false
+	return &egressv1.CreateEgressRuleRequest{OrganizationId: plan.OrganizationID.ValueString(), Name: plan.Name.ValueString(), Description: stringValue(plan.Description), Matcher: matcher, Effect: effect}, nil
 }
 
-func egressRuleState(rule *egressv1.EgressRule, plan egressRuleModel) egressRuleModel {
-	state := plan
-	state.ID = types.StringValue(rule.GetMeta().GetId())
-	state.OrganizationID = types.StringValue(rule.GetOrganizationId())
-	state.Name = types.StringValue(rule.GetName())
-	state.Description = optionalString(rule.GetDescription())
-	state.DomainPattern = types.StringValue(rule.GetMatcher().GetDomainPattern())
-	state.Ports = optionalString(formatInt32CSV(rule.GetMatcher().GetPorts()))
-	state.Methods = optionalString(strings.Join(rule.GetMatcher().GetMethods(), ","))
-	state.PathPattern = optionalString(rule.GetMatcher().GetPathPattern())
-	state.Action = optionalString(actionFromProto(rule.GetEffect().GetAction()))
-	for i, header := range rule.GetEffect().GetInject() {
-		if i >= len(state.Headers) {
-			state.Headers = append(state.Headers, egressHeaderModel{})
-		}
-		state.Headers[i].Name = types.StringValue(header.GetName())
-		state.Headers[i].Scheme = optionalString(schemeFromProto(header.GetScheme()))
-		if secretID := header.GetSecretId(); secretID != "" {
-			state.Headers[i].SecretID = types.StringValue(secretID)
-			state.Headers[i].Value = types.StringNull()
-		}
+func egressMatcherFromModel(model egressRuleModel) (*egressv1.EgressRuleMatcher, error) {
+	methods, err := egressMethodsFromModel(model.Methods)
+	if err != nil {
+		return nil, err
 	}
-	return state
+	ports, err := egressPortsFromModel(model.Ports)
+	if err != nil {
+		return nil, err
+	}
+	return &egressv1.EgressRuleMatcher{DomainPattern: model.DomainPattern.ValueString(), Ports: ports, Methods: methods, PathPattern: stringValue(model.PathPattern)}, nil
 }
 
-func headerHasLiteralValue(header egressHeaderModel) bool {
-	return !header.Value.IsNull() && !header.Value.IsUnknown()
-}
-
-func headerHasSecretID(header egressHeaderModel) bool {
-	return !header.SecretID.IsNull() && !header.SecretID.IsUnknown()
-}
-
-func parseCSVPorts(value string) ([]int32, error) {
-	if strings.TrimSpace(value) == "" {
+func egressMethodsFromModel(methodsValue egressMethodsListValue) ([]string, error) {
+	if methodsValue.IsNull() || methodsValue.IsUnknown() {
 		return nil, nil
 	}
-	parts := strings.Split(value, ",")
-	ports := make([]int32, 0, len(parts))
-	for _, part := range parts {
-		parsed, err := strconv.Atoi(strings.TrimSpace(part))
-		if err != nil || parsed < 1 || parsed > 65535 {
-			return nil, fmt.Errorf("ports must be comma-separated integers between 1 and 65535")
+
+	elements := methodsValue.Elements()
+	methods := make([]string, 0, len(elements))
+	for _, element := range elements {
+		method, ok := egressMethodElementString(element)
+		if !ok || method.IsNull() || method.IsUnknown() || strings.TrimSpace(method.ValueString()) == "" {
+			return nil, fmt.Errorf("methods cannot contain empty values")
 		}
-		ports = append(ports, int32(parsed))
+		methods = append(methods, strings.ToUpper(strings.TrimSpace(method.ValueString())))
+	}
+	return methods, nil
+}
+
+func egressPortsFromModel(portsValue types.List) ([]int32, error) {
+	if portsValue.IsNull() || portsValue.IsUnknown() {
+		return nil, nil
+	}
+
+	elements := portsValue.Elements()
+	ports := make([]int32, 0, len(elements))
+	for _, element := range elements {
+		port, ok := element.(types.Int32)
+		if !ok || port.IsNull() || port.IsUnknown() {
+			return nil, fmt.Errorf("ports cannot contain empty values")
+		}
+		ports = append(ports, port.ValueInt32())
 	}
 	return ports, nil
 }
 
-func parseCSVStrings(value string, transform func(string) string) []string {
-	if strings.TrimSpace(value) == "" {
-		return nil
+func egressEffectFromModel(model egressRuleModel) (*egressv1.EgressRuleEffect, error) {
+	action, err := egressActionFromString(stringValue(model.Action))
+	if err != nil {
+		return nil, err
 	}
-	parts := strings.Split(value, ",")
-	values := make([]string, 0, len(parts))
-	for _, part := range parts {
-		trimmed := strings.TrimSpace(part)
-		if trimmed != "" {
-			values = append(values, transform(trimmed))
+	effect := &egressv1.EgressRuleEffect{Action: action.Enum()}
+	seenHeaders := make(map[string]struct{}, len(model.Headers))
+	for _, headerModel := range model.Headers {
+		header, err := egressHeaderFromModel(headerModel)
+		if err != nil {
+			return nil, err
 		}
+		headerKey := egressHeaderNameKey(header.GetName())
+		if _, ok := seenHeaders[headerKey]; ok {
+			return nil, fmt.Errorf("duplicate header name %s", header.GetName())
+		}
+		seenHeaders[headerKey] = struct{}{}
+		effect.Inject = append(effect.Inject, header)
 	}
-	return values
+	return effect, nil
 }
 
-func formatInt32CSV(values []int32) string {
-	parts := make([]string, len(values))
-	for i, value := range values {
-		parts[i] = strconv.Itoa(int(value))
+func egressHeaderFromModel(model egressHeaderModel) (*egressv1.EgressRuleHeader, error) {
+	header := &egressv1.EgressRuleHeader{Name: model.Name.ValueString()}
+	scheme, err := egressSchemeFromString(stringValue(model.Scheme))
+	if err != nil {
+		return nil, err
 	}
-	return strings.Join(parts, ",")
+	header.Scheme = scheme
+	hasValue := !model.Value.IsNull() && !model.Value.IsUnknown()
+	hasSecretID := !model.SecretID.IsNull() && !model.SecretID.IsUnknown()
+	if hasValue && hasSecretID {
+		return nil, fmt.Errorf("header %s requires exactly one of value or secret_id", model.Name.ValueString())
+	}
+	if hasValue {
+		header.Credential = &egressv1.EgressRuleHeader_Value{Value: model.Value.ValueString()}
+		return header, nil
+	}
+	if hasSecretID {
+		header.Credential = &egressv1.EgressRuleHeader_SecretId{SecretId: model.SecretID.ValueString()}
+		return header, nil
+	}
+	return nil, fmt.Errorf("header %s requires value or secret_id", model.Name.ValueString())
 }
 
-func egressAction(value string) egressv1.EgressRuleAction {
-	if value == "deny" {
-		return egressv1.EgressRuleAction_EGRESS_RULE_ACTION_DENY
-	}
-	return egressv1.EgressRuleAction_EGRESS_RULE_ACTION_ALLOW
+func egressRuleState(rule *egressv1.EgressRule, prior egressRuleModel) egressRuleModel {
+	matcher := rule.GetMatcher()
+	return egressRuleModel{ID: types.StringValue(rule.GetMeta().GetId()), OrganizationID: types.StringValue(rule.GetOrganizationId()), Name: types.StringValue(rule.GetName()), Description: optionalString(rule.GetDescription()), DomainPattern: types.StringValue(matcher.GetDomainPattern()), Ports: egressPortsState(matcher.GetPorts()), Methods: egressMethodsState(matcher.GetMethods()), PathPattern: optionalString(matcher.GetPathPattern()), Action: types.StringValue(egressActionToString(rule.GetEffect().GetAction())), Headers: egressHeadersState(rule.GetEffect().GetInject(), prior.Headers)}
 }
 
-func actionFromProto(value egressv1.EgressRuleAction) string {
-	switch value {
+func egressPortsState(ports []int32) types.List {
+	elements := make([]attr.Value, 0, len(ports))
+	for _, port := range ports {
+		elements = append(elements, types.Int32Value(port))
+	}
+	return types.ListValueMust(types.Int32Type, elements)
+}
+
+func egressMethodsState(methods []string) egressMethodsListValue {
+	elements := make([]attr.Value, 0, len(methods))
+	for _, method := range methods {
+		elements = append(elements, egressMethodStringValue{StringValue: types.StringValue(strings.ToUpper(strings.TrimSpace(method)))})
+	}
+	return newEgressMethodsListValue(basetypes.NewListValueMust(egressMethodStringType{}, elements))
+}
+
+func egressHeadersState(headers []*egressv1.EgressRuleHeader, prior []egressHeaderModel) []egressHeaderModel {
+	priorValues := make(map[string]types.String, len(prior))
+	for _, header := range prior {
+		if header.Value.IsNull() || header.Value.IsUnknown() {
+			continue
+		}
+		priorValues[egressHeaderStateKey(header.Name.ValueString(), stringValue(header.Scheme))] = header.Value
+	}
+	state := make([]egressHeaderModel, 0, len(headers))
+	for _, header := range headers {
+		scheme := egressSchemeToString(header.GetScheme())
+		entry := egressHeaderModel{Name: types.StringValue(header.GetName()), Scheme: optionalString(scheme), Value: types.StringNull(), SecretID: types.StringNull()}
+		if header.GetSecretId() != "" {
+			entry.SecretID = types.StringValue(header.GetSecretId())
+		} else if priorValue, ok := priorValues[egressHeaderStateKey(header.GetName(), scheme)]; ok {
+			entry.Value = priorValue
+		}
+		state = append(state, entry)
+	}
+	return state
+}
+
+func egressHeaderStateKey(name string, scheme string) string {
+	return egressHeaderNameKey(name) + "|" + strings.ToLower(strings.TrimSpace(scheme))
+}
+
+func egressHeaderNameKey(name string) string {
+	return strings.ToLower(strings.TrimSpace(name))
+}
+
+func egressActionFromString(value string) (egressv1.EgressRuleAction, error) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "", "allow":
+		return egressv1.EgressRuleAction_EGRESS_RULE_ACTION_ALLOW, nil
+	case "deny":
+		return egressv1.EgressRuleAction_EGRESS_RULE_ACTION_DENY, nil
+	default:
+		return egressv1.EgressRuleAction_EGRESS_RULE_ACTION_UNSPECIFIED, fmt.Errorf("action must be allow or deny")
+	}
+}
+
+func egressActionToString(action egressv1.EgressRuleAction) string {
+	switch action {
 	case egressv1.EgressRuleAction_EGRESS_RULE_ACTION_ALLOW:
 		return "allow"
 	case egressv1.EgressRuleAction_EGRESS_RULE_ACTION_DENY:
 		return "deny"
-	default:
+	case egressv1.EgressRuleAction_EGRESS_RULE_ACTION_UNSPECIFIED:
 		return ""
-	}
-}
-
-func headerScheme(value string) egressv1.HeaderAuthScheme {
-	switch value {
-	case "bearer":
-		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BEARER
-	case "basic":
-		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BASIC
 	default:
-		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_UNSPECIFIED
+		panic("unsupported egress rule action " + action.String())
 	}
 }
 
-func schemeFromProto(value egressv1.HeaderAuthScheme) string {
-	switch value {
+func egressSchemeFromString(value string) (egressv1.HeaderAuthScheme, error) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "":
+		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_UNSPECIFIED, nil
+	case "bearer":
+		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BEARER, nil
+	case "basic":
+		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BASIC, nil
+	default:
+		return egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_UNSPECIFIED, fmt.Errorf("scheme must be bearer or basic")
+	}
+}
+
+func egressSchemeToString(scheme egressv1.HeaderAuthScheme) string {
+	switch scheme {
 	case egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BEARER:
 		return "bearer"
 	case egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_BASIC:
 		return "basic"
-	default:
+	case egressv1.HeaderAuthScheme_HEADER_AUTH_SCHEME_UNSPECIFIED:
 		return ""
+	default:
+		panic("unsupported egress header scheme " + scheme.String())
+	}
+}
+
+func stringPtr(value string) *string { return &value }
+
+type egressMethodsListType struct {
+	basetypes.ListType
+}
+
+func newEgressMethodsListType() egressMethodsListType {
+	return egressMethodsListType{ListType: basetypes.ListType{ElemType: egressMethodStringType{}}}
+}
+
+func (t egressMethodsListType) Equal(other attr.Type) bool {
+	otherType, ok := other.(egressMethodsListType)
+	return ok && t.ListType.Equal(otherType.ListType)
+}
+
+func (t egressMethodsListType) String() string {
+	return "egressMethodsListType"
+}
+
+func (t egressMethodsListType) ValueFromList(_ context.Context, value basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
+	return newEgressMethodsListValue(value), nil
+}
+
+func (t egressMethodsListType) ValueFromTerraform(ctx context.Context, value tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.ListType.ValueFromTerraform(ctx, value)
+	if err != nil {
+		return nil, err
+	}
+	listValue, ok := attrValue.(basetypes.ListValue)
+	if !ok {
+		return nil, fmt.Errorf("unexpected egress methods value type %T", attrValue)
+	}
+	return newEgressMethodsListValue(listValue), nil
+}
+
+func (t egressMethodsListType) ValueType(context.Context) attr.Value {
+	return newEgressMethodsListValue(basetypes.NewListNull(egressMethodStringType{}))
+}
+
+type egressMethodStringType struct {
+	basetypes.StringType
+}
+
+func (t egressMethodStringType) Equal(other attr.Type) bool {
+	_, ok := other.(egressMethodStringType)
+	return ok
+}
+
+func (t egressMethodStringType) String() string {
+	return "egressMethodStringType"
+}
+
+func (t egressMethodStringType) ValueFromString(_ context.Context, value basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
+	return egressMethodStringValue{StringValue: value}, nil
+}
+
+func (t egressMethodStringType) ValueFromTerraform(ctx context.Context, value tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, value)
+	if err != nil {
+		return nil, err
+	}
+	stringValue, ok := attrValue.(basetypes.StringValue)
+	if !ok {
+		return nil, fmt.Errorf("unexpected egress method value type %T", attrValue)
+	}
+	return egressMethodStringValue{StringValue: stringValue}, nil
+}
+
+func (t egressMethodStringType) ValueType(context.Context) attr.Value {
+	return egressMethodStringValue{}
+}
+
+type egressMethodStringValue struct {
+	basetypes.StringValue
+}
+
+func (v egressMethodStringValue) Equal(other attr.Value) bool {
+	otherValue, ok := other.(egressMethodStringValue)
+	return ok && v.StringValue.Equal(otherValue.StringValue)
+}
+
+func (v egressMethodStringValue) Type(context.Context) attr.Type {
+	return egressMethodStringType{}
+}
+
+func (v egressMethodStringValue) StringSemanticEquals(ctx context.Context, other basetypes.StringValuable) (bool, diag.Diagnostics) {
+	otherValue, diagnostics := other.ToStringValue(ctx)
+	if diagnostics.HasError() {
+		return false, diagnostics
+	}
+	if v.IsNull() || v.IsUnknown() || otherValue.IsNull() || otherValue.IsUnknown() {
+		return false, nil
+	}
+	return strings.EqualFold(strings.TrimSpace(v.ValueString()), strings.TrimSpace(otherValue.ValueString())), nil
+}
+
+type egressMethodsListValue struct {
+	basetypes.ListValue
+}
+
+func newEgressMethodsListValue(value basetypes.ListValue) egressMethodsListValue {
+	return egressMethodsListValue{ListValue: value}
+}
+
+func (v egressMethodsListValue) Equal(other attr.Value) bool {
+	otherValue, ok := other.(egressMethodsListValue)
+	return ok && v.ListValue.Equal(otherValue.ListValue)
+}
+
+func (v egressMethodsListValue) Type(context.Context) attr.Type {
+	return newEgressMethodsListType()
+}
+
+func (v egressMethodsListValue) ListSemanticEquals(ctx context.Context, other basetypes.ListValuable) (bool, diag.Diagnostics) {
+	otherList, diagnostics := other.ToListValue(ctx)
+	if diagnostics.HasError() {
+		return false, diagnostics
+	}
+	return egressMethodListsEqualFold(otherList, v.ListValue), nil
+}
+
+func egressMethodListsEqualFold(left basetypes.ListValue, right basetypes.ListValue) bool {
+	if left.IsNull() || left.IsUnknown() || right.IsNull() || right.IsUnknown() {
+		return false
+	}
+
+	leftElements := left.Elements()
+	rightElements := right.Elements()
+	if len(leftElements) != len(rightElements) {
+		return false
+	}
+
+	for index := range leftElements {
+		leftMethod, leftOK := egressMethodElementString(leftElements[index])
+		rightMethod, rightOK := egressMethodElementString(rightElements[index])
+		if !leftOK || !rightOK || leftMethod.IsNull() || leftMethod.IsUnknown() || rightMethod.IsNull() || rightMethod.IsUnknown() {
+			return false
+		}
+		if !strings.EqualFold(strings.TrimSpace(leftMethod.ValueString()), strings.TrimSpace(rightMethod.ValueString())) {
+			return false
+		}
+	}
+	return true
+}
+
+func egressMethodElementString(value attr.Value) (basetypes.StringValue, bool) {
+	switch method := value.(type) {
+	case types.String:
+		return method, true
+	case egressMethodStringValue:
+		return method.StringValue, true
+	default:
+		return basetypes.StringValue{}, false
 	}
 }

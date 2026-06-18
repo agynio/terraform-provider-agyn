@@ -13,19 +13,30 @@ Manages an Agyn egress rule.
 ## Example Usage
 
 ```terraform
-resource "agyn_egress_rule" "github" {
+resource "agyn_organization" "example" {
+  name = "example-org"
+}
+
+resource "agyn_secret" "api_token" {
   organization_id = agyn_organization.example.id
-  name            = "github-api"
-  domain_pattern  = "*.github.com"
-  ports           = "443"
-  methods         = "GET,POST"
-  path_pattern    = "/repos/**"
+  name            = "example-api-token"
+  value           = "token-value"
+}
+
+resource "agyn_egress_rule" "example" {
+  organization_id = agyn_organization.example.id
+  name            = "example-api"
+  description     = "Allow API calls with injected authentication."
+  domain_pattern  = "api.example.com"
+  ports           = [443]
+  methods         = ["GET", "POST"]
+  path_pattern    = "/v1/*"
   action          = "allow"
 
-  injected_header {
+  header {
     name      = "Authorization"
     scheme    = "bearer"
-    secret_id = agyn_secret.github_token.id
+    secret_id = agyn_secret.api_token.id
   }
 }
 ```
@@ -35,32 +46,32 @@ resource "agyn_egress_rule" "github" {
 
 ### Required
 
-- `domain_pattern` (String)
-- `name` (String)
-- `organization_id` (String)
+- `domain_pattern` (String) Destination host pattern, for example `api.example.com` or `*.example.com`.
+- `name` (String) Rule name.
+- `organization_id` (String) Organization identifier for the egress rule.
 
 ### Optional
 
-- `action` (String)
-- `description` (String)
-- `injected_header` (Block List) (see [below for nested schema](#nestedblock--injected_header))
-- `methods` (String) Comma-separated HTTP methods. Empty matches all methods.
-- `path_pattern` (String)
-- `ports` (String) Comma-separated destination ports. Empty uses service defaults.
+- `action` (String) Rule action. One of `allow` or `deny`.
+- `description` (String) Human-readable description.
+- `header` (Block List) Header to inject for matching requests. (see [below for nested schema](#nestedblock--header))
+- `methods` (List of String) HTTP methods to match. Empty matches all methods.
+- `path_pattern` (String) Request path glob. Empty matches all paths.
+- `ports` (List of Number) Destination ports to intercept. Empty uses platform defaults.
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) UUID identifier of the egress rule.
 
-<a id="nestedblock--injected_header"></a>
-### Nested Schema for `injected_header`
+<a id="nestedblock--header"></a>
+### Nested Schema for `header`
 
 Required:
 
-- `name` (String)
+- `name` (String) Header name.
 
 Optional:
 
-- `scheme` (String)
-- `secret_id` (String)
-- `value` (String, Sensitive)
+- `scheme` (String) Credential scheme. One of `bearer` or `basic`.
+- `secret_id` (String) Secret identifier containing the header value.
+- `value` (String, Sensitive) Literal header value.
