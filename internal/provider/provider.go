@@ -105,6 +105,12 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 		resources.NewInitScriptResource,
 		resources.NewEgressRuleResource,
 		resources.NewEgressRuleAttachmentResource,
+		resources.NewNetworkResource,
+		resources.NewTunnelCredentialResource,
+		resources.NewPrivateResourceResource,
+		resources.NewPrivateResourceAccessResource,
+		resources.NewGroupResource,
+		resources.NewGroupMembershipResource,
 	}
 }
 
