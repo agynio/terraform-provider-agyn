@@ -18,6 +18,7 @@ inputs:
     paths:
       - agynio/api/agents/v1
       - agynio/api/egress/v1
+      - agynio/api/groups/v1
       - agynio/api/apps/v1/apps.proto
       - agynio/api/llm/v1/llm.proto
       - agynio/api/organizations/v1/organizations.proto
@@ -25,6 +26,8 @@ inputs:
       - agynio/api/runners/v1/runners.proto
       - agynio/api/gateway/v1/agents.proto
       - agynio/api/gateway/v1/egress.proto
+      - agynio/api/gateway/v1/groups.proto
+      - agynio/api/gateway/v1/networks.proto
       - agynio/api/gateway/v1/apps.proto
       - agynio/api/gateway/v1/llm.proto
       - agynio/api/gateway/v1/organizations.proto
@@ -33,3 +36,4 @@ inputs:
       - agynio/api/secrets/v1/secrets.proto
       - agynio/api/gateway/v1/secrets.proto
       - agynio/api/users/v1/users.proto
+      - agynio/api/networks/v1/networks.proto
