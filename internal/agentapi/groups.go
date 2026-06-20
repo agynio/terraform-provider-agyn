@@ -53,17 +53,25 @@ func (c *Client) AddGroupMember(ctx context.Context, req *groupsv1.AddMemberRequ
 	})
 }
 
+const lookupPageSize int32 = 100
+
 func (c *Client) GetGroupMembershipByGroupAndMember(ctx context.Context, groupID string, memberType groupsv1.GroupMemberType, memberID string) (*groupsv1.GroupMembership, error) {
-	resp, err := c.groupsGateway.ListMembers(ctx, &groupsv1.ListMembersRequest{GroupId: groupID, MemberType: memberType.Enum()})
-	if err != nil {
-		return nil, fmt.Errorf("list group members: %w", err)
-	}
-	for _, membership := range resp.GetMemberships() {
-		if membership.GetMemberId() == memberID {
-			return membership, nil
+	pageToken := ""
+	for {
+		resp, err := c.groupsGateway.ListMembers(ctx, &groupsv1.ListMembersRequest{GroupId: groupID, MemberType: memberType.Enum(), PageSize: lookupPageSize, PageToken: pageToken})
+		if err != nil {
+			return nil, fmt.Errorf("list group members: %w", err)
+		}
+		for _, membership := range resp.GetMemberships() {
+			if membership.GetMemberId() == memberID {
+				return membership, nil
+			}
+		}
+		pageToken = resp.GetNextPageToken()
+		if pageToken == "" {
+			return nil, ErrNotFound
 		}
 	}
-	return nil, ErrNotFound
 }
 
 func (c *Client) RemoveGroupMember(ctx context.Context, groupID string, memberID string) error {

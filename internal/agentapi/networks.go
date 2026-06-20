@@ -123,16 +123,22 @@ func (c *Client) CreatePrivateResourceAccess(ctx context.Context, req *networksv
 }
 
 func (c *Client) GetPrivateResourceAccessByResourceAndPrincipal(ctx context.Context, privateResourceID string, principalType networksv1.PrivateResourceAccessPrincipalType, principalID string) (*networksv1.PrivateResourceAccess, error) {
-	resp, err := c.networksGateway.ListPrivateResourceAccess(ctx, &networksv1.ListPrivateResourceAccessRequest{PrivateResourceId: &privateResourceID, PrincipalType: principalType.Enum(), PrincipalId: &principalID})
-	if err != nil {
-		return nil, fmt.Errorf("list private resource access: %w", err)
-	}
-	for _, access := range resp.GetPrivateResourceAccess() {
-		if access.GetPrivateResourceId() == privateResourceID && access.GetPrincipalType() == principalType && access.GetPrincipalId() == principalID {
-			return access, nil
+	pageToken := ""
+	for {
+		resp, err := c.networksGateway.ListPrivateResourceAccess(ctx, &networksv1.ListPrivateResourceAccessRequest{PrivateResourceId: &privateResourceID, PrincipalType: principalType.Enum(), PrincipalId: &principalID, PageSize: lookupPageSize, PageToken: pageToken})
+		if err != nil {
+			return nil, fmt.Errorf("list private resource access: %w", err)
+		}
+		for _, access := range resp.GetPrivateResourceAccess() {
+			if access.GetPrivateResourceId() == privateResourceID && access.GetPrincipalType() == principalType && access.GetPrincipalId() == principalID {
+				return access, nil
+			}
+		}
+		pageToken = resp.GetNextPageToken()
+		if pageToken == "" {
+			return nil, ErrNotFound
 		}
 	}
-	return nil, ErrNotFound
 }
 
 func (c *Client) DeletePrivateResourceAccess(ctx context.Context, id string) error {
