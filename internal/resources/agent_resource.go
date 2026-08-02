@@ -27,20 +27,25 @@ var _ resource.Resource = &agentResource{}
 var _ resource.ResourceWithImportState = &agentResource{}
 
 type agentModel struct {
-	ID             types.String           `tfsdk:"id"`
-	OrganizationID types.String           `tfsdk:"organization_id"`
-	Name           types.String           `tfsdk:"name"`
-	Nickname       types.String           `tfsdk:"nickname"`
-	Role           types.String           `tfsdk:"role"`
-	Model          types.String           `tfsdk:"model"`
-	Image          types.String           `tfsdk:"image"`
-	InitImage      types.String           `tfsdk:"init_image"`
-	Description    types.String           `tfsdk:"description"`
-	Configuration  types.String           `tfsdk:"configuration"`
-	IdleTimeout    types.String           `tfsdk:"idle_timeout"`
-	Capabilities   types.List             `tfsdk:"capabilities"`
-	Availability   types.String           `tfsdk:"availability"`
-	Resources      *computeResourcesModel `tfsdk:"resources"`
+	ID             types.String `tfsdk:"id"`
+	OrganizationID types.String `tfsdk:"organization_id"`
+	Name           types.String `tfsdk:"name"`
+	Nickname       types.String `tfsdk:"nickname"`
+	Role           types.String `tfsdk:"role"`
+	Model          types.String `tfsdk:"model"`
+	Image          types.String `tfsdk:"image"`
+	InitImage      types.String `tfsdk:"init_image"`
+	Description    types.String `tfsdk:"description"`
+	Configuration  types.String `tfsdk:"configuration"`
+	IdleTimeout    types.String `tfsdk:"idle_timeout"`
+	// Policies an instance of this agent inherits. See the agent-instances
+	// change in agynio/architecture.
+	DefaultThread   types.String           `tfsdk:"default_thread"`
+	FinalMessage    types.String           `tfsdk:"final_message"`
+	InstanceIdleTTL types.String           `tfsdk:"instance_idle_ttl"`
+	Capabilities    types.List             `tfsdk:"capabilities"`
+	Availability    types.String           `tfsdk:"availability"`
+	Resources       *computeResourcesModel `tfsdk:"resources"`
 }
 
 var agentNicknameRegex = regexp.MustCompile("^[a-z0-9_-]+$")
@@ -49,6 +54,57 @@ const (
 	agentAvailabilityInternal = "internal"
 	agentAvailabilityPrivate  = "private"
 )
+
+const (
+	agentDefaultThreadOrigin     = "origin"
+	agentDefaultThreadNone       = "none"
+	agentFinalMessageDiscard     = "discard"
+	agentFinalMessageDefaultThrd = "default_thread"
+)
+
+func agentDefaultThreadToProto(v string) agentsv1.AgentDefaultThread {
+	switch v {
+	case agentDefaultThreadOrigin:
+		return agentsv1.AgentDefaultThread_AGENT_DEFAULT_THREAD_ORIGIN
+	case agentDefaultThreadNone:
+		return agentsv1.AgentDefaultThread_AGENT_DEFAULT_THREAD_NONE
+	default:
+		return agentsv1.AgentDefaultThread_AGENT_DEFAULT_THREAD_UNSPECIFIED
+	}
+}
+
+func agentDefaultThreadFromProto(v agentsv1.AgentDefaultThread) types.String {
+	switch v {
+	case agentsv1.AgentDefaultThread_AGENT_DEFAULT_THREAD_ORIGIN:
+		return types.StringValue(agentDefaultThreadOrigin)
+	case agentsv1.AgentDefaultThread_AGENT_DEFAULT_THREAD_NONE:
+		return types.StringValue(agentDefaultThreadNone)
+	default:
+		return types.StringNull()
+	}
+}
+
+func agentFinalMessageToProto(v string) agentsv1.AgentFinalMessage {
+	switch v {
+	case agentFinalMessageDiscard:
+		return agentsv1.AgentFinalMessage_AGENT_FINAL_MESSAGE_DISCARD
+	case agentFinalMessageDefaultThrd:
+		return agentsv1.AgentFinalMessage_AGENT_FINAL_MESSAGE_DEFAULT_THREAD
+	default:
+		return agentsv1.AgentFinalMessage_AGENT_FINAL_MESSAGE_UNSPECIFIED
+	}
+}
+
+func agentFinalMessageFromProto(v agentsv1.AgentFinalMessage) types.String {
+	switch v {
+	case agentsv1.AgentFinalMessage_AGENT_FINAL_MESSAGE_DISCARD:
+		return types.StringValue(agentFinalMessageDiscard)
+	case agentsv1.AgentFinalMessage_AGENT_FINAL_MESSAGE_DEFAULT_THREAD:
+		return types.StringValue(agentFinalMessageDefaultThrd)
+	default:
+		return types.StringNull()
+	}
+}
 
 func agentAvailabilityToProto(v string) agentsv1.AgentAvailability {
 	switch v {
@@ -136,6 +192,25 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				MarkdownDescription: "Go duration string for idle timeout (for example, \"30s\", \"5m\", \"1h\").",
 			},
+			"default_thread": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "Where an instance's default thread comes from when the platform creates it: " +
+					"\"origin\" takes the thread that added the instance, \"none\" infers nothing. Defaults to \"origin\".",
+			},
+			"final_message": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "What becomes of the text the agent CLI produces at the end of a turn: " +
+					"\"discard\", or \"default_thread\" to post it. Defaults to \"discard\" -- an agent that " +
+					"sends its own messages would otherwise post twice.",
+			},
+			"instance_idle_ttl": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				MarkdownDescription: "Go duration string. How long an instance of this agent may sit idle before " +
+					"the platform pauses it. Unset means never.",
+			},
 			"capabilities": schema.ListAttribute{
 				Optional:            true,
 				ElementType:         types.StringType,
@@ -211,6 +286,15 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if !plan.IdleTimeout.IsNull() && !plan.IdleTimeout.IsUnknown() {
 		input.IdleTimeout = proto.String(plan.IdleTimeout.ValueString())
 	}
+	if !plan.DefaultThread.IsNull() && !plan.DefaultThread.IsUnknown() {
+		input.DefaultThread = agentDefaultThreadToProto(plan.DefaultThread.ValueString())
+	}
+	if !plan.FinalMessage.IsNull() && !plan.FinalMessage.IsUnknown() {
+		input.FinalMessage = agentFinalMessageToProto(plan.FinalMessage.ValueString())
+	}
+	if !plan.InstanceIdleTTL.IsNull() && !plan.InstanceIdleTTL.IsUnknown() {
+		input.InstanceIdleTtl = proto.String(plan.InstanceIdleTTL.ValueString())
+	}
 
 	agent, err := r.client.CreateAgent(ctx, input)
 	if err != nil {
@@ -231,20 +315,23 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:             types.StringValue(agent.Meta.Id),
-		OrganizationID: types.StringValue(agent.OrganizationId),
-		Name:           types.StringValue(agent.Name),
-		Nickname:       optionalString(agent.Nickname),
-		Role:           types.StringValue(agent.Role),
-		Model:          types.StringValue(agent.Model),
-		Image:          types.StringValue(agent.Image),
-		InitImage:      types.StringValue(agent.InitImage),
-		Description:    optionalString(agent.Description),
-		Configuration:  configuration,
-		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
-		Capabilities:   capabilitiesState,
-		Availability:   agentAvailabilityFromProto(agent.Availability),
-		Resources:      computeResourcesToModel(agent.Resources),
+		ID:              types.StringValue(agent.Meta.Id),
+		OrganizationID:  types.StringValue(agent.OrganizationId),
+		Name:            types.StringValue(agent.Name),
+		Nickname:        optionalString(agent.Nickname),
+		Role:            types.StringValue(agent.Role),
+		Model:           types.StringValue(agent.Model),
+		Image:           types.StringValue(agent.Image),
+		InitImage:       types.StringValue(agent.InitImage),
+		Description:     optionalString(agent.Description),
+		Configuration:   configuration,
+		IdleTimeout:     optionalString(agent.GetIdleTimeout()),
+		DefaultThread:   agentDefaultThreadFromProto(agent.GetDefaultThread()),
+		FinalMessage:    agentFinalMessageFromProto(agent.GetFinalMessage()),
+		InstanceIdleTTL: optionalString(agent.GetInstanceIdleTtl()),
+		Capabilities:    capabilitiesState,
+		Availability:    agentAvailabilityFromProto(agent.Availability),
+		Resources:       computeResourcesToModel(agent.Resources),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -294,6 +381,9 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
 	state.IdleTimeout = optionalString(agent.GetIdleTimeout())
+	state.DefaultThread = agentDefaultThreadFromProto(agent.GetDefaultThread())
+	state.FinalMessage = agentFinalMessageFromProto(agent.GetFinalMessage())
+	state.InstanceIdleTTL = optionalString(agent.GetInstanceIdleTtl())
 	state.Capabilities = capabilitiesState
 	state.Availability = agentAvailabilityFromProto(agent.Availability)
 	state.Resources = computeResourcesToModel(agent.Resources)
@@ -329,19 +419,30 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	input := &agentsv1.UpdateAgentRequest{
-		Id:            plan.ID.ValueString(),
-		Name:          updateStringPointer(plan.Name, state.Name),
-		Nickname:      updateStringPointer(plan.Nickname, state.Nickname),
-		Role:          updateStringPointer(plan.Role, state.Role),
-		Model:         updateStringPointer(plan.Model, state.Model),
-		Image:         updateStringPointer(plan.Image, state.Image),
-		InitImage:     updateStringPointer(plan.InitImage, state.InitImage),
-		Description:   updateStringPointer(plan.Description, state.Description),
-		Configuration: updateStringPointer(plan.Configuration, state.Configuration),
-		IdleTimeout:   updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
-		Capabilities:  capabilities,
-		Availability:  updateAgentAvailability(plan.Availability, state.Availability),
-		Resources:     updateComputeResources(plan.Resources, state.Resources),
+		Id:              plan.ID.ValueString(),
+		Name:            updateStringPointer(plan.Name, state.Name),
+		Nickname:        updateStringPointer(plan.Nickname, state.Nickname),
+		Role:            updateStringPointer(plan.Role, state.Role),
+		Model:           updateStringPointer(plan.Model, state.Model),
+		Image:           updateStringPointer(plan.Image, state.Image),
+		InitImage:       updateStringPointer(plan.InitImage, state.InitImage),
+		Description:     updateStringPointer(plan.Description, state.Description),
+		Configuration:   updateStringPointer(plan.Configuration, state.Configuration),
+		IdleTimeout:     updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
+		InstanceIdleTtl: updateStringPointer(plan.InstanceIdleTTL, state.InstanceIdleTTL),
+		Capabilities:    capabilities,
+		Availability:    updateAgentAvailability(plan.Availability, state.Availability),
+		Resources:       updateComputeResources(plan.Resources, state.Resources),
+	}
+	// Enums, so the string helper does not apply: send one only when the plan
+	// names a value the state does not already hold.
+	if !plan.DefaultThread.IsNull() && !plan.DefaultThread.IsUnknown() && !plan.DefaultThread.Equal(state.DefaultThread) {
+		value := agentDefaultThreadToProto(plan.DefaultThread.ValueString())
+		input.DefaultThread = &value
+	}
+	if !plan.FinalMessage.IsNull() && !plan.FinalMessage.IsUnknown() && !plan.FinalMessage.Equal(state.FinalMessage) {
+		value := agentFinalMessageToProto(plan.FinalMessage.ValueString())
+		input.FinalMessage = &value
 	}
 
 	agent, err := r.client.UpdateAgent(ctx, input)
@@ -363,20 +464,23 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	updatedState := agentModel{
-		ID:             types.StringValue(agent.Meta.Id),
-		OrganizationID: types.StringValue(agent.OrganizationId),
-		Name:           types.StringValue(agent.Name),
-		Nickname:       optionalString(agent.Nickname),
-		Role:           types.StringValue(agent.Role),
-		Model:          types.StringValue(agent.Model),
-		Image:          types.StringValue(agent.Image),
-		InitImage:      types.StringValue(agent.InitImage),
-		Description:    optionalString(agent.Description),
-		Configuration:  configuration,
-		IdleTimeout:    optionalString(agent.GetIdleTimeout()),
-		Capabilities:   capabilitiesState,
-		Availability:   agentAvailabilityFromProto(agent.Availability),
-		Resources:      computeResourcesToModel(agent.Resources),
+		ID:              types.StringValue(agent.Meta.Id),
+		OrganizationID:  types.StringValue(agent.OrganizationId),
+		Name:            types.StringValue(agent.Name),
+		Nickname:        optionalString(agent.Nickname),
+		Role:            types.StringValue(agent.Role),
+		Model:           types.StringValue(agent.Model),
+		Image:           types.StringValue(agent.Image),
+		InitImage:       types.StringValue(agent.InitImage),
+		Description:     optionalString(agent.Description),
+		Configuration:   configuration,
+		IdleTimeout:     optionalString(agent.GetIdleTimeout()),
+		DefaultThread:   agentDefaultThreadFromProto(agent.GetDefaultThread()),
+		FinalMessage:    agentFinalMessageFromProto(agent.GetFinalMessage()),
+		InstanceIdleTTL: optionalString(agent.GetInstanceIdleTtl()),
+		Capabilities:    capabilitiesState,
+		Availability:    agentAvailabilityFromProto(agent.Availability),
+		Resources:       computeResourcesToModel(agent.Resources),
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
