@@ -26,7 +26,7 @@ resource "agyn_agent" "example" {
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
   init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
-  availability    = "private"
+  availability    = "internal"
 }
 ```
 
@@ -47,8 +47,11 @@ resource "agyn_agent" "example" {
 
 - `capabilities` (List of String) Capabilities supported by this agent.
 - `configuration` (String) JSON-encoded agent configuration.
+- `default_thread` (String) Where an instance's default thread comes from when the platform creates it: "origin" takes the thread that added the instance, "none" infers nothing. Defaults to "origin".
 - `description` (String) Human-readable description.
+- `final_message` (String) What becomes of the text the agent CLI produces at the end of a turn: "discard", or "default_thread" to post it. Defaults to "discard" -- an agent that sends its own messages would otherwise post twice.
 - `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").
+- `instance_idle_ttl` (String) Go duration string. How long an instance of this agent may sit idle before the platform pauses it. Unset means never.
 - `nickname` (String) Optional nickname for the agent.
 - `resources` (Attributes) Compute resource requests and limits. (see [below for nested schema](#nestedatt--resources))
 
