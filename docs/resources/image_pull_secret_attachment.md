@@ -51,7 +51,6 @@ resource "agyn_image_pull_secret_attachment" "example" {
 ### Optional
 
 - `agent_id` (String) Target agent identifier.
-- `hook_id` (String) Target hook identifier.
 - `mcp_id` (String) Target MCP identifier.
 
 ### Read-Only

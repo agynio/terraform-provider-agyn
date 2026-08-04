@@ -46,7 +46,6 @@ resource "agyn_env" "example" {
 
 - `agent_id` (String) Target agent identifier.
 - `description` (String) Human-readable description.
-- `hook_id` (String) Target hook identifier.
 - `mcp_id` (String) Target MCP identifier.
 - `secret_id` (String) Secret reference identifier.
 - `value` (String, Sensitive) Plain-text value.

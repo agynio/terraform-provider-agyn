@@ -100,7 +100,6 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 		resources.NewImagePullSecretAttachmentResource,
 		resources.NewMcpResource,
 		resources.NewSkillResource,
-		resources.NewHookResource,
 		resources.NewEnvResource,
 		resources.NewInitScriptResource,
 		resources.NewEgressRuleResource,

@@ -30,7 +30,6 @@ type envModel struct {
 	Description types.String `tfsdk:"description"`
 	AgentID     types.String `tfsdk:"agent_id"`
 	McpID       types.String `tfsdk:"mcp_id"`
-	HookID      types.String `tfsdk:"hook_id"`
 	Value       types.String `tfsdk:"value"`
 	SecretID    types.String `tfsdk:"secret_id"`
 }
@@ -46,7 +45,6 @@ func (r *envResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 		stringvalidator.ExactlyOneOf(
 			path.MatchRoot("agent_id"),
 			path.MatchRoot("mcp_id"),
-			path.MatchRoot("hook_id"),
 		),
 	}
 	valueValidators := []validator.String{
@@ -81,12 +79,6 @@ func (r *envResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 			"mcp_id": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Target MCP identifier.",
-				Validators:          ownerValidators,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
-			},
-			"hook_id": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Target hook identifier.",
 				Validators:          ownerValidators,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
@@ -133,7 +125,7 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		Name:        plan.Name.ValueString(),
 		Description: stringValue(plan.Description),
 	}
-	if setEnvTarget(input, plan.AgentID, plan.McpID, plan.HookID, "create env", resp) {
+	if setEnvTarget(input, plan.AgentID, plan.McpID, "create env", resp) {
 		return
 	}
 	if setEnvSource(input, plan.Value, plan.SecretID, "create env", resp) {
@@ -146,7 +138,7 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	agentID, mcpID, hookID := envTargetState(env)
+	agentID, mcpID := envTargetState(env)
 	value, secretID := envSourceState(env, plan.Value)
 
 	updatedState := envModel{
@@ -155,7 +147,6 @@ func (r *envResource) Create(ctx context.Context, req resource.CreateRequest, re
 		Description: optionalString(env.Description),
 		AgentID:     agentID,
 		McpID:       mcpID,
-		HookID:      hookID,
 		Value:       value,
 		SecretID:    secretID,
 	}
@@ -185,14 +176,13 @@ func (r *envResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	agentID, mcpID, hookID := envTargetState(env)
+	agentID, mcpID := envTargetState(env)
 	value, secretID := envSourceState(env, state.Value)
 
 	state.Name = types.StringValue(env.Name)
 	state.Description = optionalString(env.Description)
 	state.AgentID = agentID
 	state.McpID = mcpID
-	state.HookID = hookID
 	state.Value = value
 	state.SecretID = secretID
 
@@ -227,7 +217,7 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
-	agentID, mcpID, hookID := envTargetState(env)
+	agentID, mcpID := envTargetState(env)
 	value, secretID := envSourceState(env, plan.Value)
 
 	updatedState := envModel{
@@ -236,7 +226,6 @@ func (r *envResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		Description: optionalString(env.Description),
 		AgentID:     agentID,
 		McpID:       mcpID,
-		HookID:      hookID,
 		Value:       value,
 		SecretID:    secretID,
 	}
@@ -269,7 +258,7 @@ func (r *envResource) ImportState(ctx context.Context, req resource.ImportStateR
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func setEnvTarget(req *agentsv1.CreateEnvRequest, agentID types.String, mcpID types.String, hookID types.String, op string, resp *resource.CreateResponse) bool {
+func setEnvTarget(req *agentsv1.CreateEnvRequest, agentID types.String, mcpID types.String, op string, resp *resource.CreateResponse) bool {
 	if !agentID.IsNull() && !agentID.IsUnknown() {
 		req.Target = &agentsv1.CreateEnvRequest_AgentId{AgentId: agentID.ValueString()}
 		return false
@@ -278,11 +267,7 @@ func setEnvTarget(req *agentsv1.CreateEnvRequest, agentID types.String, mcpID ty
 		req.Target = &agentsv1.CreateEnvRequest_McpId{McpId: mcpID.ValueString()}
 		return false
 	}
-	if !hookID.IsNull() && !hookID.IsUnknown() {
-		req.Target = &agentsv1.CreateEnvRequest_HookId{HookId: hookID.ValueString()}
-		return false
-	}
-	resp.Diagnostics.AddError("Missing env target", op+" requires one of agent_id, mcp_id, or hook_id")
+	resp.Diagnostics.AddError("Missing env target", op+" requires one of agent_id or mcp_id")
 	return true
 }
 
@@ -299,21 +284,18 @@ func setEnvSource(req *agentsv1.CreateEnvRequest, value types.String, secretID t
 	return true
 }
 
-func envTargetState(env *agentsv1.Env) (types.String, types.String, types.String) {
+func envTargetState(env *agentsv1.Env) (types.String, types.String) {
 	agentID := types.StringNull()
 	mcpID := types.StringNull()
-	hookID := types.StringNull()
 	switch target := env.GetTarget().(type) {
 	case *agentsv1.Env_AgentId:
 		agentID = types.StringValue(target.AgentId)
 	case *agentsv1.Env_McpId:
 		mcpID = types.StringValue(target.McpId)
-	case *agentsv1.Env_HookId:
-		hookID = types.StringValue(target.HookId)
 	default:
 		panic(fmt.Sprintf("unexpected env target type: %T", target))
 	}
-	return agentID, mcpID, hookID
+	return agentID, mcpID
 }
 
 func envSourceState(env *agentsv1.Env, fallback types.String) (types.String, types.String) {
