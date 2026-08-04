@@ -89,6 +89,8 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 		resources.NewOrganizationResource,
 		resources.NewUserResource,
 		resources.NewLLMProviderResource,
+		resources.NewEnvironmentResource,
+		resources.NewImageResource,
 		resources.NewModelResource,
 		resources.NewRunnerResource,
 		resources.NewAgentResource,

@@ -46,7 +46,7 @@ jobs:
           mkdir -p dist
           go build -o dist/terraform-provider-agyn .
       - name: Provision cluster
-        uses: agynio/bootstrap/.github/actions/provision@main
+        uses: agynio/e2e/.github/actions/provision-vm@main
       - name: Run E2E tests
         uses: agynio/e2e/.github/actions/run-tests@main
         with:

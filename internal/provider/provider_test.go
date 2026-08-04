@@ -21,9 +21,6 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("AGYN_AGENT_IMAGE") == "" {
 		t.Skip("AGYN_AGENT_IMAGE must be set for acceptance tests")
 	}
-	if os.Getenv("AGYN_AGENT_INIT_IMAGE") == "" {
-		t.Skip("AGYN_AGENT_INIT_IMAGE must be set for acceptance tests")
-	}
 }
 
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){

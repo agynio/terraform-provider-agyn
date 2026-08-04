@@ -44,7 +44,6 @@ resource "agyn_agent" "test" {
 	  role            = "Terraform acceptance role"
 	  model           = %q
 	  image           = %q
-	  init_image      = %q
 	  availability    = "private"
 }
 
@@ -61,5 +60,5 @@ resource "agyn_egress_rule_attachment" "test" {
 	  rule_id         = agyn_egress_rule.test.id
 	  agent_id        = agyn_agent.test.id
 }
-`, testAccProviderConfig(), organizationName, agentName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"), ruleName)
+`, testAccProviderConfig(), organizationName, agentName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), ruleName)
 }

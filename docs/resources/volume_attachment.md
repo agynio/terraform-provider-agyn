@@ -23,7 +23,6 @@ resource "agyn_agent" "example" {
   role            = "assistant"
   model           = "gpt-4o"
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
-  init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
 }
 
