@@ -34,6 +34,7 @@ type agentModel struct {
 	Role           types.String `tfsdk:"role"`
 	Model          types.String `tfsdk:"model"`
 	Image          types.String `tfsdk:"image"`
+	EnvironmentID  types.String `tfsdk:"environment_id"`
 	Description    types.String `tfsdk:"description"`
 	Configuration  types.String `tfsdk:"configuration"`
 	IdleTimeout    types.String `tfsdk:"idle_timeout"`
@@ -173,6 +174,10 @@ func (r *agentResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Required:            true,
 				MarkdownDescription: "Container image.",
 			},
+			"environment_id": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Environment the agent runs in.",
+			},
 			"description": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Human-readable description.",
@@ -271,6 +276,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Role:           plan.Role.ValueString(),
 		Model:          plan.Model.ValueString(),
 		Image:          plan.Image.ValueString(),
+		EnvironmentId:  plan.EnvironmentID.ValueString(),
 		Description:    stringValue(plan.Description),
 		Configuration:  stringValue(plan.Configuration),
 		Capabilities:   capabilities,
@@ -316,6 +322,7 @@ func (r *agentResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Role:            types.StringValue(agent.Role),
 		Model:           types.StringValue(agent.Model),
 		Image:           types.StringValue(agent.Image),
+		EnvironmentID:   optionalString(agent.GetEnvironmentId()),
 		Description:     optionalString(agent.Description),
 		Configuration:   configuration,
 		IdleTimeout:     optionalString(agent.GetIdleTimeout()),
@@ -417,6 +424,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Role:            updateStringPointer(plan.Role, state.Role),
 		Model:           updateStringPointer(plan.Model, state.Model),
 		Image:           updateStringPointer(plan.Image, state.Image),
+		EnvironmentId:   updateStringPointer(plan.EnvironmentID, state.EnvironmentID),
 		Description:     updateStringPointer(plan.Description, state.Description),
 		Configuration:   updateStringPointer(plan.Configuration, state.Configuration),
 		IdleTimeout:     updateStringPointer(plan.IdleTimeout, state.IdleTimeout),
@@ -462,6 +470,7 @@ func (r *agentResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Role:            types.StringValue(agent.Role),
 		Model:           types.StringValue(agent.Model),
 		Image:           types.StringValue(agent.Image),
+		EnvironmentID:   optionalString(agent.GetEnvironmentId()),
 		Description:     optionalString(agent.Description),
 		Configuration:   configuration,
 		IdleTimeout:     optionalString(agent.GetIdleTimeout()),
