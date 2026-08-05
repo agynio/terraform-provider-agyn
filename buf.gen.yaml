@@ -18,6 +18,7 @@ inputs:
     paths:
       - agynio/api/agents/v1/agents.proto
       - agynio/api/gateway/v1/agents.proto
+      - agynio/api/gateway/v1/runners.proto
       - agynio/api/gateway/v1/images.proto
       - agynio/api/gateway/v1/organizations.proto
       - agynio/api/gateway/v1/secrets.proto
