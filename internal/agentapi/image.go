@@ -3,6 +3,7 @@ package agentapi
 import (
 	"context"
 	"fmt"
+	"time"
 
 	imagesv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/images/v1"
 )
@@ -15,6 +16,30 @@ func (c *Client) CreateImage(ctx context.Context, req *imagesv1.CreateImageReque
 		}
 		return resp.Image, nil
 	})
+}
+
+// WaitForVersion blocks until the catalog has discovered at least one version
+// of the image, so a resource naming a tag of it can resolve. Discovery is
+// asynchronous, and an image with no versions yet resolves to nothing.
+func (c *Client) WaitForVersion(ctx context.Context, id string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for {
+		resp, err := c.imagesGateway.ListVersions(ctx, &imagesv1.ListVersionsRequest{ImageId: id})
+		if err != nil {
+			return fmt.Errorf("list versions: %w", err)
+		}
+		if len(resp.Versions) > 0 {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("no version of image %s was discovered within %s", id, timeout)
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
 }
 
 func (c *Client) GetImage(ctx context.Context, id string) (*imagesv1.Image, error) {

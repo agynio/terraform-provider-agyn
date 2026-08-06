@@ -3,6 +3,7 @@ package resources
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -36,6 +37,10 @@ type imageModel struct {
 	Visibility     types.String `tfsdk:"visibility"`
 	TagFilter      types.String `tfsdk:"tag_filter"`
 }
+
+// Discovery reads the upstream registry, so this covers a slow one without
+// holding an apply open indefinitely.
+const imageDiscoveryTimeout = 2 * time.Minute
 
 func NewImageResource() resource.Resource { return &imageResource{} }
 
@@ -152,6 +157,14 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create image", err.Error())
 		return
+	}
+
+	// Versions are discovered after the record exists, and anything naming a
+	// tag of this image resolves against them. Returning before the first one
+	// is known makes every dependent resource a race.
+	if err := r.client.WaitForVersion(ctx, image.Meta.Id, imageDiscoveryTimeout); err != nil {
+		resp.Diagnostics.AddWarning("No image version discovered yet",
+			fmt.Sprintf("%s. A resource naming a tag of this image may fail until one is.", err))
 	}
 
 	state := imageStateFrom(image)
