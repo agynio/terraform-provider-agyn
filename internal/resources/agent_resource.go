@@ -376,6 +376,7 @@ func (r *agentResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	state.Role = types.StringValue(agent.Role)
 	state.Model = types.StringValue(agent.Model)
 	state.Image = types.StringValue(agent.Image)
+	state.EnvironmentID = optionalString(agent.GetEnvironmentId())
 	state.OrganizationID = types.StringValue(agent.OrganizationId)
 	state.Description = optionalString(agent.Description)
 	state.Configuration = configuration
