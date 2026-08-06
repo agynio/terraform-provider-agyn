@@ -18,7 +18,7 @@ func TestAccAgynAgent_basic(t *testing.T) {
 		PreCheck:                 func() { testAccOrganizationPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", nil, []string{"docker"}, "private"),
+				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", nil, []string{"docker"}, "internal"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", resourceName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent"),
@@ -26,8 +26,7 @@ func TestAccAgynAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.#", "1"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.0", "docker"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "private"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "internal"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -49,7 +48,7 @@ func TestAccAgynAgent_update(t *testing.T) {
 		PreCheck:                 func() { testAccOrganizationPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", &nickname, []string{"docker"}, "private"),
+				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", &nickname, []string{"docker"}, "internal"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", resourceName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent"),
@@ -57,8 +56,7 @@ func TestAccAgynAgent_update(t *testing.T) {
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.#", "1"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.0", "docker"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "private"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "internal"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -66,15 +64,14 @@ func TestAccAgynAgent_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAgynAgentConfig(organizationName, updatedName, "Terraform acceptance agent updated", "Terraform acceptance role updated", &updatedNickname, []string{"docker", "gpu"}, "internal"),
+				Config: testAccAgynAgentConfig(organizationName, updatedName, "Terraform acceptance agent updated", "Terraform acceptance role updated", &updatedNickname, []string{"docker", "gpu"}, "private"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", updatedName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent updated"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "nickname", updatedNickname),
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role updated"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.#", "2"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "internal"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "private"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "image"),
@@ -82,14 +79,13 @@ func TestAccAgynAgent_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAgynAgentConfig(organizationName, updatedName, "Terraform acceptance agent updated", "Terraform acceptance role updated", nil, nil, "internal"),
+				Config: testAccAgynAgentConfig(organizationName, updatedName, "Terraform acceptance agent updated", "Terraform acceptance role updated", nil, nil, "private"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("agyn_agent.test", "name", updatedName),
 					resource.TestCheckResourceAttr("agyn_agent.test", "description", "Terraform acceptance agent updated"),
 					resource.TestCheckNoResourceAttr("agyn_agent.test", "nickname"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "role", "Terraform acceptance role updated"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "internal"),
-					resource.TestCheckResourceAttr("agyn_agent.test", "init_image", os.Getenv("AGYN_AGENT_INIT_IMAGE")),
+					resource.TestCheckResourceAttr("agyn_agent.test", "availability", "private"),
 					resource.TestCheckResourceAttr("agyn_agent.test", "capabilities.#", "0"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "organization_id"),
 					resource.TestCheckResourceAttrSet("agyn_agent.test", "model"),
@@ -110,7 +106,7 @@ func TestAccAgynAgent_import(t *testing.T) {
 		PreCheck:                 func() { testAccOrganizationPreCheck(t) },
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", &nickname, []string{"docker"}, "private"),
+				Config: testAccAgynAgentConfig(organizationName, resourceName, "Terraform acceptance agent", "Terraform acceptance role", &nickname, []string{"docker"}, "internal"),
 			},
 			{
 				ResourceName:      "agyn_agent.test",
@@ -177,12 +173,11 @@ resource "agyn_agent" "test" {
 	  role         = %q
 	  model        = %q
 	  image        = %q
-	  init_image   = %q
 	  availability = %q
 %s
 %s
 }
-`, testAccProviderConfig(), organizationName, title, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"), availability, nicknameLine, capabilityLine)
+`, testAccProviderConfig(), organizationName, title, description, role, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), availability, nicknameLine, capabilityLine)
 }
 
 func testAccAgynAgentInvalidConfig(organizationName string) string {
@@ -199,11 +194,10 @@ resource "agyn_agent" "test" {
 	  role          = "invalid"
 	  model         = %q
 	  image         = %q
-	  init_image    = %q
-	  availability  = "private"
+	  availability  = "internal"
 	  configuration = "{invalid"
 }
-`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"))
+`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"))
 }
 
 func testAccAgynAgentInvalidNicknameConfig(organizationName string) string {
@@ -221,8 +215,7 @@ resource "agyn_agent" "test" {
 	  role          = "invalid"
 	  model         = %q
 	  image         = %q
-	  init_image    = %q
-	  availability  = "private"
+	  availability  = "internal"
 }
-`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"), os.Getenv("AGYN_AGENT_INIT_IMAGE"))
+`, testAccProviderConfig(), organizationName, os.Getenv("AGYN_MODEL_ID"), os.Getenv("AGYN_AGENT_IMAGE"))
 }

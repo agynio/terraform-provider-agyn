@@ -24,9 +24,8 @@ resource "agyn_agent" "example" {
   role            = "assistant"
   model           = "gpt-4o"
   image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
-  init_image      = "ghcr.io/agynio/agent-init:v1.0.0"
   description     = "Example agent managed by Terraform."
-  availability    = "private"
+  availability    = "internal"
 }
 ```
 
@@ -37,7 +36,6 @@ resource "agyn_agent" "example" {
 
 - `availability` (String) Agent availability. One of `internal` or `private`.
 - `image` (String) Container image.
-- `init_image` (String) Init container image.
 - `model` (String) Model identifier.
 - `name` (String) Agent name.
 - `organization_id` (String) Organization identifier for the agent.
@@ -49,6 +47,7 @@ resource "agyn_agent" "example" {
 - `configuration` (String) JSON-encoded agent configuration.
 - `default_thread` (String) Where an instance's default thread comes from when the platform creates it: "origin" takes the thread that added the instance, "none" infers nothing. Defaults to "origin".
 - `description` (String) Human-readable description.
+- `environment_id` (String) Environment the agent runs in.
 - `final_message` (String) What becomes of the text the agent CLI produces at the end of a turn: "discard", or "default_thread" to post it. Defaults to "discard" -- an agent that sends its own messages would otherwise post twice.
 - `idle_timeout` (String) Go duration string for idle timeout (for example, "30s", "5m", "1h").
 - `instance_idle_ttl` (String) Go duration string. How long an instance of this agent may sit idle before the platform pauses it. Unset means never.

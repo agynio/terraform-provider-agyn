@@ -30,7 +30,6 @@ type initScriptModel struct {
 	Description types.String `tfsdk:"description"`
 	AgentID     types.String `tfsdk:"agent_id"`
 	McpID       types.String `tfsdk:"mcp_id"`
-	HookID      types.String `tfsdk:"hook_id"`
 }
 
 func NewInitScriptResource() resource.Resource { return &initScriptResource{} }
@@ -44,7 +43,6 @@ func (r *initScriptResource) Schema(_ context.Context, _ resource.SchemaRequest,
 		stringvalidator.ExactlyOneOf(
 			path.MatchRoot("agent_id"),
 			path.MatchRoot("mcp_id"),
-			path.MatchRoot("hook_id"),
 		),
 	}
 
@@ -73,12 +71,6 @@ func (r *initScriptResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"mcp_id": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Target MCP identifier.",
-				Validators:          ownerValidators,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
-			},
-			"hook_id": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Target hook identifier.",
 				Validators:          ownerValidators,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
@@ -114,7 +106,7 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		Script:      plan.Script.ValueString(),
 		Description: stringValue(plan.Description),
 	}
-	if setInitScriptTarget(input, plan.AgentID, plan.McpID, plan.HookID, "create init script", resp) {
+	if setInitScriptTarget(input, plan.AgentID, plan.McpID, "create init script", resp) {
 		return
 	}
 
@@ -124,14 +116,13 @@ func (r *initScriptResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	agentID, mcpID, hookID := initScriptTargetState(script)
+	agentID, mcpID := initScriptTargetState(script)
 	updatedState := initScriptModel{
 		ID:          types.StringValue(script.Meta.Id),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
 		AgentID:     agentID,
 		McpID:       mcpID,
-		HookID:      hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -159,12 +150,11 @@ func (r *initScriptResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	agentID, mcpID, hookID := initScriptTargetState(script)
+	agentID, mcpID := initScriptTargetState(script)
 	state.Script = types.StringValue(script.Script)
 	state.Description = optionalString(script.Description)
 	state.AgentID = agentID
 	state.McpID = mcpID
-	state.HookID = hookID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -195,14 +185,13 @@ func (r *initScriptResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	agentID, mcpID, hookID := initScriptTargetState(script)
+	agentID, mcpID := initScriptTargetState(script)
 	updatedState := initScriptModel{
 		ID:          types.StringValue(script.Meta.Id),
 		Script:      types.StringValue(script.Script),
 		Description: optionalString(script.Description),
 		AgentID:     agentID,
 		McpID:       mcpID,
-		HookID:      hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
@@ -233,7 +222,7 @@ func (r *initScriptResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func setInitScriptTarget(req *agentsv1.CreateInitScriptRequest, agentID types.String, mcpID types.String, hookID types.String, op string, resp *resource.CreateResponse) bool {
+func setInitScriptTarget(req *agentsv1.CreateInitScriptRequest, agentID types.String, mcpID types.String, op string, resp *resource.CreateResponse) bool {
 	if !agentID.IsNull() && !agentID.IsUnknown() {
 		req.Target = &agentsv1.CreateInitScriptRequest_AgentId{AgentId: agentID.ValueString()}
 		return false
@@ -242,27 +231,20 @@ func setInitScriptTarget(req *agentsv1.CreateInitScriptRequest, agentID types.St
 		req.Target = &agentsv1.CreateInitScriptRequest_McpId{McpId: mcpID.ValueString()}
 		return false
 	}
-	if !hookID.IsNull() && !hookID.IsUnknown() {
-		req.Target = &agentsv1.CreateInitScriptRequest_HookId{HookId: hookID.ValueString()}
-		return false
-	}
-	resp.Diagnostics.AddError("Missing init script target", op+" requires one of agent_id, mcp_id, or hook_id")
+	resp.Diagnostics.AddError("Missing init script target", op+" requires one of agent_id or mcp_id")
 	return true
 }
 
-func initScriptTargetState(script *agentsv1.InitScript) (types.String, types.String, types.String) {
+func initScriptTargetState(script *agentsv1.InitScript) (types.String, types.String) {
 	agentID := types.StringNull()
 	mcpID := types.StringNull()
-	hookID := types.StringNull()
 	switch target := script.GetTarget().(type) {
 	case *agentsv1.InitScript_AgentId:
 		agentID = types.StringValue(target.AgentId)
 	case *agentsv1.InitScript_McpId:
 		mcpID = types.StringValue(target.McpId)
-	case *agentsv1.InitScript_HookId:
-		hookID = types.StringValue(target.HookId)
 	default:
 		panic(fmt.Sprintf("unexpected init script target type: %T", target))
 	}
-	return agentID, mcpID, hookID
+	return agentID, mcpID
 }

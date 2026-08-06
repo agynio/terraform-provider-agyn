@@ -29,7 +29,6 @@ type volumeAttachmentModel struct {
 	VolumeID types.String `tfsdk:"volume_id"`
 	AgentID  types.String `tfsdk:"agent_id"`
 	McpID    types.String `tfsdk:"mcp_id"`
-	HookID   types.String `tfsdk:"hook_id"`
 }
 
 func NewVolumeAttachmentResource() resource.Resource { return &volumeAttachmentResource{} }
@@ -43,7 +42,6 @@ func (r *volumeAttachmentResource) Schema(_ context.Context, _ resource.SchemaRe
 		stringvalidator.ExactlyOneOf(
 			path.MatchRoot("agent_id"),
 			path.MatchRoot("mcp_id"),
-			path.MatchRoot("hook_id"),
 		),
 	}
 
@@ -69,12 +67,6 @@ func (r *volumeAttachmentResource) Schema(_ context.Context, _ resource.SchemaRe
 			"mcp_id": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "Target MCP identifier.",
-				Validators:          ownerValidators,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
-			},
-			"hook_id": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Target hook identifier.",
 				Validators:          ownerValidators,
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 			},
@@ -107,7 +99,7 @@ func (r *volumeAttachmentResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	input := &agentsv1.CreateVolumeAttachmentRequest{VolumeId: plan.VolumeID.ValueString()}
-	if setVolumeAttachmentTarget(input, plan.AgentID, plan.McpID, plan.HookID, resp) {
+	if setVolumeAttachmentTarget(input, plan.AgentID, plan.McpID, resp) {
 		return
 	}
 
@@ -117,13 +109,12 @@ func (r *volumeAttachmentResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	agentID, mcpID, hookID := volumeAttachmentTargetState(attachment)
+	agentID, mcpID := volumeAttachmentTargetState(attachment)
 	state := volumeAttachmentModel{
 		ID:       types.StringValue(attachment.Meta.Id),
 		VolumeID: types.StringValue(attachment.VolumeId),
 		AgentID:  agentID,
 		McpID:    mcpID,
-		HookID:   hookID,
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -151,11 +142,10 @@ func (r *volumeAttachmentResource) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	agentID, mcpID, hookID := volumeAttachmentTargetState(attachment)
+	agentID, mcpID := volumeAttachmentTargetState(attachment)
 	state.VolumeID = types.StringValue(attachment.VolumeId)
 	state.AgentID = agentID
 	state.McpID = mcpID
-	state.HookID = hookID
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -197,7 +187,7 @@ func (r *volumeAttachmentResource) ImportState(ctx context.Context, req resource
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func setVolumeAttachmentTarget(req *agentsv1.CreateVolumeAttachmentRequest, agentID types.String, mcpID types.String, hookID types.String, resp *resource.CreateResponse) bool {
+func setVolumeAttachmentTarget(req *agentsv1.CreateVolumeAttachmentRequest, agentID types.String, mcpID types.String, resp *resource.CreateResponse) bool {
 	if !agentID.IsNull() && !agentID.IsUnknown() {
 		req.Target = &agentsv1.CreateVolumeAttachmentRequest_AgentId{AgentId: agentID.ValueString()}
 		return false
@@ -206,27 +196,20 @@ func setVolumeAttachmentTarget(req *agentsv1.CreateVolumeAttachmentRequest, agen
 		req.Target = &agentsv1.CreateVolumeAttachmentRequest_McpId{McpId: mcpID.ValueString()}
 		return false
 	}
-	if !hookID.IsNull() && !hookID.IsUnknown() {
-		req.Target = &agentsv1.CreateVolumeAttachmentRequest_HookId{HookId: hookID.ValueString()}
-		return false
-	}
-	resp.Diagnostics.AddError("Missing attachment target", "volume attachment requires one of agent_id, mcp_id, or hook_id")
+	resp.Diagnostics.AddError("Missing attachment target", "volume attachment requires one of agent_id or mcp_id")
 	return true
 }
 
-func volumeAttachmentTargetState(attachment *agentsv1.VolumeAttachment) (types.String, types.String, types.String) {
+func volumeAttachmentTargetState(attachment *agentsv1.VolumeAttachment) (types.String, types.String) {
 	agentID := types.StringNull()
 	mcpID := types.StringNull()
-	hookID := types.StringNull()
 	switch target := attachment.GetTarget().(type) {
 	case *agentsv1.VolumeAttachment_AgentId:
 		agentID = types.StringValue(target.AgentId)
 	case *agentsv1.VolumeAttachment_McpId:
 		mcpID = types.StringValue(target.McpId)
-	case *agentsv1.VolumeAttachment_HookId:
-		hookID = types.StringValue(target.HookId)
 	default:
 		panic(fmt.Sprintf("unexpected volume attachment target type: %T", target))
 	}
-	return agentID, mcpID, hookID
+	return agentID, mcpID
 }
