@@ -40,15 +40,17 @@ resource "agyn_mcp" "example" {
 
 ### Required
 
-- `agent_id` (String) Agent identifier.
 - `command` (String) Command to execute.
 - `image` (String) Container image.
 - `name` (String) MCP name.
 
 ### Optional
 
+- `agent_id` (String) Agent that runs this server. Conflicts with environment_id.
 - `description` (String) Human-readable description.
+- `environment_id` (String) Environment that runs this server in every workload, sandboxes included. Conflicts with agent_id.
 - `resources` (Attributes) Compute resource requests and limits. (see [below for nested schema](#nestedatt--resources))
+- `shared_volumes` (List of String) Names of environment volumes to mount into this sidecar, at the paths the main container uses.
 
 ### Read-Only
 

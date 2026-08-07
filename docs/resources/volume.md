@@ -3,12 +3,12 @@
 page_title: "agyn_volume Resource - agyn"
 subcategory: ""
 description: |-
-  Manages an Agyn volume.
+  Manages a volume on an environment or an MCP server. A volume is a definition, not a disk: one disk is provisioned per agent instance and per sandbox that runs it.
 ---
 
 # agyn_volume (Resource)
 
-Manages an Agyn volume.
+Manages a volume on an environment or an MCP server. A volume is a definition, not a disk: one disk is provisioned per agent instance and per sandbox that runs it.
 
 ## Example Usage
 
@@ -31,14 +31,16 @@ resource "agyn_volume" "example" {
 
 ### Required
 
-- `mount_path` (String) Mount path inside the container.
-- `organization_id` (String) Organization identifier for the volume.
-- `persistent` (Boolean) Whether the volume is persistent.
+- `mount_path` (String) Absolute container path for the mount.
+- `name` (String) Volume name, unique within its target. An MCP's shared_volumes references this.
 
 ### Optional
 
-- `description` (String) Human-readable description.
-- `size` (String) Volume size (required when persistent is true).
+- `environment_id` (String) Environment that mounts the volume. Conflicts with mcp_id.
+- `mcp_id` (String) MCP server that mounts the volume. Conflicts with environment_id.
+- `size` (String) Capacity, e.g. 10Gi. Setting it makes the volume persistent; omitting it makes it ephemeral scratch.
+- `storage_class` (String) Storage class in the runner's catalog. Resolved at provisioning time.
+- `ttl` (String) How long after an owner's last workload stops before that owner's disk is deleted.
 
 ### Read-Only
 
