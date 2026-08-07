@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -31,6 +32,7 @@ type environmentModel struct {
 	WorkspaceImageTag    types.String `tfsdk:"workspace_image_tag"`
 	AgentRuntimeImageID  types.String `tfsdk:"agent_runtime_image_id"`
 	AgentRuntimeImageTag types.String `tfsdk:"agent_runtime_image_tag"`
+	Availability         types.String `tfsdk:"availability"`
 }
 
 func NewEnvironmentResource() resource.Resource { return &environmentResource{} }
@@ -89,6 +91,10 @@ func (r *environmentResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Computed:            true,
 				MarkdownDescription: "Tag within the agent runtime image.",
 			},
+			"availability": schema.StringAttribute{
+				Required:            true,
+				MarkdownDescription: "internal or private. Controls who may run workloads in the environment; running in one reaches its secrets, egress credentials and volume contents.",
+			},
 		},
 	}
 }
@@ -125,6 +131,7 @@ func (r *environmentResource) Create(ctx context.Context, req resource.CreateReq
 		WorkspaceImageTag:    plan.WorkspaceImageTag.ValueString(),
 		AgentRuntimeImageId:  plan.AgentRuntimeImageID.ValueString(),
 		AgentRuntimeImageTag: plan.AgentRuntimeImageTag.ValueString(),
+		Availability:         environmentAvailabilityFromString(plan.Availability.ValueString()),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to create environment", err.Error())
@@ -226,5 +233,20 @@ func environmentStateFrom(environment *agentsv1.Environment) environmentModel {
 		WorkspaceImageTag:    types.StringValue(environment.GetWorkspaceImageTag()),
 		AgentRuntimeImageID:  types.StringValue(environment.GetAgentRuntimeImageId()),
 		AgentRuntimeImageTag: types.StringValue(environment.GetAgentRuntimeImageTag()),
+		Availability:         types.StringValue(environmentAvailabilityToString(environment.GetAvailability())),
 	}
+}
+
+func environmentAvailabilityFromString(value string) agentsv1.EnvironmentAvailability {
+	if strings.EqualFold(strings.TrimSpace(value), "private") {
+		return agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_PRIVATE
+	}
+	return agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_INTERNAL
+}
+
+func environmentAvailabilityToString(value agentsv1.EnvironmentAvailability) string {
+	if value == agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_PRIVATE {
+		return "private"
+	}
+	return "internal"
 }

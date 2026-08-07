@@ -22,12 +22,14 @@ var _ resource.Resource = &volumeResource{}
 var _ resource.ResourceWithImportState = &volumeResource{}
 
 type volumeModel struct {
-	ID             types.String `tfsdk:"id"`
-	OrganizationID types.String `tfsdk:"organization_id"`
-	Persistent     types.Bool   `tfsdk:"persistent"`
-	MountPath      types.String `tfsdk:"mount_path"`
-	Size           types.String `tfsdk:"size"`
-	Description    types.String `tfsdk:"description"`
+	ID            types.String `tfsdk:"id"`
+	EnvironmentID types.String `tfsdk:"environment_id"`
+	McpID         types.String `tfsdk:"mcp_id"`
+	Name          types.String `tfsdk:"name"`
+	MountPath     types.String `tfsdk:"mount_path"`
+	Size          types.String `tfsdk:"size"`
+	StorageClass  types.String `tfsdk:"storage_class"`
+	TTL           types.String `tfsdk:"ttl"`
 }
 
 func NewVolumeResource() resource.Resource { return &volumeResource{} }
@@ -38,36 +40,48 @@ func (r *volumeResource) Metadata(_ context.Context, req resource.MetadataReques
 
 func (r *volumeResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages an Agyn volume.",
+		MarkdownDescription: "Manages a volume on an environment or an MCP server. A volume is a definition, not a disk: one disk is provisioned per agent instance and per sandbox that runs it.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:            true,
 				MarkdownDescription: "UUID identifier of the volume.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"organization_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Organization identifier for the volume.",
+			"environment_id": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Environment that mounts the volume. Conflicts with mcp_id.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"persistent": schema.BoolAttribute{
+			"mcp_id": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "MCP server that mounts the volume. Conflicts with environment_id.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Whether the volume is persistent.",
+				MarkdownDescription: "Volume name, unique within its target. An MCP's shared_volumes references this.",
 			},
 			"mount_path": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Mount path inside the container.",
+				MarkdownDescription: "Absolute container path for the mount.",
 			},
 			"size": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Volume size (required when persistent is true).",
+				MarkdownDescription: "Capacity, e.g. 10Gi. Setting it makes the volume persistent; omitting it makes it ephemeral scratch.",
 			},
-			"description": schema.StringAttribute{
+			"storage_class": schema.StringAttribute{
 				Optional:            true,
-				MarkdownDescription: "Human-readable description.",
+				MarkdownDescription: "Storage class in the runner's catalog. Resolved at provisioning time.",
+			},
+			"ttl": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "How long after an owner's last workload stops before that owner's disk is deleted.",
 			},
 		},
 	}
@@ -98,11 +112,29 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	input := &agentsv1.CreateVolumeRequest{
-		OrganizationId: plan.OrganizationID.ValueString(),
-		Persistent:     plan.Persistent.ValueBool(),
-		MountPath:      plan.MountPath.ValueString(),
-		Size:           stringValue(plan.Size),
-		Description:    stringValue(plan.Description),
+		Name:      plan.Name.ValueString(),
+		MountPath: plan.MountPath.ValueString(),
+	}
+	// size is what makes a volume persistent: the resource makes the two
+	// biconditional, so there is no separate flag to disagree with.
+	if size := stringValue(plan.Size); size != "" {
+		input.Size = size
+		input.Persistent = true
+	}
+	if class := stringValue(plan.StorageClass); class != "" {
+		input.StorageClass = &class
+	}
+	if ttl := stringValue(plan.TTL); ttl != "" {
+		input.Ttl = &ttl
+	}
+	switch {
+	case !plan.EnvironmentID.IsNull():
+		input.Target = &agentsv1.CreateVolumeRequest_EnvironmentId{EnvironmentId: plan.EnvironmentID.ValueString()}
+	case !plan.McpID.IsNull():
+		input.Target = &agentsv1.CreateVolumeRequest_McpId{McpId: plan.McpID.ValueString()}
+	default:
+		resp.Diagnostics.AddError("Missing volume target", "Set exactly one of environment_id or mcp_id")
+		return
 	}
 
 	volume, err := r.client.CreateVolume(ctx, input)
@@ -111,16 +143,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	updatedState := volumeModel{
-		ID:             types.StringValue(volume.Meta.Id),
-		OrganizationID: plan.OrganizationID,
-		Persistent:     types.BoolValue(volume.Persistent),
-		MountPath:      types.StringValue(volume.MountPath),
-		Size:           optionalString(volume.Size),
-		Description:    optionalString(volume.Description),
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, plan))...)
 }
 
 func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -145,12 +168,7 @@ func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	state.Persistent = types.BoolValue(volume.Persistent)
-	state.MountPath = types.StringValue(volume.MountPath)
-	state.Size = optionalString(volume.Size)
-	state.Description = optionalString(volume.Description)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, state))...)
 }
 
 func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -168,11 +186,16 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	input := &agentsv1.UpdateVolumeRequest{
-		Id:          plan.ID.ValueString(),
-		Persistent:  boolPointer(plan.Persistent),
-		MountPath:   updateStringPointer(plan.MountPath, state.MountPath),
-		Size:        updateStringPointer(plan.Size, state.Size),
-		Description: updateStringPointer(plan.Description, state.Description),
+		Id:           plan.ID.ValueString(),
+		Name:         updateStringPointer(plan.Name, state.Name),
+		MountPath:    updateStringPointer(plan.MountPath, state.MountPath),
+		Size:         updateStringPointer(plan.Size, state.Size),
+		StorageClass: updateStringPointer(plan.StorageClass, state.StorageClass),
+		Ttl:          updateStringPointer(plan.TTL, state.TTL),
+	}
+	if input.Size != nil {
+		persistent := *input.Size != ""
+		input.Persistent = &persistent
 	}
 
 	volume, err := r.client.UpdateVolume(ctx, input)
@@ -181,16 +204,7 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	updatedState := volumeModel{
-		ID:             types.StringValue(volume.Meta.Id),
-		OrganizationID: state.OrganizationID,
-		Persistent:     types.BoolValue(volume.Persistent),
-		MountPath:      types.StringValue(volume.MountPath),
-		Size:           optionalString(volume.Size),
-		Description:    optionalString(volume.Description),
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, state))...)
 }
 
 func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -216,4 +230,19 @@ func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 func (r *volumeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// volumeStateFrom keeps the target from the prior model: it is immutable and the
+// API returns it in a oneof the state shape splits into two attributes.
+func volumeStateFrom(volume *agentsv1.Volume, prior volumeModel) *volumeModel {
+	return &volumeModel{
+		ID:            types.StringValue(volume.Meta.Id),
+		EnvironmentID: prior.EnvironmentID,
+		McpID:         prior.McpID,
+		Name:          types.StringValue(volume.Name),
+		MountPath:     types.StringValue(volume.MountPath),
+		Size:          optionalString(volume.Size),
+		StorageClass:  optionalString(volume.GetStorageClass()),
+		TTL:           optionalString(volume.GetTtl()),
+	}
 }
