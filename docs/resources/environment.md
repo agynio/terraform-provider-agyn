@@ -35,6 +35,7 @@ resource "agyn_environment" "build" {
 
 ### Required
 
+- `availability` (String) internal or private. Controls who may run workloads in the environment; running in one reaches its secrets, egress credentials and volume contents.
 - `name` (String) Environment name, unique within the organization.
 - `organization_id` (String) Organization that owns the environment.
 - `runner_id` (String) Runner workloads are placed on. Must be visible to the organization.

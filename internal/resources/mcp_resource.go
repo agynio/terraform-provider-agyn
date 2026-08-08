@@ -22,13 +22,15 @@ var _ resource.Resource = &mcpResource{}
 var _ resource.ResourceWithImportState = &mcpResource{}
 
 type mcpModel struct {
-	ID          types.String           `tfsdk:"id"`
-	AgentID     types.String           `tfsdk:"agent_id"`
-	Name        types.String           `tfsdk:"name"`
-	Image       types.String           `tfsdk:"image"`
-	Command     types.String           `tfsdk:"command"`
-	Description types.String           `tfsdk:"description"`
-	Resources   *computeResourcesModel `tfsdk:"resources"`
+	ID            types.String           `tfsdk:"id"`
+	AgentID       types.String           `tfsdk:"agent_id"`
+	EnvironmentID types.String           `tfsdk:"environment_id"`
+	SharedVolumes []types.String         `tfsdk:"shared_volumes"`
+	Name          types.String           `tfsdk:"name"`
+	Image         types.String           `tfsdk:"image"`
+	Command       types.String           `tfsdk:"command"`
+	Description   types.String           `tfsdk:"description"`
+	Resources     *computeResourcesModel `tfsdk:"resources"`
 }
 
 func NewMcpResource() resource.Resource { return &mcpResource{} }
@@ -47,9 +49,19 @@ func (r *mcpResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"agent_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "Agent identifier.",
+				Optional:            true,
+				MarkdownDescription: "Agent that runs this server. Conflicts with environment_id.",
 				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+			},
+			"environment_id": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "Environment that runs this server in every workload, sandboxes included. Conflicts with agent_id.",
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+			},
+			"shared_volumes": schema.ListAttribute{
+				Optional:            true,
+				ElementType:         types.StringType,
+				MarkdownDescription: "Names of environment volumes to mount into this sidecar, at the paths the main container uses.",
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
@@ -102,12 +114,21 @@ func (r *mcpResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	input := &agentsv1.CreateMcpRequest{
-		AgentId:     plan.AgentID.ValueString(),
-		Name:        plan.Name.ValueString(),
-		Image:       plan.Image.ValueString(),
-		Command:     plan.Command.ValueString(),
-		Description: stringValue(plan.Description),
-		Resources:   computeResourcesFromModel(plan.Resources),
+		Name:          plan.Name.ValueString(),
+		Image:         plan.Image.ValueString(),
+		Command:       plan.Command.ValueString(),
+		Description:   stringValue(plan.Description),
+		Resources:     computeResourcesFromModel(plan.Resources),
+		SharedVolumes: stringSliceValue(plan.SharedVolumes),
+	}
+	switch {
+	case !plan.EnvironmentID.IsNull():
+		input.EnvironmentId = plan.EnvironmentID.ValueString()
+	case !plan.AgentID.IsNull():
+		input.AgentId = plan.AgentID.ValueString()
+	default:
+		resp.Diagnostics.AddError("Missing MCP target", "Set exactly one of agent_id or environment_id")
+		return
 	}
 
 	mcp, err := r.client.CreateMcp(ctx, input)
@@ -225,4 +246,15 @@ func (r *mcpResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 
 func (r *mcpResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func stringSliceValue(values []types.String) []string {
+	if len(values) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		out = append(out, value.ValueString())
+	}
+	return out
 }
