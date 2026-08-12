@@ -143,7 +143,7 @@ func (r *volumeResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, plan))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume))...)
 }
 
 func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -168,7 +168,7 @@ func (r *volumeResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, state))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume))...)
 }
 
 func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -204,7 +204,7 @@ func (r *volumeResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume, state))...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, volumeStateFrom(volume))...)
 }
 
 func (r *volumeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -232,17 +232,23 @@ func (r *volumeResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// volumeStateFrom keeps the target from the prior model: it is immutable and the
-// API returns it in a oneof the state shape splits into two attributes.
-func volumeStateFrom(volume *agentsv1.Volume, prior volumeModel) *volumeModel {
-	return &volumeModel{
-		ID:            types.StringValue(volume.Meta.Id),
-		EnvironmentID: prior.EnvironmentID,
-		McpID:         prior.McpID,
-		Name:          types.StringValue(volume.Name),
-		MountPath:     types.StringValue(volume.MountPath),
-		Size:          optionalString(volume.Size),
-		StorageClass:  optionalString(volume.GetStorageClass()),
-		TTL:           optionalString(volume.GetTtl()),
+// The API returns the target in a oneof the state shape splits into two
+// attributes. Reading it back rather than carrying the prior value is what lets
+// an import land a volume whose target the state does not know yet.
+func volumeStateFrom(volume *agentsv1.Volume) *volumeModel {
+	state := &volumeModel{
+		ID:           types.StringValue(volume.Meta.Id),
+		Name:         types.StringValue(volume.Name),
+		MountPath:    types.StringValue(volume.MountPath),
+		Size:         optionalString(volume.Size),
+		StorageClass: optionalString(volume.GetStorageClass()),
+		TTL:          optionalString(volume.GetTtl()),
 	}
+	switch {
+	case volume.GetEnvironmentId() != "":
+		state.EnvironmentID = types.StringValue(volume.GetEnvironmentId())
+	case volume.GetMcpId() != "":
+		state.McpID = types.StringValue(volume.GetMcpId())
+	}
+	return state
 }
