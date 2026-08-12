@@ -1,14 +1,13 @@
-resource "agyn_organization" "example" {
-  name = "example-org"
-}
-
 resource "agyn_agent" "example" {
   organization_id = agyn_organization.example.id
   name            = "example-agent"
   nickname        = "example-agent"
   role            = "assistant"
-  model           = "gpt-4o"
-  image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
   description     = "Example agent managed by Terraform."
-  availability    = "internal"
+
+  # The environment supplies the image and compute the agent runs with.
+  environment_id = agyn_environment.build.id
+  model          = agyn_model.example.id
+  image          = "ghcr.io/agynio/agent-runtime:v1.0.0"
+  availability   = "internal"
 }

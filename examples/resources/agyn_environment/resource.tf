@@ -12,4 +12,8 @@ resource "agyn_environment" "build" {
   # sandbox, rejected when creating an agent.
   agent_runtime_image_id  = agyn_image.runtime_codex.id
   agent_runtime_image_tag = "0.146.0"
+
+  # Who may run workloads here. Running in an environment reaches its secrets,
+  # egress credentials and volume contents.
+  availability = "internal"
 }

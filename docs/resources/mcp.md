@@ -13,25 +13,17 @@ Manages an Agyn MCP.
 ## Example Usage
 
 ```terraform
-resource "agyn_organization" "example" {
-  name = "example-org"
-}
+# An MCP server runs as a sidecar to every workload in its environment.
+resource "agyn_mcp" "search" {
+  environment_id = agyn_environment.build.id
+  name           = "search"
+  image          = "ghcr.io/agynio/mcp-search:v1.0.0"
+  command        = "mcp-search --port 8080"
+  description    = "Example MCP service."
 
-resource "agyn_agent" "example" {
-  organization_id = agyn_organization.example.id
-  name            = "example-agent"
-  role            = "assistant"
-  model           = "gpt-4o"
-  image           = "ghcr.io/agynio/agent-runtime:v1.0.0"
-  description     = "Example agent managed by Terraform."
-}
-
-resource "agyn_mcp" "example" {
-  agent_id    = agyn_agent.example.id
-  name        = "example-mcp"
-  image       = "ghcr.io/agynio/mcp-server:v1.0.0"
-  command     = "mcp-server --port 8080"
-  description = "Example MCP service."
+  # Environment volumes to mount into the sidecar, at the paths the main
+  # container uses.
+  shared_volumes = ["workspace"]
 }
 ```
 
