@@ -4,11 +4,13 @@ import (
 	"context"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	agentsv1 "github.com/agynio/terraform-provider-agyn/gen/agynio/api/agents/v1"
@@ -34,6 +36,11 @@ type environmentModel struct {
 	AgentRuntimeImageTag types.String `tfsdk:"agent_runtime_image_tag"`
 	Availability         types.String `tfsdk:"availability"`
 }
+
+const (
+	environmentAvailabilityInternal = "internal"
+	environmentAvailabilityPrivate  = "private"
+)
 
 func NewEnvironmentResource() resource.Resource { return &environmentResource{} }
 
@@ -94,6 +101,9 @@ func (r *environmentResource) Schema(_ context.Context, _ resource.SchemaRequest
 			"availability": schema.StringAttribute{
 				Required:            true,
 				MarkdownDescription: "internal or private. Controls who may run workloads in the environment; running in one reaches its secrets, egress credentials and volume contents.",
+				Validators: []validator.String{
+					stringvalidator.OneOf(environmentAvailabilityInternal, environmentAvailabilityPrivate),
+				},
 			},
 		},
 	}
@@ -188,6 +198,7 @@ func (r *environmentResource) Update(ctx context.Context, req resource.UpdateReq
 		WorkspaceImageTag:    updateStringPointer(plan.WorkspaceImageTag, state.WorkspaceImageTag),
 		AgentRuntimeImageId:  updateStringPointer(plan.AgentRuntimeImageID, state.AgentRuntimeImageID),
 		AgentRuntimeImageTag: updateStringPointer(plan.AgentRuntimeImageTag, state.AgentRuntimeImageTag),
+		Availability:         environmentAvailabilityUpdate(plan.Availability),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to update environment", err.Error())
@@ -238,7 +249,7 @@ func environmentStateFrom(environment *agentsv1.Environment) environmentModel {
 }
 
 func environmentAvailabilityFromString(value string) agentsv1.EnvironmentAvailability {
-	if strings.EqualFold(strings.TrimSpace(value), "private") {
+	if strings.EqualFold(strings.TrimSpace(value), environmentAvailabilityPrivate) {
 		return agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_PRIVATE
 	}
 	return agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_INTERNAL
@@ -246,7 +257,17 @@ func environmentAvailabilityFromString(value string) agentsv1.EnvironmentAvailab
 
 func environmentAvailabilityToString(value agentsv1.EnvironmentAvailability) string {
 	if value == agentsv1.EnvironmentAvailability_ENVIRONMENT_AVAILABILITY_PRIVATE {
-		return "private"
+		return environmentAvailabilityPrivate
 	}
-	return "internal"
+	return environmentAvailabilityInternal
+}
+
+// The attribute is required, so an unknown plan value is the only case with
+// nothing to send: leaving it out would silently keep the prior availability.
+func environmentAvailabilityUpdate(plan types.String) *agentsv1.EnvironmentAvailability {
+	if plan.IsNull() || plan.IsUnknown() {
+		return nil
+	}
+	availability := environmentAvailabilityFromString(plan.ValueString())
+	return &availability
 }
