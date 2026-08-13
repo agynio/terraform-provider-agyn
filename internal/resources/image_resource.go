@@ -33,7 +33,7 @@ type imageModel struct {
 	Type           types.String `tfsdk:"type"`
 	Repository     types.String `tfsdk:"repository"`
 	Username       types.String `tfsdk:"username"`
-	Password       types.String `tfsdk:"password"`
+	SecretID       types.String `tfsdk:"secret_id"`
 	Visibility     types.String `tfsdk:"visibility"`
 	TagFilter      types.String `tfsdk:"tag_filter"`
 }
@@ -89,12 +89,12 @@ func (r *imageResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				MarkdownDescription: "Registry username. Omit for an anonymously readable repository.",
 			},
-			"password": schema.StringAttribute{
-				Optional:  true,
-				Sensitive: true,
-				// Write-only: the platform stores it as a Secret and never
-				// returns it, so Terraform cannot detect drift on it.
-				MarkdownDescription: "Registry password. Write-only — the platform stores it as a secret and never returns it.",
+			"secret_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				// An id rather than the password itself: the value lives in a
+				// Secret, so it never appears in a plan, a state file, or here.
+				MarkdownDescription: "UUID of the Secret holding the registry password. Must belong to the same organization. Omit for an anonymously readable repository.",
 			},
 			"visibility": schema.StringAttribute{
 				Required:            true,
@@ -150,7 +150,7 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 		Type:           imageType,
 		Repository:     plan.Repository.ValueString(),
 		Username:       plan.Username.ValueString(),
-		Password:       plan.Password.ValueString(),
+		SecretId:       plan.SecretID.ValueString(),
 		Visibility:     visibility,
 		TagFilter:      plan.TagFilter.ValueString(),
 	})
@@ -168,8 +168,6 @@ func (r *imageResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	state := imageStateFrom(image)
-	// The password is never returned, so state keeps what was configured.
-	state.Password = plan.Password
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -194,9 +192,9 @@ func (r *imageResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	password := state.Password
+	// The credential is a reference, so unlike a password it round-trips and
+	// drift on it is detectable.
 	state = imageStateFrom(image)
-	state.Password = password
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -218,12 +216,7 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Description: updateStringPointer(plan.Description, state.Description),
 		Username:    updateStringPointer(plan.Username, state.Username),
 		TagFilter:   updateStringPointer(plan.TagFilter, state.TagFilter),
-	}
-	// The password never round-trips, so it is sent whenever the configuration
-	// names one that differs from what was last applied.
-	if !plan.Password.Equal(state.Password) && !plan.Password.IsNull() {
-		password := plan.Password.ValueString()
-		input.Password = &password
+		SecretId:    updateStringPointer(plan.SecretID, state.SecretID),
 	}
 	if !plan.Visibility.Equal(state.Visibility) {
 		visibility, diag := imageVisibilityFromString(plan.Visibility.ValueString())
@@ -241,7 +234,6 @@ func (r *imageResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	updated := imageStateFrom(image)
-	updated.Password = plan.Password
 	resp.Diagnostics.Append(resp.State.Set(ctx, &updated)...)
 }
 
@@ -278,6 +270,7 @@ func imageStateFrom(image *imagesv1.Image) imageModel {
 		Type:           types.StringValue(imageTypeToString(image.GetType())),
 		Repository:     types.StringValue(image.GetRepository()),
 		Username:       types.StringValue(image.GetUsername()),
+		SecretID:       types.StringValue(image.GetSecretId()),
 		Visibility:     types.StringValue(imageVisibilityToString(image.GetVisibility())),
 		TagFilter:      types.StringValue(image.GetTagFilter()),
 	}
