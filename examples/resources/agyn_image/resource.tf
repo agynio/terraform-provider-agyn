@@ -9,15 +9,21 @@ resource "agyn_image" "devcontainer" {
   visibility      = "internal"
 }
 
-# A private repository names a credential. The password is write-only: the
-# platform stores it as a secret and never returns it.
+# A private repository names a credential by reference, so the password lives
+# in a secret rather than in this configuration or in the state file.
+resource "agyn_secret" "registry" {
+  organization_id = var.organization_id
+  name            = "internal-tools-registry"
+  value           = var.registry_password
+}
+
 resource "agyn_image" "private" {
   organization_id = var.organization_id
   name            = "internal-tools"
   type            = "mcp"
   repository      = "ghcr.io/acme/internal-tools"
   username        = "robot"
-  password        = var.registry_password
+  secret_id       = agyn_secret.registry.id
   visibility      = "internal"
   tag_filter      = "v*"
 }
