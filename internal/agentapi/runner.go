@@ -47,3 +47,27 @@ func (c *Client) DeleteRunner(ctx context.Context, id string) error {
 		return nil
 	})
 }
+
+// ListRunners walks every page so a lookup by name sees every runner the
+// organization can place workloads on.
+func (c *Client) ListRunners(ctx context.Context, organizationID string) ([]*runnersv1.Runner, error) {
+	var runners []*runnersv1.Runner
+	var pageToken string
+	for {
+		req := &runnersv1.ListRunnersRequest{PageSize: runnerListPageSize, PageToken: pageToken}
+		if organizationID != "" {
+			req.OrganizationId = &organizationID
+		}
+		resp, err := c.runnersGateway.ListRunners(ctx, req)
+		if err != nil {
+			return nil, fmt.Errorf("list runners: %w", err)
+		}
+		runners = append(runners, resp.Runners...)
+		pageToken = resp.NextPageToken
+		if pageToken == "" {
+			return runners, nil
+		}
+	}
+}
+
+const runnerListPageSize = 100
