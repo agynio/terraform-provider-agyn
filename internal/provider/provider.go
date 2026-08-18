@@ -113,5 +113,8 @@ func (p *agynProvider) Resources(_ context.Context) []func() resource.Resource {
 }
 
 func (p *agynProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		resources.NewImageDataSource,
+		resources.NewRunnerDataSource,
+	}
 }

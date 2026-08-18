@@ -66,3 +66,52 @@ func (c *Client) DeleteImage(ctx context.Context, id string) error {
 		return nil
 	})
 }
+
+// ListImages walks every page so a lookup by name sees the whole catalog. The
+// service returns the organization's own images and every public one, so a
+// platform-seeded image resolves from any organization.
+func (c *Client) ListImages(ctx context.Context, organizationID string, imageType imagesv1.ImageType) ([]*imagesv1.Image, error) {
+	var images []*imagesv1.Image
+	var pageToken string
+	for {
+		resp, err := c.imagesGateway.ListImages(ctx, &imagesv1.ListImagesRequest{
+			OrganizationId: organizationID,
+			Type:           imageType,
+			PageSize:       imageListPageSize,
+			PageToken:      pageToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("list images: %w", err)
+		}
+		images = append(images, resp.Images...)
+		pageToken = resp.NextPageToken
+		if pageToken == "" {
+			return images, nil
+		}
+	}
+}
+
+// ListVersionTags returns the tags the catalog has discovered, newest first.
+func (c *Client) ListVersionTags(ctx context.Context, imageID string) ([]string, error) {
+	var tags []string
+	var pageToken string
+	for {
+		resp, err := c.imagesGateway.ListVersions(ctx, &imagesv1.ListVersionsRequest{
+			ImageId:   imageID,
+			PageSize:  imageListPageSize,
+			PageToken: pageToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("list versions: %w", err)
+		}
+		for _, version := range resp.Versions {
+			tags = append(tags, version.Tag)
+		}
+		pageToken = resp.NextPageToken
+		if pageToken == "" {
+			return tags, nil
+		}
+	}
+}
+
+const imageListPageSize = 100
