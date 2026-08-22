@@ -51,15 +51,15 @@ func (r *skillResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"name": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Skill name.",
+				MarkdownDescription: "Skill name. A slug: lowercase letters, digits and hyphens, up to 64 characters. Names the skill's directory on the agent filesystem.",
 			},
 			"body": schema.StringAttribute{
 				Required:            true,
-				MarkdownDescription: "Skill body.",
+				MarkdownDescription: "Skill body. Markdown instructions, without front matter.",
 			},
 			"description": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "Human-readable description.",
+				Required:            true,
+				MarkdownDescription: "When the skill applies. The agent reads this before opening the body.",
 			},
 		},
 	}

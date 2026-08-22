@@ -40,12 +40,9 @@ resource "agyn_skill" "example" {
 ### Required
 
 - `agent_id` (String) Agent identifier.
-- `body` (String) Skill body.
-- `name` (String) Skill name.
-
-### Optional
-
-- `description` (String) Human-readable description.
+- `body` (String) Skill body. Markdown instructions, without front matter.
+- `description` (String) When the skill applies. The agent reads this before opening the body.
+- `name` (String) Skill name. A slug: lowercase letters, digits and hyphens, up to 64 characters. Names the skill's directory on the agent filesystem.
 
 ### Read-Only
 
